@@ -24,7 +24,7 @@
   --color-grey-400: #8d9fad;
   --color-grey-500: #5f7281;
   --color-grey-600: #44535f;
-  --color-grey-700: #2a3a45;
+  --color-grey-700: #1f272d;
   --color-grey-800: #11171c;
 
   /* DuBois Red */
@@ -228,7 +228,7 @@
   --primary-foreground: #ffffff;
 
   /* Secondary — grey700 */
-  --secondary: #2a3a45;
+  --secondary: #1f272d;
   --secondary-foreground: #e8ecf0;
 
   --muted: #2a3a45;

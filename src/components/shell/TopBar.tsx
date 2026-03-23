@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Search, ChevronDown } from "lucide-react"
+import { Search, ChevronDown, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DbIcon } from "@/components/ui/db-icon"
@@ -18,6 +18,7 @@ import { AppSwitcher } from "./AppSwitcher"
 interface TopBarProps {
   sidebarOpen?: boolean
   onToggleSidebar?: () => void
+  onMobileMenuToggle?: () => void
   workspace?: string
   userInitial?: string
   className?: string
@@ -26,6 +27,7 @@ interface TopBarProps {
 export function TopBar({
   sidebarOpen = true,
   onToggleSidebar,
+  onMobileMenuToggle,
   workspace = "Production",
   userInitial = "N",
   className,
@@ -37,11 +39,23 @@ export function TopBar({
         className
       )}
     >
-      {/* Left: sidebar toggle + logo */}
+      {/* Left: toggle + logo */}
       <div className="flex items-center gap-2">
+        {/* Mobile: hamburger opens Sheet */}
         <Button
           variant="ghost"
           size="icon-sm"
+          className="md:hidden"
+          onClick={onMobileMenuToggle}
+          aria-label="Open menu"
+        >
+          <Menu className="h-4 w-4 text-muted-foreground" />
+        </Button>
+        {/* Desktop: collapse/expand inline sidebar */}
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="hidden md:flex"
           onClick={onToggleSidebar}
           aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
@@ -54,8 +68,8 @@ export function TopBar({
         <Link href="/"><DatabricksLogo height={18} /></Link>
       </div>
 
-      {/* Center: search */}
-      <div className="flex flex-1 justify-center px-4">
+      {/* Center: search (hidden on mobile) */}
+      <div className="hidden md:flex flex-1 justify-center px-4">
         <div className="relative flex w-full max-w-[480px] items-center">
           <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
@@ -69,9 +83,12 @@ export function TopBar({
         </div>
       </div>
 
+      {/* Spacer on mobile so right section stays right-aligned */}
+      <div className="flex-1 md:hidden" />
+
       {/* Right: workspace selector + icon buttons + avatar */}
       <div className="flex items-center gap-0.5">
-        <Button variant="ghost" size="sm" className="gap-1 px-2">
+        <Button variant="ghost" size="sm" className="hidden md:flex gap-1 px-2">
           <span className="text-xs">{workspace}</span>
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
         </Button>
