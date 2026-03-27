@@ -4,8 +4,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 export const metadata: Metadata = {
-  title: "Databricks Designer Starter Kit",
-  description: "DuBois-themed shadcn/ui components for building Databricks UIs",
+  title: "Multi-cloud account",
+  description: "Making accounts cloud-agnostic and compatible with multiple clouds",
 };
 
 export default function RootLayout({
@@ -15,12 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        style={{
-          fontFamily:
-            '"Helvetica Neue", ui-sans-serif, system-ui, -apple-system, sans-serif',
-        }}
-      >
+      <body>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

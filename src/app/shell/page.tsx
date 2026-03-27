@@ -165,7 +165,7 @@ function FileIcon({ type }: { type: FileType }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function WorkspacePage() {
-  const [activeNav, setActiveNav] = React.useState("workspace")
+  const [activeNav, setActiveNav] = React.useState("workspaces")
   const [navPath, setNavPath]     = React.useState<PathItem[]>([{ id: "home", label: "Home" }])
   const [expanded, setExpanded]   = React.useState<Record<string, boolean>>({ home: true })
   const [search, setSearch]       = React.useState("")
@@ -220,7 +220,7 @@ export default function WorkspacePage() {
   const pageTitle = TITLES[currentId] ?? navPath[navPath.length - 1].label
 
   return (
-    <AppShell activeItem={activeNav} onNavigate={setActiveNav} workspace="Production" mainClassName="overflow-hidden">
+    <AppShell activeItem={activeNav} onNavigate={setActiveNav} mainClassName="overflow-hidden">
       <div className="flex h-full">
 
         {/* ── Left tree panel ──────────────────────────────────────────── */}

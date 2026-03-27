@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils"
 interface DatabricksLogoProps {
   /** Height in px. Width scales proportionally (713:113 ratio). */
   height?: number
+  /** When provided, shows the brickwork icon + this name instead of the full wordmark. */
+  workspaceName?: string
   className?: string
 }
 
@@ -12,7 +14,19 @@ interface DatabricksLogoProps {
  * - Brickwork icon: always #FF3621
  * - Wordmark text: currentColor — inherits dark-mode text color from parent
  */
-export function DatabricksLogo({ height = 20, className }: DatabricksLogoProps) {
+export function DatabricksLogo({ height = 20, workspaceName, className }: DatabricksLogoProps) {
+  if (workspaceName) {
+    const iconWidth = Math.round((105 / 113) * height)
+    return (
+      <div className={cn("flex items-center gap-2 shrink-0", className)}>
+        <svg width={iconWidth} height={height} viewBox="0 0 105 113" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M98.9 46.5996L52.3 72.8996L2.4 44.7996L0 46.0996V66.4996L52.3 95.8996L98.9 69.6996V80.4996L52.3 106.8L2.4 78.6996L0 79.9996V83.4996L52.3 112.9L104.5 83.4996V63.0996L102.1 61.7996L52.3 89.7996L5.6 63.5996V52.7996L52.3 78.9996L104.5 49.5996V29.4996L101.9 27.9996L52.3 55.8996L8 31.0996L52.3 6.19961L88.7 26.6996L91.9 24.8996V22.3996L52.3 0.0996094L0 29.4996V32.6996L52.3 62.0996L98.9 35.7996V46.5996Z" fill="#FF3621" />
+        </svg>
+        <span className="text-sm text-foreground truncate">{workspaceName}</span>
+      </div>
+    )
+  }
+
   const width = Math.round((713 / 113) * height)
   return (
     <svg

@@ -8,8 +8,9 @@ The DuBois design system rules below are **always active** — apply them to eve
 ## DuBois Design System Rules
 
 ### Typography
-- Base font: `"Helvetica Neue", ui-sans-serif, system-ui, sans-serif`
+- Base font: `-apple-system, BlinkMacSystemFont, "Helvetica Neue", ui-sans-serif, system-ui, sans-serif` (Apple system font first)
 - Base size: **13px** — already set on `body` in `globals.css`. Do not set `font-size` on `html`.
+- `text-sm` = **13px** (overridden from Tailwind's default 14px)
 - Bold weight: **`font-semibold` (600)** — never use `font-bold` (700)
 - Line height base: 20px
 
@@ -39,15 +40,15 @@ The DuBois design system rules below are **always active** — apply them to eve
 
 ### Component Overrides Already Applied
 These shadcn components have DuBois overrides — use them as-is:
-- **`Button`** — 4px radius, sizes: `sm` 32px (default) · `xs` 24px · `icon-sm` 32px · `icon-xs` 24px, semibold, variants: `default` `outline` `ghost` `destructive` `link`
+- **`Button`** — 4px radius, sizes: `sm` 32px (default) · `xs` 24px · `icon-sm` 32px · `icon-xs` 24px, **font-weight 400 (normal)**, variants: `default` `outline` `ghost` `destructive` `link`
 - **`Input`** — 32px height (`h-8`), 4px radius, inset focus ring (no offset)
 - **`Select`** / **`SelectTrigger`** — 32px height (`h-8`), 4px radius, no size variants
 - **`Badge`** — rectangular (4px radius), variants: `default` `secondary` `destructive` `outline` `coral` `brown` `indigo` `lemon` `lime` `pink` `purple` `teal` `turquoise`
 - **`Dialog`** / **`DialogHeader`** / **`DialogFooter`** / **`DialogBody`** — 40px padding, no dividers
-- **`Table`** / **`TableRow`** — DuBois hover/selected row colors
+- **`Table`** / **`TableRow`** — DuBois hover/selected row colors; **`TableHead`** always `text-sm` (13px)
 - **`Alert`** — variants: `default` `info` `warning` `success` `destructive` — full border with light tinted bg, 4px radius. CSS tokens: `--border-danger` `--border-warning` `--border-success` `--background-danger` `--background-warning` `--background-success`
-- **`Tabs`** / **`TabsList`** — use `variant="line"` for DuBois underline style
-- **`Tooltip`** — grey-800 background (dark in light mode)
+- **`Tabs`** / **`TabsList`** — use `variant="line"` for DuBois underline style; line **TabsList** uses `px-0 py-1`, `gap-4` (16px between tabs), line **TabsTrigger** has no horizontal padding (`px-0`); pill **default** keeps `p-[3px]` on the list and `px-2` on triggers
+- **`Tooltip`** — grey-800 background (dark in light mode), `text-sm` (13px)
 - **`Card`** — 8px radius, subtle shadow
 - **`Breadcrumb`** — `BreadcrumbLink` uses `text-primary` · `BreadcrumbPage` uses `text-muted-foreground` · separator is ChevronRight at `size-3`
 
@@ -74,7 +75,7 @@ background: linear-gradient(135deg, #4299E0 20.5%, #CA42E0 46.91%, #FF5F46 79.5%
 
 ### Do's and Don'ts
 ✅ Use semantic CSS variables (`text-foreground`, `bg-primary`, `border-border`)
-✅ Use `font-semibold` for emphasis
+✅ Use `font-semibold` for headings/emphasis — but **not** for buttons (buttons use `font-normal`)
 ✅ Use `rounded` (4px) for interactive elements
 ✅ Use DuBois icons from `@/components/icons` for Databricks concepts
 ✅ Support dark mode — all tokens are already defined in `globals.css`

@@ -257,37 +257,13 @@ const alertVariants = cva(
 
 ## P2 — Tabs (`components/ui/tabs.tsx`)
 
-DuBois tabs have a blue bottom indicator and bolder active label.
+DuBois **line** tabs (`TabsList variant="line"`): full-width list with `border-b border-border` (often via `className` on `TabsList`), **no horizontal padding** on the list (`px-0 py-1`), **`gap-4`** (16px between tabs), **TabsTrigger** `px-0`; active tab uses primary text + semibold + `after:` blue underline indicator. **Default** pill tabs: `TabsList` `bg-muted p-[3px]`, **TabsTrigger** `px-2`.
 
 ```tsx
-// TabsList — no background, just a bottom border
-const TabsList = React.forwardRef<...>(({ className, ...props }, ref) => (
-  <TabsPrimitive.List
-    ref={ref}
-    className={cn(
-      "inline-flex items-center border-b border-border w-full",   // full-width, border-b only
-      className
-    )}
-    {...props}
-  />
-));
-
-// TabsTrigger — blue bottom indicator on active, 600 weight
-const TabsTrigger = React.forwardRef<...>(({ className, ...props }, ref) => (
-  <TabsPrimitive.Trigger
-    ref={ref}
-    className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap px-4 py-2.5 text-sm font-normal",
-      "ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2",
-      "focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-40",
-      "text-muted-foreground hover:text-foreground",
-      "border-b-2 border-transparent -mb-px",                      // bottom indicator
-      "data-[state=active]:text-primary data-[state=active]:font-semibold data-[state=active]:border-primary",
-      className
-    )}
-    {...props}
-  />
-));
+// Usage — line variant (typical page tabs)
+<TabsList variant="line" className="w-full justify-start border-b border-border mb-6">
+  <TabsTrigger value="a">Subscription & billing</TabsTrigger>
+</TabsList>
 ```
 
 ---

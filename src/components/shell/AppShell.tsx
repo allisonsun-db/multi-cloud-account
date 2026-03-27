@@ -9,8 +9,8 @@ import { cn } from "@/lib/utils"
 interface AppShellProps {
   activeItem?: string
   onNavigate?: (id: string) => void
-  workspace?: string
   userInitial?: string
+  workspace?: string
   children: React.ReactNode
   className?: string
   mainClassName?: string
@@ -19,8 +19,8 @@ interface AppShellProps {
 export function AppShell({
   activeItem,
   onNavigate,
-  workspace,
   userInitial,
+  workspace,
   children,
   className,
   mainClassName,
@@ -34,8 +34,8 @@ export function AppShell({
         sidebarOpen={sidebarOpen}
         onToggleSidebar={() => setSidebarOpen((v) => !v)}
         onMobileMenuToggle={() => setMobileOpen((v) => !v)}
-        workspace={workspace}
         userInitial={userInitial}
+        workspace={workspace}
       />
 
       {/* Mobile sidebar — Sheet drawer */}

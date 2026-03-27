@@ -100,7 +100,7 @@ export default function MyPage() {
 | `Badge` | Rectangular · 9 secondary palette variants (`coral` `teal` `indigo` `lime` …) |
 | `Alert` | Full border + tinted background · 4 severity variants |
 | `Dialog` | 40px padding · no dividers · `DialogBody` slot |
-| `Tabs` | `variant="line"` for DuBois underline style |
+| `Tabs` | `variant="line"` for DuBois underline · line tabs: list `px-0 py-1`, `gap-4`, triggers `px-0` |
 | `Tooltip` | Dark background in light mode |
 | `Card` | 8px radius · subtle shadow |
 | `Breadcrumb` | `text-primary` links · muted separator |

@@ -1,32 +1,17 @@
 "use client"
 
 import * as React from "react"
-import {
-  Clock,
-  Cpu,
-  Bell,
-  History,
-  Database,
-  FlaskConical,
-  TestTube2,
-  Layers,
-  Server,
-  BarChart2,
-  ChevronRight,
-} from "lucide-react"
+import { ChevronRight } from "lucide-react"
 import { DbIcon } from "@/components/ui/db-icon"
-import { NewButton } from "./NewButton"
 import {
   WorkspacesIcon,
   CatalogIcon,
-  WorkflowsIcon,
-  StorefrontIcon,
-  QueryEditorIcon,
-  QueryIcon,
-  PipelineIcon,
-  ModelsIcon,
-  AssistantIcon,
-  IngestionIcon,
+  ChartLineIcon,
+  UserGroupIcon,
+  ShieldCheckIcon,
+  CloudIcon,
+  GiftIcon,
+  GearIcon,
 } from "@/components/icons"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -52,42 +37,14 @@ type NavSection = {
 const NAV_SECTIONS: NavSection[] = [
   {
     items: [
-      { id: "workspace",   label: "Workspace",   icon: WorkspacesIcon, href: "/shell" },
-      { id: "recents",     label: "Recents",     icon: Clock },
-      { id: "catalog",     label: "Catalog",     icon: CatalogIcon },
-      { id: "workflows",   label: "Workflows",   icon: WorkflowsIcon,  href: "/jobs" },
-      { id: "compute",     label: "Compute",     icon: Cpu },
-      { id: "marketplace", label: "Marketplace", icon: StorefrontIcon },
-    ],
-  },
-  {
-    label: "SQL",
-    items: [
-      { id: "sql-editor",     label: "SQL Editor",     icon: QueryEditorIcon },
-      { id: "queries",        label: "Queries",        icon: QueryIcon },
-      { id: "dashboards",     label: "Dashboards",     icon: BarChart2,  href: "/dashboards" },
-      { id: "genie",          label: "Genie",          icon: AssistantIcon },
-      { id: "alerts",         label: "Alerts",         icon: Bell },
-      { id: "query-history",  label: "Query History",  icon: History },
-      { id: "sql-warehouses", label: "SQL Warehouses", icon: Database },
-    ],
-  },
-  {
-    label: "Data Engineering",
-    items: [
-      { id: "job-runs",       label: "Job Runs",       icon: WorkflowsIcon },
-      { id: "data-ingestion", label: "Data Ingestion", icon: IngestionIcon },
-      { id: "pipelines",      label: "Pipelines",      icon: PipelineIcon },
-    ],
-  },
-  {
-    label: "Machine Learning",
-    items: [
-      { id: "playground",  label: "Playground",  icon: FlaskConical },
-      { id: "experiments", label: "Experiments", icon: TestTube2 },
-      { id: "features",    label: "Features",    icon: Layers },
-      { id: "models",      label: "Models",      icon: ModelsIcon },
-      { id: "serving",     label: "Serving",     icon: Server },
+      { id: "workspaces",       label: "Workspaces",       icon: WorkspacesIcon,  href: "/workspaces" },
+      { id: "catalog",          label: "Catalog",          icon: CatalogIcon,  href: "/catalog" },
+      { id: "usage",            label: "Usage",            icon: ChartLineIcon },
+      { id: "user-management",  label: "User management",  icon: UserGroupIcon },
+      { id: "security",         label: "Security",         icon: ShieldCheckIcon },
+      { id: "cloud-resources",  label: "Cloud resources",  icon: CloudIcon },
+      { id: "previews",         label: "Previews",         icon: GiftIcon,  href: "/previews" },
+      { id: "settings",         label: "Settings",         icon: GearIcon,  href: "/settings" },
     ],
   },
 ]
@@ -121,9 +78,6 @@ export function Sidebar({
         className
       )}
     >
-      {/* New button — fixed above the scrollable nav */}
-      {open && <div className="px-2 pt-2 pb-1"><NewButton /></div>}
-
       {/* Nav — scrollable */}
       <nav
         className={cn(
@@ -196,7 +150,7 @@ function NavItemButton({
   onClick: () => void
 }) {
   const className = cn(
-    "flex h-8 w-full items-center gap-2 rounded px-2 text-left text-sm transition-colors",
+    "flex h-7 w-full items-center gap-2 rounded px-3 text-left text-sm transition-colors",
     active
       ? "bg-primary/10 text-primary font-semibold"
       : "text-foreground hover:bg-muted-foreground/10",
@@ -209,7 +163,7 @@ function NavItemButton({
         <DbIcon
           icon={item.icon}
           size={16}
-          color={active ? "primary" : item.iconColor ?? "default"}
+          color={active ? "primary" : item.iconColor ?? "muted"}
         />
       </span>
       {!sidebarCollapsed && <span className="truncate">{item.label}</span>}

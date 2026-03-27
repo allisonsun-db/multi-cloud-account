@@ -126,7 +126,6 @@ export default function DashboardsPage() {
     <AppShell
       activeItem={activeNav}
       onNavigate={setActiveNav}
-      workspace="Production"
       mainClassName="overflow-hidden"
     >
       <div className="flex h-full flex-col overflow-hidden">

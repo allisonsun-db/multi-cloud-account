@@ -1,9 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { Search, ChevronDown, Menu } from "lucide-react"
+import { Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { DbIcon } from "@/components/ui/db-icon"
 import {
   SidebarCollapseIcon,
@@ -19,8 +18,8 @@ interface TopBarProps {
   sidebarOpen?: boolean
   onToggleSidebar?: () => void
   onMobileMenuToggle?: () => void
-  workspace?: string
   userInitial?: string
+  workspace?: string
   className?: string
 }
 
@@ -28,8 +27,8 @@ export function TopBar({
   sidebarOpen = true,
   onToggleSidebar,
   onMobileMenuToggle,
-  workspace = "Production",
   userInitial = "N",
+  workspace,
   className,
 }: TopBarProps) {
   return (
@@ -65,34 +64,13 @@ export function TopBar({
             <SidebarExpandIcon className="h-4 w-4 text-muted-foreground" />
           )}
         </Button>
-        <Link href="/"><DatabricksLogo height={18} /></Link>
+        <Link href="/"><DatabricksLogo height={18} workspaceName={workspace ?? "Databricks"} /></Link>
       </div>
 
-      {/* Center: search (hidden on mobile) */}
-      <div className="hidden md:flex flex-1 justify-center px-4">
-        <div className="relative flex w-full max-w-[480px] items-center">
-          <Search className="absolute left-3 h-4 w-4 text-muted-foreground pointer-events-none" />
-          <Input
-            className="h-8 rounded bg-background border-border pl-9 pr-14 text-xs placeholder:text-muted-foreground"
-            placeholder="Search data, notebooks, recents, and more..."
-          />
-          <kbd className="pointer-events-none absolute right-3 flex items-center gap-0.5 text-[11px] text-muted-foreground">
-            <span>⌘</span>
-            <span>P</span>
-          </kbd>
-        </div>
-      </div>
+      <div className="flex-1" aria-hidden />
 
-      {/* Spacer on mobile so right section stays right-aligned */}
-      <div className="flex-1 md:hidden" />
-
-      {/* Right: workspace selector + icon buttons + avatar */}
+      {/* Right: icon buttons + avatar */}
       <div className="flex items-center gap-0.5">
-        <Button variant="ghost" size="sm" className="hidden md:flex gap-1 px-2">
-          <span className="text-xs">{workspace}</span>
-          <ChevronDown className="h-3 w-3 text-muted-foreground" />
-        </Button>
-
         <Button variant="ghost" size="icon-sm" aria-label="AI Assistant">
           <DbIcon icon={SparkleIcon} color="ai" size={16} />
         </Button>

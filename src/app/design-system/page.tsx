@@ -665,7 +665,11 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* ── Tabs ───────────────────────────────────────────────────────── */}
-        <Section id="tabs-demo" title="Tabs">
+        <Section
+          id="tabs-demo"
+          title="Tabs"
+          description="Line variant: bottom border, list padding px-0 py-1, gap-4 (16px) between tabs, no horizontal padding on tab labels. Pill variant: muted track, px-2 on triggers."
+        >
           <div className="flex flex-col gap-6">
             <Group label="Line variant (DuBois style)">
               <Tabs defaultValue="tab1">
@@ -902,10 +906,10 @@ export default function DesignSystemPage() {
 
             <Group label="TopBar">
               <div className="overflow-hidden rounded-md border border-border">
-                <TopBar sidebarOpen={true} workspace="Production" userInitial="N" />
+                <TopBar sidebarOpen={true} userInitial="N" />
               </div>
               <div className="overflow-hidden rounded-md border border-border mt-2">
-                <TopBar sidebarOpen={false} workspace="Production" userInitial="N" />
+                <TopBar sidebarOpen={false} userInitial="N" />
               </div>
               <p className="text-xs text-muted-foreground mt-1">Top: sidebar open · Bottom: sidebar collapsed</p>
             </Group>
