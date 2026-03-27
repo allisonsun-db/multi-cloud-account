@@ -64,7 +64,7 @@ export function TopBar({
             <SidebarExpandIcon className="h-4 w-4 text-muted-foreground" />
           )}
         </Button>
-        <Link href="/"><DatabricksLogo height={18} workspaceName={workspace ?? "Databricks"} /></Link>
+        <Link href="/"><DatabricksLogo height={18} workspaceName={workspace ?? "Databricks Bakehouse"} /></Link>
       </div>
 
       <div className="flex-1" aria-hidden />

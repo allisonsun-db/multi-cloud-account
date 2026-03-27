@@ -11,7 +11,7 @@ import { ExternalLink, ArrowRight, Check, X, Pencil } from "lucide-react"
 
 // ─── Account Settings Tab ─────────────────────────────────────────────────────
 
-const DEFAULT_ACCOUNT_NAME = "Databricks Staging (Dogfood Account)"
+const DEFAULT_ACCOUNT_NAME = "Databricks Bakehouse"
 
 function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: string) => void }) {
   const [accountName, setAccountName] = React.useState(saved)
