@@ -17,7 +17,7 @@
   --color-blue-800: #04355d;
 
   /* DuBois Grey (using "grey" not "gray" to avoid Tailwind conflict) */
-  --color-grey-050: #f6f7f9;
+  --color-grey-050: #f7f7f7;
   --color-grey-100: #e8ecf0;
   --color-grey-200: #d1dce5;
   --color-grey-300: #bdcdd9;
@@ -165,15 +165,15 @@
   --primary-foreground: #ffffff;
 
   /* Secondary surface — grey050 */
-  --secondary: #f6f7f9;
+  --secondary: #f7f7f7;
   --secondary-foreground: #11171c;
 
   /* Muted */
-  --muted: #f6f7f9;
+  --muted: #f7f7f7;
   --muted-foreground: #5f7281; /* grey500 — textSecondary */
 
   /* Accent */
-  --accent: #f6f7f9;
+  --accent: #f7f7f7;
   --accent-foreground: #11171c;
 
   /* Destructive — red600 */
@@ -204,7 +204,7 @@
   --chart-5: #9b6ae8;
 
   /* Sidebar */
-  --sidebar: #f6f7f9;
+  --sidebar: #f7f7f7;
   --sidebar-foreground: #11171c;
   --sidebar-primary: #2272b4;
   --sidebar-primary-foreground: #ffffff;

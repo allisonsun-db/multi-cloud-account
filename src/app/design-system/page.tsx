@@ -195,7 +195,7 @@ export default function DesignSystemPage() {
 
             <Group label="Grey — Neutrals">
               <div className="flex flex-wrap gap-4">
-                <Swatch color="#F6F7F9" label="grey-050" hex="#F6F7F9" cssVar="--muted" />
+                <Swatch color="#F7F7F7" label="grey-050" hex="#F7F7F7" cssVar="--muted" />
                 <Swatch color="#E8ECF0" label="grey-100" hex="#E8ECF0" cssVar="--border" />
                 <Swatch color="#BDCDD9" label="grey-300" hex="#BDCDD9" />
                 <Swatch color="#5F7281" label="grey-500" hex="#5F7281" cssVar="--muted-fg" />

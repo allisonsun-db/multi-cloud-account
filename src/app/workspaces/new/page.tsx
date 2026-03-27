@@ -54,7 +54,10 @@ function FormSection({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between px-4 py-3 bg-muted/50 hover:bg-muted transition-colors"
+        className={cn(
+          "flex w-full items-center justify-between px-4 py-3 bg-muted transition-colors",
+          !open && "hover:bg-border/60"
+        )}
       >
         <span className="text-sm font-semibold text-foreground">{title}</span>
         {open
@@ -122,7 +125,8 @@ function NewWorkspaceForm() {
 
   return (
     <AppShell activeItem="workspaces">
-      <div className="flex flex-col gap-6 p-6 max-w-[800px] mx-auto w-full">
+      <div className="max-w-[800px] mx-auto w-full">
+      <div className="flex flex-col gap-6 p-6 pb-0">
 
         <PageHeader
           breadcrumbs={
@@ -204,6 +208,7 @@ function NewWorkspaceForm() {
                   <SelectValue placeholder="Select credential" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="new-credential" className="text-primary focus:text-primary">Add new compute credential</SelectItem>
                   <SelectItem value="prod-compute-cred">prod-compute-cred</SelectItem>
                   <SelectItem value="staging-compute-cred">staging-compute-cred</SelectItem>
                   <SelectItem value="dev-compute-cred">dev-compute-cred</SelectItem>
@@ -216,6 +221,7 @@ function NewWorkspaceForm() {
                   <SelectValue placeholder="Select network configuration" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="new-network" className="text-primary focus:text-primary">Add new network configuration</SelectItem>
                   <SelectItem value="default">Default network</SelectItem>
                   <SelectItem value="custom-vpc">Custom VPC</SelectItem>
                   <SelectItem value="private-link">Private link only</SelectItem>
@@ -232,7 +238,7 @@ function NewWorkspaceForm() {
                   <SelectValue placeholder="Select storage configuration" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="new">Add new cloud storage</SelectItem>
+                  <SelectItem value="new" className="text-primary focus:text-primary">Add new cloud storage</SelectItem>
                   <SelectItem value="existing-1">prod-storage-bucket</SelectItem>
                   <SelectItem value="existing-2">staging-storage-bucket</SelectItem>
                 </SelectContent>
@@ -283,8 +289,10 @@ function NewWorkspaceForm() {
 
         </div>
 
+      </div>
+
         {/* Actions */}
-        <div className="flex items-center justify-end gap-2">
+        <div className="sticky bottom-0 bg-background flex items-center justify-end gap-2 px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => router.push("/workspaces")}>
             Cancel
           </Button>
