@@ -99,7 +99,7 @@ function FormRow({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function NewWorkspacePage() {
+function NewWorkspaceForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -295,5 +295,13 @@ export default function NewWorkspacePage() {
 
       </div>
     </AppShell>
+  )
+}
+
+export default function NewWorkspacePage() {
+  return (
+    <React.Suspense fallback={null}>
+      <NewWorkspaceForm />
+    </React.Suspense>
   )
 }
