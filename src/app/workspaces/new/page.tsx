@@ -43,27 +43,44 @@ function FormSection({
   title,
   children,
   defaultOpen = true,
+  headerActions,
 }: {
   title: string
   children: React.ReactNode
   defaultOpen?: boolean
+  headerActions?: React.ReactNode
 }) {
   const [open, setOpen] = React.useState(defaultOpen)
+  const ref = React.useRef<HTMLDivElement>(null)
+
+  function toggle() {
+    const opening = !open
+    setOpen(opening)
+    if (opening) {
+      setTimeout(() => ref.current?.scrollIntoView({ behavior: "smooth", block: "end" }), 50)
+    }
+  }
+
   return (
-    <div className="rounded-md border border-border overflow-hidden">
+    <div ref={ref} className="rounded-md border border-border overflow-hidden">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggle}
         className={cn(
           "flex w-full items-center justify-between px-4 py-3 bg-muted transition-colors",
           !open && "hover:bg-border/60"
         )}
       >
         <span className="text-sm font-semibold text-foreground">{title}</span>
-        {open
-          ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          : <ChevronDown className="h-4 w-4 text-muted-foreground" />
-        }
+        <span className="flex items-center gap-2">
+          {headerActions && (
+            <span onClick={(e) => e.stopPropagation()}>{headerActions}</span>
+          )}
+          {open
+            ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+            : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          }
+        </span>
       </button>
       {open && <div>{children}</div>}
     </div>
@@ -115,6 +132,8 @@ function NewWorkspaceForm() {
   const [computeNetworkConfig, setComputeNetworkConfig] = React.useState("")
   const [networkConfig, setNetworkConfig] = React.useState("")
   const [privateLink, setPrivateLink] = React.useState("")
+  const [cmkManaged, setCmkManaged] = React.useState("")
+  const [cmkStorage, setCmkStorage] = React.useState("")
 
   const regions = cloud ? (REGIONS[cloud] ?? []) : []
   const canSubmit = name.trim() && cloud && region
@@ -282,6 +301,34 @@ function NewWorkspaceForm() {
                   <SelectItem value="front-end">Front-end only</SelectItem>
                   <SelectItem value="back-end">Back-end only</SelectItem>
                   <SelectItem value="both">Front-end and back-end</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormRow>
+          </FormSection>
+
+          {/* Encryption */}
+          <FormSection title="Encryption (optional)">
+            <FormRow label="CMK for managed services" info>
+              <Select value={cmkManaged || undefined} onValueChange={setCmkManaged}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select key" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new-key" className="text-primary focus:text-primary">Add new encryption key</SelectItem>
+                  <SelectItem value="encryption-key">encryption-key (Assigned identity)</SelectItem>
+                  <SelectItem value="key-2">key-2 (Assigned identity)</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormRow>
+            <FormRow label="CMK for workspace storage" info>
+              <Select value={cmkStorage || undefined} onValueChange={setCmkStorage}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select key" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new-key" className="text-primary focus:text-primary">Add new encryption key</SelectItem>
+                  <SelectItem value="encryption-key">encryption-key (Assigned identity)</SelectItem>
+                  <SelectItem value="key-2">key-2 (Assigned identity)</SelectItem>
                 </SelectContent>
               </Select>
             </FormRow>
