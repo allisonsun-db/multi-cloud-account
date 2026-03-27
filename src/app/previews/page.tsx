@@ -144,11 +144,11 @@ export default function PreviewsPage() {
         {/* Header */}
         <h1 className="text-xl font-semibold text-foreground mb-1">Previews</h1>
         <p className="text-sm text-muted-foreground mb-4">
-          Manage previews. Learn more about use of{" "}
+        Try out previews as new capabilities are rolled out. Changes apply within a few minutes. {" "}
           <a href="#" className="text-primary inline-flex items-center gap-0.5 hover:underline">
-            previews <ExternalLink className="h-3 w-3" />
+            Learn more <ExternalLink className="h-3 w-3" />
           </a>
-          . More previews will continue to be added to this page. Preview enablement or disablement changes take effect in a few minutes.
+          .
         </p>
 
         {/* Filters */}
