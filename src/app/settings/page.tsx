@@ -111,8 +111,8 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
       <div className="border-t border-border" />
 
       {/* Auto redirect settings */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-foreground">Auto redirect settings</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className="text-sm font-semibold text-foreground">Auto redirect</h2>
         <div className="rounded-md border border-border overflow-hidden">
           {/* Row 1 */}
           <div className="flex items-center gap-3 px-4 py-3 border-b border-border">

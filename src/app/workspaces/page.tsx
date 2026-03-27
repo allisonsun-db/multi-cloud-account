@@ -73,24 +73,23 @@ export default function WorkspacesPage() {
     <AppShell activeItem="workspaces">
       <div className="flex flex-col gap-4 p-6">
 
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-foreground">Workspaces</h1>
-          <Button size="sm">Create workspace</Button>
-        </div>
+        <h1 className="text-xl font-semibold text-foreground">Workspaces</h1>
 
-        {/* Filters */}
-        <div className="flex items-center gap-2">
-          <div className="relative w-56">
-            <Input
-              placeholder="Filter workspaces"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="pr-8"
-            />
-            <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        {/* Filters + action */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="relative w-56">
+              <Input
+                placeholder="Filter workspaces"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="pr-8"
+              />
+              <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            </div>
+            <LocationPicker value={location} onChange={setLocation} cloudRegions={cloudRegions} />
           </div>
-          <LocationPicker value={location} onChange={setLocation} cloudRegions={cloudRegions} />
+          <Button size="sm">Create workspace</Button>
         </div>
 
         {/* Table */}

@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
-import { Search, ChevronsUpDown } from "lucide-react"
+import { Search } from "lucide-react"
 import { LocationPicker, buildCloudRegions, CLOUD_ICONS } from "@/components/ui/location-picker"
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -58,13 +58,10 @@ export default function CatalogPage() {
 
   return (
     <AppShell activeItem="catalog">
-      <div className="flex flex-col gap-6 p-6">
-
-        {/* Page title */}
+      <div className="flex flex-col gap-4 p-6">
         <h1 className="text-xl font-semibold text-foreground">Metastore</h1>
 
-        <div className="flex flex-col gap-3">
-          {/* Filter + action */}
+        {/* Filter + action */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="relative w-56">
@@ -85,11 +82,7 @@ export default function CatalogPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="font-semibold text-foreground">
-                  <div className="flex items-center gap-1">
-                    Name <ChevronsUpDown className="h-3.5 w-3.5" />
-                  </div>
-                </TableHead>
+                <TableHead className="font-semibold text-foreground w-[320px]">Name</TableHead>
                 <TableHead className="font-semibold text-foreground"><div className="flex justify-center">Cloud</div></TableHead>
                 <TableHead className="font-semibold text-foreground">Region</TableHead>
                 <TableHead className="font-semibold text-foreground">Path</TableHead>
@@ -114,7 +107,6 @@ export default function CatalogPage() {
               ))}
             </TableBody>
           </Table>
-        </div>
 
       </div>
     </AppShell>
