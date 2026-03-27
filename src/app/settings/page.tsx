@@ -90,7 +90,7 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
             <span className="text-sm text-foreground">{customUrlEnabled ? "On" : "Off"}</span>
             <Switch checked={customUrlEnabled} onCheckedChange={setCustomUrlEnabled} />
           </div>
-          <span className="text-sm text-muted-foreground">dogfood.staging.databricks.com</span>
+          <span className="text-sm text-accent-foreground">dogfood.staging.databricks.com</span>
         </div>
       </section>
 
@@ -126,11 +126,11 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
           </div>
           {/* Row 2 */}
           <div className="flex items-center gap-3 px-4 py-3">
-            <span className="text-sm text-muted-foreground">All previous workspace URLs</span>
+            <span className="text-sm text-accent-foreground">All previous workspace URLs</span>
             <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
             <span className="text-sm rounded bg-muted px-2 py-0.5 text-foreground">dogfood.staging.databricks.com</span>
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-sm text-foreground font-semibold">{redirectRow2 ? "On" : "Off"}</span>
+              <span className="text-sm text-foreground">{redirectRow2 ? "On" : "Off"}</span>
               <Switch checked={redirectRow2} onCheckedChange={setRedirectRow2} />
             </div>
           </div>

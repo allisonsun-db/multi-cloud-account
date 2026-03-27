@@ -95,6 +95,12 @@ className={cn(
 
 ---
 
+## Label (`components/ui/label.tsx`)
+
+Field labels (inputs, selects, textareas) use **`font-semibold` (600)** per DuBois. For checkbox, radio, and switch labels that should read as body text next to the control, pass **`className="font-normal"`** (and e.g. `cursor-pointer`) so `tailwind-merge` overrides the default weight.
+
+---
+
 ## P0 — Badge (`components/ui/badge.tsx`)
 
 Add DuBois secondary color variants. Each uses light background + darker text.

@@ -1,17 +1,25 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { CheckCircleIcon } from "@/components/icons"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { ExternalLink, Search } from "lucide-react"
-import { LocationPicker, buildCloudRegions, CLOUD_ICONS } from "@/components/ui/location-picker"
+import { ExternalLink, Search, ChevronRight } from "lucide-react"
+import { LocationPicker, buildCloudRegions, CLOUD_ICONS, CLOUD_LOGO } from "@/components/ui/location-picker"
 import { cn } from "@/lib/utils"
+import {
+  Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter, DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -51,15 +59,222 @@ const WORKSPACES: Workspace[] = [
   { id: "20", name: "model-serving-prod",     status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",   credentialName: "Serverless",        created: "03/15/2026",        metastore: "prod-metastore" },
 ]
 
+// ─── Create Workspace Modal ────────────────────────────────────────────────────
+
+type DeploymentOption = {
+  value: string
+  label: string
+  description: string
+}
+
+const DEPLOYMENT_OPTIONS: DeploymentOption[] = [
+  {
+    value: "serverless",
+    label: "Use serverless compute with default storage",
+    description: "No setup required. Databricks will manage compute and storage.",
+  },
+  {
+    value: "existing",
+    label: "Use existing cloud account",
+    description: "Connect to your cloud account to use your own storage and resources.",
+  },
+]
+
+function RadioTile({
+  option,
+  selected,
+  onSelect,
+}: {
+  option: DeploymentOption
+  selected: boolean
+  onSelect: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex flex-col gap-1 p-4 rounded-md text-left w-full cursor-pointer transition-colors",
+        selected
+          ? "border border-primary bg-background"
+          : "border border-border bg-background hover:border-muted-foreground/40"
+      )}
+    >
+      <div className="flex items-start gap-2 w-full">
+        <span className="flex-1 text-sm text-foreground leading-5">{option.label}</span>
+        {/* Radio circle */}
+        <span className={cn(
+          "mt-0.5 shrink-0 size-4 rounded-full border transition-colors",
+          selected
+            ? "bg-primary border-primary flex items-center justify-center"
+            : "border-border bg-background"
+        )}>
+          {selected && <span className="block size-1.5 rounded-sm bg-background" />}
+        </span>
+      </div>
+      <p className="text-sm text-muted-foreground">{option.description}</p>
+    </button>
+  )
+}
+
+const ALL_CLOUD_REGIONS = buildCloudRegions(WORKSPACES)
+
+function CreateWorkspaceModal({ onCreated }: { onCreated: (ws: Workspace) => void }) {
+  const router = useRouter()
+  const [open, setOpen] = React.useState(false)
+  const [name, setName] = React.useState("")
+  const [deployment, setDeployment] = React.useState("serverless")
+  const [moreOpen, setMoreOpen] = React.useState(false)
+  const [cloud, setCloud] = React.useState("")
+  const [region, setRegion] = React.useState("")
+
+  const regions = cloud ? (ALL_CLOUD_REGIONS[cloud] ?? []) : []
+
+  function resetForm() {
+    setName("")
+    setDeployment("serverless")
+    setMoreOpen(false)
+    setCloud("")
+    setRegion("")
+  }
+
+  function handleContinue() {
+    if (deployment === "existing") {
+      setOpen(false)
+      resetForm()
+      router.push(`/workspaces/new?name=${encodeURIComponent(name)}`)
+      return
+    }
+    const newWs: Workspace = {
+      id: String(Date.now()),
+      name,
+      status: "Running",
+      cloud: (cloud || "AWS") as Workspace["cloud"],
+      pricingTier: "Enterprise",
+      region: region || "—",
+      storage: "Serverless",
+      credentialName: "Serverless",
+      created: "just now",
+      metastore: null,
+    }
+    onCreated(newWs)
+    setOpen(false)
+    resetForm()
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) resetForm() }}>
+      <DialogTrigger asChild>
+        <Button size="sm">Create workspace</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[640px]">
+        <DialogHeader className="px-6 pt-4 pb-0">
+          <DialogTitle className="text-[22px] font-semibold leading-7">Create workspace</DialogTitle>
+        </DialogHeader>
+        <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-4">
+          {/* Name */}
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="ws-name">Name</Label>
+            <Input
+              id="ws-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+
+          {/* Deployment */}
+          <div className="flex flex-col gap-2">
+            <Label>Deployment</Label>
+            <div className="flex gap-2">
+              {DEPLOYMENT_OPTIONS.map((option) => (
+                <RadioTile
+                  key={option.value}
+                  option={option}
+                  selected={deployment === option.value}
+                  onSelect={() => setDeployment(option.value)}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* More — only shown for serverless */}
+          {deployment === "serverless" && (
+            <div className="flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={() => setMoreOpen((v) => !v)}
+                className="flex items-center gap-1 text-sm font-semibold text-foreground hover:text-primary w-fit"
+              >
+                <ChevronRight className={cn("h-4 w-4 text-muted-foreground transition-transform", moreOpen && "rotate-90")} />
+                More
+              </button>
+              {moreOpen && (
+                <div className="flex gap-2">
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <Label>Cloud</Label>
+                    <Select value={cloud} onValueChange={(v) => { setCloud(v); setRegion("") }}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select cloud" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(["AWS", "Azure", "GCP"] as const).map((c) => (
+                          <SelectItem key={c} value={c}>
+                            <span className="flex items-center gap-2">
+                              <img
+                                src={CLOUD_LOGO[c]}
+                                alt={c}
+                                width={14}
+                                height={14}
+                                className={cn("object-contain", c === "AWS" && "dark:[filter:brightness(0)_invert(1)]")}
+                              />
+                              {c}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex flex-col gap-1.5 flex-1">
+                    <Label>Region</Label>
+                    <Select value={region} onValueChange={setRegion} disabled={!cloud}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {regions.map((r) => (
+                          <SelectItem key={r} value={r}>{r}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogBody>
+        <DialogFooter className="px-6 pt-4 pb-6">
+          <DialogClose asChild>
+            <Button variant="outline" size="sm">Cancel</Button>
+          </DialogClose>
+          <Button size="sm" onClick={handleContinue} disabled={!name.trim()}>
+            {deployment === "serverless" ? "Create" : "Continue"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function WorkspacesPage() {
   const [filter, setFilter] = React.useState("")
   const [location, setLocation] = React.useState("all")
+  const [workspaces, setWorkspaces] = React.useState<Workspace[]>(WORKSPACES)
 
-  const cloudRegions = React.useMemo(() => buildCloudRegions(WORKSPACES), [])
+  const cloudRegions = React.useMemo(() => buildCloudRegions(workspaces), [workspaces])
 
-  const filtered = WORKSPACES.filter((w) => {
+  const filtered = workspaces.filter((w) => {
     if (filter && !w.name.toLowerCase().includes(filter.toLowerCase())) return false
     if (location === "all") return true
     if (location.includes(":")) {
@@ -89,7 +304,7 @@ export default function WorkspacesPage() {
             </div>
             <LocationPicker value={location} onChange={setLocation} cloudRegions={cloudRegions} />
           </div>
-          <Button size="sm">Create workspace</Button>
+          <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
         </div>
 
         {/* Table */}

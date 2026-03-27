@@ -46,7 +46,7 @@ export function LocationPicker({ value, onChange, cloudRegions }: {
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setActiveCloud(null) }}>
       <PopoverTrigger asChild>
-        <button className={cn("flex h-8 w-52 items-center justify-between rounded border border-border bg-background px-3 text-sm hover:bg-muted", value === "all" ? "text-muted-foreground" : "text-foreground")}>
+        <button className={cn("flex h-8 w-52 items-center justify-between rounded border border-border bg-background px-3 text-sm shadow-xs hover:bg-muted", value === "all" ? "text-muted-foreground" : "text-foreground")}>
           <span className="truncate">{label}</span>
           {value !== "all" ? (
             <span

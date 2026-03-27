@@ -97,6 +97,7 @@ export default function MyPage() {
 |---|---|
 | `Button` | 4px radius · `sm` 32px (default) · `xs` 24px · `icon-sm` / `icon-xs` |
 | `Input` / `Select` | 32px height · 4px radius · inset focus ring |
+| `Label` | `font-semibold` (600) for inputs & selects · override with `font-normal` for checkboxes / switches |
 | `Badge` | Rectangular · 9 secondary palette variants (`coral` `teal` `indigo` `lime` …) |
 | `Alert` | Full border + tinted background · 4 severity variants |
 | `Dialog` | 40px padding · no dividers · `DialogBody` slot |

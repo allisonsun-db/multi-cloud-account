@@ -325,7 +325,11 @@ export default function DesignSystemPage() {
         </Section>
 
         {/* ── Form Controls ──────────────────────────────────────────────── */}
-        <Section id="forms" title="Form Controls" description="40px input height, 4px radius, grey100 border, blue600 focus ring.">
+        <Section
+          id="forms"
+          title="Form Controls"
+          description="Labels for inputs, selects, and textareas use font-semibold (600). 32px control height, 4px radius, grey100 border, blue600 focus ring."
+        >
           <div className="grid grid-cols-2 gap-8">
             <div className="flex flex-col gap-4">
               <Group label="Text Input">

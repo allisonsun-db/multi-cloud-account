@@ -43,6 +43,7 @@ These shadcn components have DuBois overrides — use them as-is:
 - **`Button`** — 4px radius, sizes: `sm` 32px (default) · `xs` 24px · `icon-sm` 32px · `icon-xs` 24px, **font-weight 400 (normal)**, variants: `default` `outline` `ghost` `destructive` `link`
 - **`Input`** — 32px height (`h-8`), 4px radius, inset focus ring (no offset)
 - **`Select`** / **`SelectTrigger`** — 32px height (`h-8`), 4px radius, no size variants
+- **`Label`** — `text-sm` (13px), **`font-semibold` (600)** for field labels; use `className="font-normal"` for checkbox / switch / inline control labels
 - **`Badge`** — rectangular (4px radius), variants: `default` `secondary` `destructive` `outline` `coral` `brown` `indigo` `lemon` `lime` `pink` `purple` `teal` `turquoise`
 - **`Dialog`** / **`DialogHeader`** / **`DialogFooter`** / **`DialogBody`** — 40px padding, no dividers
 - **`Table`** / **`TableRow`** — DuBois hover/selected row colors; **`TableHead`** always `text-sm` (13px)
