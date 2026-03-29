@@ -307,7 +307,7 @@ function NewWorkspaceForm() {
           </FormSection>
 
           {/* Encryption */}
-          <FormSection title="Encryption (optional)">
+          <FormSection title="Encryption (optional)" defaultOpen={false}>
             <FormRow label="CMK for managed services" info>
               <Select value={cmkManaged || undefined} onValueChange={setCmkManaged}>
                 <SelectTrigger>

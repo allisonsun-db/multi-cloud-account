@@ -336,7 +336,7 @@ export default function WorkspacesPage() {
                     </Tooltip>
                   </TableCell>
                   <TableCell>
-                    <a href="#" className="text-primary hover:underline truncate block max-w-[120px]">
+                    <a href={`/workspaces/${ws.id}`} className="text-primary hover:underline truncate block max-w-[120px]">
                       {ws.name}
                     </a>
                   </TableCell>
