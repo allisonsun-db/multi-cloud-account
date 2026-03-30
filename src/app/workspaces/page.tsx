@@ -37,26 +37,26 @@ type Workspace = {
 }
 
 const WORKSPACES: Workspace[] = [
-  { id: "1",  name: "prod-us-west",           status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "Default",   credentialName: "Serverless",        created: "yesterday at ...",  metastore: "prod-metastore" },
-  { id: "2",  name: "prod-us-east",           status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Serverless", credentialName: "prod-storage-cred", created: "yesterday at ...",  metastore: "prod-metastore" },
-  { id: "3",  name: "staging-us-west",        status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "Default",   credentialName: "Serverless",        created: "yesterday at ...",  metastore: "staging-metast..." },
-  { id: "4",  name: "staging-us-east",        status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "eastus",            storage: "Default",   credentialName: "Serverless",        created: "last Tuesday ...",  metastore: "staging-metast..." },
-  { id: "5",  name: "data-eng-prod",          status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "eastus2",           storage: "Default",   credentialName: "Serverless",        created: "last Tuesday ...",  metastore: "prod-metastore" },
-  { id: "6",  name: "ml-platform-prod",       status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "us-central1",       storage: "Default",   credentialName: "Serverless",        created: "last Tuesday ...",  metastore: "prod-metastore" },
-  { id: "7",  name: "analytics-prod",         status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",   credentialName: "Serverless",        created: "last Monday ...",   metastore: null },
-  { id: "8",  name: "analytics-staging",      status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "westeurope",        storage: "Default",   credentialName: "Serverless",        created: "last Monday ...",   metastore: "staging-metast..." },
-  { id: "9",  name: "finance-reporting",      status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "europe-west1",      storage: "Default",   credentialName: "Serverless",        created: "last Friday at...", metastore: "prod-metastore" },
-  { id: "10", name: "risk-modeling",          status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",   credentialName: "Serverless",        created: "last Friday at...", metastore: "prod-metastore" },
-  { id: "11", name: "marketing-analytics",    status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "eastus",            storage: "Default",   credentialName: "Serverless",        created: "03/19/2026",        metastore: "prod-metastore" },
-  { id: "12", name: "customer-data-platform", status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",   credentialName: "Serverless",        created: "03/19/2026",        metastore: "prod-metastore" },
-  { id: "13", name: "security-audit",         status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "us-west1",          storage: "Default",   credentialName: "Serverless",        created: "03/18/2026",        metastore: "prod-metastore" },
-  { id: "14", name: "data-science-sandbox",   status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "Default",   credentialName: "Serverless",        created: "03/18/2026",        metastore: "dev-metastore" },
-  { id: "15", name: "platform-dev",           status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "westus2",           storage: "Default",   credentialName: "Serverless",        created: "03/18/2026",        metastore: "dev-metastore" },
-  { id: "16", name: "etl-orchestration",      status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "us-east1",          storage: "Default",   credentialName: "Serverless",        created: "03/18/2026",        metastore: "prod-metastore" },
-  { id: "17", name: "realtime-streaming",     status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "Default",   credentialName: "Serverless",        created: "03/17/2026",        metastore: "prod-metastore" },
-  { id: "18", name: "supply-chain-analytics", status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "northeurope",       storage: "Default",   credentialName: "Serverless",        created: "03/17/2026",        metastore: "prod-metastore" },
-  { id: "19", name: "feature-store-prod",     status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "asia-east1",        storage: "Default",   credentialName: "Serverless",        created: "03/16/2026",        metastore: "prod-metastore" },
-  { id: "20", name: "model-serving-prod",     status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",   credentialName: "Serverless",        created: "03/15/2026",        metastore: "prod-metastore" },
+  { id: "1",  name: "prod-us-west",           status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "Default",            credentialName: "Serverless",              created: "yesterday at ...",  metastore: "prod-metastore" },
+  { id: "2",  name: "prod-us-east",           status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "prod-storage-bucket", credentialName: "Serverless and classic",  created: "yesterday at ...",  metastore: "prod-metastore" },
+  { id: "3",  name: "staging-us-west",        status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "Default",            credentialName: "Serverless",              created: "yesterday at ...",  metastore: "staging-metast..." },
+  { id: "4",  name: "staging-us-east",        status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "eastus",            storage: "Default",            credentialName: "Serverless",              created: "last Tuesday ...",  metastore: "staging-metast..." },
+  { id: "5",  name: "data-eng-prod",          status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "eastus2",           storage: "Default",            credentialName: "Serverless and classic",  created: "last Tuesday ...",  metastore: "prod-metastore" },
+  { id: "6",  name: "ml-platform-prod",       status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "us-central1",       storage: "Default",            credentialName: "Serverless",              created: "last Tuesday ...",  metastore: "prod-metastore" },
+  { id: "7",  name: "analytics-prod",         status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",            credentialName: "Serverless",              created: "last Monday ...",   metastore: null },
+  { id: "8",  name: "analytics-staging",      status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "westeurope",        storage: "Default",            credentialName: "Serverless",              created: "last Monday ...",   metastore: "staging-metast..." },
+  { id: "9",  name: "finance-reporting",      status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "europe-west1",      storage: "custom-gcs-bucket",  credentialName: "Serverless and classic",  created: "last Friday at...", metastore: "prod-metastore" },
+  { id: "10", name: "risk-modeling",          status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",            credentialName: "Serverless",              created: "last Friday at...", metastore: "prod-metastore" },
+  { id: "11", name: "marketing-analytics",    status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "eastus",            storage: "Default",            credentialName: "Serverless",              created: "03/19/2026",        metastore: "prod-metastore" },
+  { id: "12", name: "customer-data-platform", status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",            credentialName: "Serverless",              created: "03/19/2026",        metastore: "prod-metastore" },
+  { id: "13", name: "security-audit",         status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "us-west1",          storage: "Default",            credentialName: "Serverless",              created: "03/18/2026",        metastore: "prod-metastore" },
+  { id: "14", name: "data-science-sandbox",   status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "staging-s3-bucket",  credentialName: "Serverless and classic",  created: "03/18/2026",        metastore: "dev-metastore" },
+  { id: "15", name: "platform-dev",           status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "westus2",           storage: "Default",            credentialName: "Serverless",              created: "03/18/2026",        metastore: "dev-metastore" },
+  { id: "16", name: "etl-orchestration",      status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "us-east1",          storage: "Default",            credentialName: "Serverless",              created: "03/18/2026",        metastore: "prod-metastore" },
+  { id: "17", name: "realtime-streaming",     status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-west-2",         storage: "Default",            credentialName: "Serverless",              created: "03/17/2026",        metastore: "prod-metastore" },
+  { id: "18", name: "supply-chain-analytics", status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "northeurope",       storage: "Default",            credentialName: "Serverless and classic",  created: "03/17/2026",        metastore: "prod-metastore" },
+  { id: "19", name: "feature-store-prod",     status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "asia-east1",        storage: "Default",            credentialName: "Serverless",              created: "03/16/2026",        metastore: "prod-metastore" },
+  { id: "20", name: "model-serving-prod",     status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",            credentialName: "Serverless",              created: "03/15/2026",        metastore: "prod-metastore" },
 ]
 
 // ─── Create Workspace Modal ────────────────────────────────────────────────────
@@ -317,7 +317,7 @@ export default function WorkspacesPage() {
                 <TableHead className="font-semibold text-foreground"><div className="flex justify-center">Cloud</div></TableHead>
                 <TableHead className="font-semibold text-foreground">Region</TableHead>
                 <TableHead className="font-semibold text-foreground">Storage</TableHead>
-                <TableHead className="font-semibold text-foreground">Credential</TableHead>
+                <TableHead className="font-semibold text-foreground">Compute</TableHead>
                 <TableHead className="font-semibold text-foreground">Created</TableHead>
                 <TableHead className="font-semibold text-foreground">Pricing tier</TableHead>
                 <TableHead className="font-semibold text-foreground">Metastore</TableHead>
@@ -354,11 +354,7 @@ export default function WorkspacesPage() {
                   <TableCell>
                     <span className={cn(ws.storage === "Default" && "italic")}>{ws.storage}</span>
                   </TableCell>
-                  <TableCell className="max-w-[120px] truncate">
-                    {ws.credentialName === "Serverless"
-                      ? <span className="italic">{ws.credentialName}</span>
-                      : ws.credentialName}
-                  </TableCell>
+                  <TableCell>{ws.credentialName}</TableCell>
                   <TableCell>{ws.created}</TableCell>
                   <TableCell>{ws.pricingTier}</TableCell>
                   <TableCell>

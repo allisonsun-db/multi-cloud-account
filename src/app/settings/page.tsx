@@ -135,15 +135,12 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
               <span className="text-sm font-semibold text-foreground">Multi-cloud</span>
               <p className="text-sm text-muted-foreground">Enable workspaces across multiple cloud providers under this account.</p>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="text-sm text-foreground">{multiCloud ? "On" : "Off"}</span>
-              <Switch
-                checked={multiCloud}
-                onCheckedChange={(v) => {
-                  if (v) setMultiCloudModal(true)
-                  else setMultiCloud(false)
-                }}
-              />
+            <div className="shrink-0">
+              {multiCloud ? (
+                <Button variant="outline" size="sm" onClick={() => setMultiCloud(false)}>Disable</Button>
+              ) : (
+                <Button variant="outline" size="sm" className="shadow-xs" onClick={() => setMultiCloudModal(true)}>Enable</Button>
+              )}
             </div>
           </div>
 
