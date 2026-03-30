@@ -151,9 +151,9 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
           {multiCloud && (
           <>
             {([
-              { key: "AWS",   name: "Amazon Web Services",  desc: "Deploy workspaces and resources on AWS infrastructure" },
-              { key: "Azure", name: "Microsoft Azure",      desc: "Deploy workspaces and resources on Azure infrastructure" },
-              { key: "GCP",   name: "Google Cloud Platform", desc: "Deploy workspaces and resources on GCP infrastructure" },
+              { key: "AWS",   name: "Amazon Web Services",  desc: "Deploy workspaces and resources on AWS" },
+              { key: "Azure", name: "Microsoft Azure",      desc: "Deploy workspaces and resources on Azure" },
+              { key: "GCP",   name: "Google Cloud Platform", desc: "Deploy workspaces and resources on GCP" },
             ] as const).map(({ key, name, desc }) => (
               <React.Fragment key={key}>
                 <div className="border-t border-border mx-4" />

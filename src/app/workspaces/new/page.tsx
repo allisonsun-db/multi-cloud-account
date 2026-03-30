@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { ChevronUp, ChevronDown, Info, CircleCheck } from "lucide-react"
+import { ChevronUp, ChevronDown, Info, CircleCheck, ExternalLink } from "lucide-react"
 import { AppShell } from "@/components/shell"
 import { PageHeader } from "@/components/shell"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { CLOUD_LOGO } from "@/components/ui/location-picker"
 import { Switch } from "@/components/ui/switch"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
@@ -96,24 +97,29 @@ function FormRow({
   required,
   info,
   hint,
+  labelHint,
   children,
 }: {
   label: string
   required?: boolean
   info?: boolean
-  hint?: string
+  hint?: React.ReactNode
+  labelHint?: React.ReactNode
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:h-12 sm:items-center gap-1 sm:gap-4 px-4 py-2.5 sm:py-2">
-      <div className="flex items-center gap-1 sm:w-[280px] sm:shrink-0">
-        <span className="text-sm text-foreground">{label}</span>
-        {required && <span className="text-destructive text-sm">*</span>}
-        {info && <Info className="h-3.5 w-3.5 text-muted-foreground" />}
+    <div className={cn("flex flex-col sm:flex-row gap-1 sm:gap-4 px-4 py-2.5 sm:py-2", hint ? "sm:items-start" : "sm:h-12 sm:items-center")}>
+      <div className={cn("flex flex-col gap-0.5 sm:w-[280px] sm:shrink-0", hint && "sm:pt-[6px]")}>
+        <div className="flex items-center gap-1">
+          <span className="text-sm text-foreground">{label}</span>
+          {required && <span className="text-destructive text-sm">*</span>}
+          {info && <Info className="h-3.5 w-3.5 text-muted-foreground" />}
+          {labelHint && <span className="text-xs text-muted-foreground">{labelHint}</span>}
+        </div>
       </div>
       <div className="flex flex-col gap-1 flex-1 min-w-0">
         {children}
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+        {hint && <p className="text-xs text-muted-foreground pt-1 px-2">{hint}</p>}
       </div>
     </div>
   )
@@ -136,6 +142,11 @@ function NewWorkspaceForm() {
   const [privateLink, setPrivateLink] = React.useState("")
   const [cmkManaged, setCmkManaged] = React.useState("")
   const [cmkStorage, setCmkStorage] = React.useState("")
+  const [projectId, setProjectId] = React.useState("")
+  const [resourceGroup, setResourceGroup] = React.useState("")
+  const [pricingTier, setPricingTier] = React.useState("")
+  const [secureClusterConnectivity, setSecureClusterConnectivity] = React.useState(false)
+  const [customVNet, setCustomVNet] = React.useState(false)
 
   const regions = cloud ? (REGIONS[cloud] ?? []) : []
   const canSubmit = name.trim() && cloud && region
@@ -212,10 +223,35 @@ function NewWorkspaceForm() {
                 </Select>
               </div>
             </FormRow>
+            {cloud === "Azure" && (
+              <FormRow label="Pricing tier">
+                <Select value={pricingTier || undefined} onValueChange={setPricingTier}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="standard">Standard</SelectItem>
+                    <SelectItem value="premium">Premium</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FormRow>
+            )}
+            {cloud === "GCP" && (
+              <FormRow label="Project ID" required hint={<a href="#" className="text-primary inline-flex items-center gap-0.5">How to find it <ExternalLink className="h-3 w-3" /></a>}>
+                <Input
+                  placeholder="my-gcp-project"
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                />
+              </FormRow>
+            )}
           </FormSection>
 
           {/* Compute */}
           <FormSection title="Compute">
+            {!cloud ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground">Select a cloud to configure compute.</div>
+            ) : <>
             <FormRow label="Serverless compute">
               <div className="flex items-center gap-1.5 text-sm text-accent-foreground">
                 <CircleCheck className="h-4 w-4 text-[var(--success)]" />
@@ -235,9 +271,19 @@ function NewWorkspaceForm() {
                     At the moment, classic compute must be enabled for workspaces using cloud accounts.
                   </TooltipContent>
                 </Tooltip>
-                <span className="text-sm text-muted-foreground">Enable</span>
+                <span className="text-sm text-accent-foreground">Enable</span>
               </div>
             </FormRow>
+            {cloud === "Azure" && <>
+            <FormRow label="Resource group" info>
+              <Input
+                placeholder="my-resource-group"
+                value={resourceGroup}
+                onChange={(e) => setResourceGroup(e.target.value)}
+              />
+            </FormRow>
+            </>}
+            {cloud === "AWS" && <>
             <FormRow label="Compute credentials" required>
               <Select value={credential || undefined} onValueChange={setCredential}>
                 <SelectTrigger>
@@ -264,10 +310,22 @@ function NewWorkspaceForm() {
                 </SelectContent>
               </Select>
             </FormRow>
+            </>}
+            </>}
           </FormSection>
 
           {/* Storage */}
           <FormSection title="Storage">
+            {cloud === "GCP" ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground">
+                Two GCS buckets will be automatically created in your GCP project for workspace storage.{" "}
+                <a href="#" className="text-primary">Learn more</a>
+              </div>
+            ) : cloud === "Azure" ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground">Storage will be automatically provisioned for you.</div>
+            ) : !cloud ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground">Select a cloud to configure storage.</div>
+            ) : <>
             <FormRow label="Workspace storage" required>
               <Select value={storage || undefined} onValueChange={setStorage}>
                 <SelectTrigger>
@@ -292,10 +350,34 @@ function NewWorkspaceForm() {
                 </SelectContent>
               </Select>
             </FormRow>
+            </>}
           </FormSection>
 
           {/* Networking */}
           <FormSection title="Networking">
+            {!cloud ? (
+              <div className="px-4 py-6 text-sm text-muted-foreground">Select a cloud to configure networking.</div>
+            ) : <>
+            {cloud === "Azure" ? (<>
+              <FormRow label="Secure cluster connectivity" info>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={secureClusterConnectivity}
+                    onCheckedChange={(v) => setSecureClusterConnectivity(!!v)}
+                  />
+                  <span className="text-sm text-foreground">Deploy workspace with secure cluster connectivity</span>
+                </div>
+              </FormRow>
+              <FormRow label="Virtual Network (VNet)" info>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    checked={customVNet}
+                    onCheckedChange={(v) => setCustomVNet(!!v)}
+                  />
+                  <span className="text-sm text-foreground">Deploy workspace in custom VNet</span>
+                </div>
+              </FormRow>
+            </>) : <>
             <FormRow label="Network connectivity configuration" required>
               <Select value={networkConfig || undefined} onValueChange={setNetworkConfig}>
                 <SelectTrigger>
@@ -321,6 +403,8 @@ function NewWorkspaceForm() {
                 </SelectContent>
               </Select>
             </FormRow>
+            </>}
+            </>}
           </FormSection>
 
           {/* Encryption */}
