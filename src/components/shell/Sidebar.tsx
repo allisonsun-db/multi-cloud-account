@@ -42,7 +42,7 @@ const NAV_SECTIONS: NavSection[] = [
       { id: "usage",            label: "Usage",            icon: ChartLineIcon },
       { id: "user-management",  label: "Identity and access",  icon: UserGroupIcon, href: "https://db-ui-mockups.vercel.app/user-management" },
       { id: "security",         label: "Security",         icon: ShieldCheckIcon, href: "https://db-ui-mockups.vercel.app/security" },
-      { id: "cloud-resources",  label: "Cloud resources",  icon: CloudIcon },
+      { id: "cloud-resources",  label: "Cloud resources",  icon: CloudIcon, href: "/cloud-resources" },
       { id: "previews",         label: "Previews",         icon: GiftIcon,  href: "/previews" },
       { id: "settings",         label: "Settings",         icon: GearIcon,  href: "/settings" },
     ],

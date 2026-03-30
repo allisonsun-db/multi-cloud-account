@@ -133,7 +133,7 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
           <div className="flex items-center justify-between gap-8 px-4 py-4">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-foreground">Multi-cloud</span>
-              <p className="text-sm text-muted-foreground">Enable workspaces across multiple cloud providers under this account.</p>
+              <p className="text-sm text-muted-foreground">Enable management across clouds under your account.</p>
             </div>
             <div className="shrink-0">
               {multiCloud ? (
