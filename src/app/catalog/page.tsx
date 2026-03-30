@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table"
 import { Search } from "lucide-react"
 import { LocationPicker, buildCloudRegions, CLOUD_ICONS } from "@/components/ui/location-picker"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 type Metastore = {
@@ -98,7 +99,16 @@ export default function CatalogPage() {
                       {m.name}
                     </a>
                   </TableCell>
-                  <TableCell><div className="flex justify-center">{CLOUD_ICONS[m.cloud]}</div></TableCell>
+                  <TableCell>
+                    <div className="flex justify-center">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>{CLOUD_ICONS[m.cloud]}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>{m.cloud}</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TableCell>
                   <TableCell>{m.region}</TableCell>
                   <TableCell className="text-muted-foreground">{m.path || ""}</TableCell>
                   <TableCell>{m.createdAt}</TableCell>

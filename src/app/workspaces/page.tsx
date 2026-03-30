@@ -340,7 +340,16 @@ export default function WorkspacesPage() {
                       {ws.name}
                     </a>
                   </TableCell>
-                  <TableCell><div className="flex justify-center">{CLOUD_ICONS[ws.cloud]}</div></TableCell>
+                  <TableCell>
+                    <div className="flex justify-center">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>{CLOUD_ICONS[ws.cloud]}</span>
+                        </TooltipTrigger>
+                        <TooltipContent>{ws.cloud}</TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TableCell>
                   <TableCell>{ws.region}</TableCell>
                   <TableCell>
                     <span className={cn(ws.storage === "Default" && "italic")}>{ws.storage}</span>
