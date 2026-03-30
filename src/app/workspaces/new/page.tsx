@@ -15,6 +15,8 @@ import {
   BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
 import { CLOUD_LOGO } from "@/components/ui/location-picker"
+import { Switch } from "@/components/ui/switch"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -221,6 +223,21 @@ function NewWorkspaceForm() {
               </div>
             </FormRow>
             <div className="border-t border-border mx-4" />
+            <FormRow label="Classic compute">
+              <div className="flex items-center gap-2">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex">
+                      <Switch id="classic-compute" checked disabled />
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-56">
+                    At the moment, classic compute must be enabled for workspaces that use existing cloud accounts.
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-sm text-muted-foreground">Enable</span>
+              </div>
+            </FormRow>
             <FormRow label="Compute credentials" required>
               <Select value={credential || undefined} onValueChange={setCredential}>
                 <SelectTrigger>
