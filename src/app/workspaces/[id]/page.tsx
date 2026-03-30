@@ -198,13 +198,13 @@ export default function WorkspaceDetailPage() {
                       Enabled
                     </span>
                   </KVRow>
+                  <div className="border-t border-border" />
                   <KVRow label="Classic compute">
                     <span className="flex items-center gap-1.5">
                       <CircleCheck className="h-4 w-4 text-[var(--success)]" />
                       Enabled
                     </span>
                   </KVRow>
-                  <div className="border-t border-border" />
                   <KVRow label="Compute credentials">
                     <a href="#" className="text-primary hover:underline">compute-creds</a>
                   </KVRow>

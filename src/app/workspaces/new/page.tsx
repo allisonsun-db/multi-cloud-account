@@ -105,13 +105,13 @@ function FormRow({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex h-12 items-center gap-4 px-4 py-2">
-      <div className="flex items-center gap-1 w-[280px] shrink-0">
+    <div className="flex flex-col sm:flex-row sm:h-12 sm:items-center gap-1 sm:gap-4 px-4 py-2.5 sm:py-2">
+      <div className="flex items-center gap-1 sm:w-[280px] sm:shrink-0">
         <span className="text-sm text-foreground">{label}</span>
         {required && <span className="text-destructive text-sm">*</span>}
         {info && <Info className="h-3.5 w-3.5 text-muted-foreground" />}
       </div>
-      <div className="flex flex-col gap-1 flex-1">
+      <div className="flex flex-col gap-1 flex-1 min-w-0">
         {children}
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
@@ -147,7 +147,7 @@ function NewWorkspaceForm() {
   return (
     <AppShell activeItem="workspaces">
       <div className="max-w-[800px] mx-auto w-full">
-      <div className="flex flex-col gap-6 p-6 pb-0">
+      <div className="flex flex-col gap-6 p-4 sm:p-6 pb-0">
 
         <PageHeader
           breadcrumbs={
@@ -178,7 +178,7 @@ function NewWorkspaceForm() {
               />
             </FormRow>
             <FormRow label="Cloud and region" required>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Select value={cloud || undefined} onValueChange={(v) => { setCloud(v); setRegion("") }}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select cloud" />
@@ -232,7 +232,7 @@ function NewWorkspaceForm() {
                     </span>
                   </TooltipTrigger>
                   <TooltipContent className="max-w-56">
-                    At the moment, classic compute must be enabled for workspaces that use existing cloud accounts.
+                    At the moment, classic compute must be enabled for workspaces using cloud accounts.
                   </TooltipContent>
                 </Tooltip>
                 <span className="text-sm text-muted-foreground">Enable</span>
@@ -356,7 +356,7 @@ function NewWorkspaceForm() {
       </div>
 
         {/* Actions */}
-        <div className="sticky bottom-0 bg-background flex items-center justify-end gap-2 px-6 py-4">
+        <div className="sticky bottom-0 bg-background flex items-center justify-end gap-2 px-4 sm:px-6 py-4">
           <Button variant="outline" size="sm" onClick={() => router.push("/workspaces")}>
             Cancel
           </Button>
