@@ -243,7 +243,7 @@ export default function CloudResourcesPage() {
         </div>
 
         <Tabs defaultValue="credential-configuration">
-          <TabsList variant="line" className="w-full justify-start border-b border-border mb-6">
+          <TabsList variant="line" className="w-full justify-start border-b border-border mb-4">
             <TabsTrigger value="credential-configuration" className="flex-none">Credential configuration</TabsTrigger>
             <TabsTrigger value="storage-configuration" className="flex-none">Storage configuration</TabsTrigger>
           </TabsList>

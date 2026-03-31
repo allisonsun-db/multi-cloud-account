@@ -13,7 +13,34 @@ import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
-import { WorkspacesIcon } from "@/components/icons"
+
+function MultiCloudLogosGraphic() {
+  const cardBase = "bg-background border border-border flex items-center justify-center rounded-md shadow-[0px_2px_3px_0px_rgba(0,0,0,0.05),0px_1px_0px_0px_rgba(0,0,0,0.02)] size-10 shrink-0"
+  return (
+    <div className="flex items-center -space-x-1">
+      {/* AWS — tilted left */}
+      <div className="flex items-center justify-center size-[42px]">
+        <div className="-rotate-3">
+          <div className={cardBase}>
+            <img src={CLOUD_LOGO["AWS"]} alt="AWS" width={24} height={15} className="object-contain dark:[filter:brightness(0)_invert(1)]" />
+          </div>
+        </div>
+      </div>
+      {/* Azure — center, no rotation, on top */}
+      <div className={cn(cardBase, "relative z-10")}>
+        <img src={CLOUD_LOGO["Azure"]} alt="Azure" width={20} height={20} className="object-contain" />
+      </div>
+      {/* GCP — tilted right */}
+      <div className="flex items-center justify-center size-[42px]">
+        <div className="rotate-3">
+          <div className={cardBase}>
+            <img src={CLOUD_LOGO["GCP"]} alt="GCP" width={24} height={20} className="object-contain" />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 // ─── Account Settings Tab ─────────────────────────────────────────────────────
 
@@ -197,9 +224,7 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
         <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
           <VisuallyHidden><DialogTitle>Enable multi-cloud</DialogTitle></VisuallyHidden>
           <div className="flex flex-col items-center gap-5 px-8 pt-10 pb-8 text-center">
-            <div className="bg-primary/10 rounded-md p-3">
-              <WorkspacesIcon size={32} className="text-primary" />
-            </div>
+            <MultiCloudLogosGraphic />
             <div className="flex flex-col gap-1.5">
               <h2 className="text-lg font-semibold text-foreground">Enable multi-cloud</h2>
               <p className="text-sm text-muted-foreground">Enterprise management across clouds</p>
