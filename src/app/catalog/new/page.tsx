@@ -199,7 +199,6 @@ export default function NewMetastorePage() {
 
   function handleFinish() {
     setShowAssignModal(false)
-    router.push("/catalog/1")
   }
 
   return (
