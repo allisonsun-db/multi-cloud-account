@@ -7,7 +7,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { ExternalLink, ArrowRight, Check, X, Pencil, CircleCheck } from "lucide-react"
+import { ExternalLink, ArrowRight, Check, X, CircleCheck } from "lucide-react"
+import { PencilIcon } from "@/components/icons"
 import { CLOUD_LOGO } from "@/components/ui/location-picker"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
@@ -65,8 +66,8 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
         <div className="rounded-md border border-border overflow-hidden">
 
           {/* Account name */}
-          <div className="flex items-center gap-4 px-4 py-4">
-            <span className="text-sm font-semibold text-foreground w-[200px] shrink-0">Account name</span>
+          <div className="flex items-start gap-4 px-4 py-4">
+            <span className="text-sm font-semibold text-foreground w-[200px] shrink-0 pt-[5px]">Account name</span>
             <div className="flex flex-col gap-2 flex-1">
               {editing ? (
                 <div className="flex items-start gap-1 self-end">
@@ -93,8 +94,8 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
               ) : (
                 <div className="flex items-center justify-end gap-2 h-8">
                   <span className="text-sm text-foreground">{accountName}</span>
-                  <Button variant="ghost" size="icon-sm" aria-label="Edit" onClick={() => setEditing(true)}>
-                    <Pencil className="h-4 w-4" />
+                  <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" aria-label="Edit" onClick={() => setEditing(true)}>
+                    <PencilIcon size={16} />
                   </Button>
                 </div>
               )}

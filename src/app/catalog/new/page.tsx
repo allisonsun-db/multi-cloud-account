@@ -24,7 +24,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import { CheckCircleIcon, MinusCircleIcon, LoadingIcon } from "@/components/icons"
+import { CheckCircleIcon, MinusCircleIcon, LoadingIcon, PencilIcon } from "@/components/icons"
 import { CLOUD_LOGO } from "@/components/ui/location-picker"
 import { cn } from "@/lib/utils"
 
@@ -102,7 +102,7 @@ function FormSection({
   }
 
   return (
-    <div ref={ref} className="rounded-md border border-border overflow-hidden">
+    <div ref={ref} className="rounded-md border border-border">
       <button
         type="button"
         onClick={toggle}
@@ -143,7 +143,7 @@ function FormRow({
 }) {
   const isTop = hint || multiline
   return (
-    <div className={cn("flex flex-col sm:flex-row gap-1 sm:gap-4 px-4 py-2.5 sm:py-2", isTop ? "sm:items-start" : "sm:h-12 sm:items-center")}>
+    <div className={cn("flex flex-col sm:flex-row gap-1 sm:gap-4 px-4", isTop ? "py-3 sm:items-start" : "sm:h-12 sm:items-center py-2.5 sm:py-2")}>
       <div className={cn("flex flex-col gap-0.5 sm:w-[280px] sm:shrink-0", isTop && "sm:pt-[6px]")}>
         <div className="flex items-center gap-1">
           <span className="text-sm text-foreground">{label}</span>
@@ -275,7 +275,6 @@ export default function NewMetastorePage() {
             <FormSection title="Storage">
               <FormRow
                 label="S3 bucket path"
-                labelHint="(optional)"
                 info
                 hint={
                   <>
@@ -292,7 +291,6 @@ export default function NewMetastorePage() {
               </FormRow>
               <FormRow
                 label="IAM role ARN"
-                labelHint="(optional)"
                 info
                 hint={
                   <>
@@ -314,14 +312,14 @@ export default function NewMetastorePage() {
             <FormSection title={<>Assign to workspaces <span className="font-normal text-foreground">(optional)</span></>}>
               <FormRow label="Workspaces" multiline>
                 {!region ? (
-                  <span className="text-sm text-muted-foreground">Select a cloud and region first</span>
+                  <span className="text-sm text-muted-foreground pt-[6px]">Select a cloud and region first</span>
                 ) : selectedWorkspaces.size > 0 ? (
                   <div className="flex flex-wrap items-center gap-1.5 pt-[6px]">
                     {WORKSPACES.filter((w) => selectedWorkspaces.has(w.id)).map((w) => (
-                      <Badge key={w.id} variant="secondary">{w.name}</Badge>
+                      <Badge key={w.id} variant="secondary" className="font-normal text-sm">{w.name}</Badge>
                     ))}
-                    <Button variant="ghost" size="sm" className="h-auto py-0.5 px-1.5 text-primary hover:text-primary" onClick={() => setShowAssignModal(true)}>
-                      Edit
+                    <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" onClick={() => setShowAssignModal(true)}>
+                      <PencilIcon size={16} />
                     </Button>
                   </div>
                 ) : (
@@ -402,7 +400,7 @@ export default function NewMetastorePage() {
                     filteredWorkspaces.map((w) => (
                       <TableRow
                         key={w.id}
-                        className="cursor-pointer"
+                        className="cursor-pointer data-[state=selected]:bg-transparent"
                         onClick={() => toggleWorkspace(w.id)}
                         data-state={selectedWorkspaces.has(w.id) ? "selected" : undefined}
                       >

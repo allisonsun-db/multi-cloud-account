@@ -97,7 +97,7 @@ export default function CatalogPage() {
               {filtered.map((m) => (
                 <TableRow key={m.id}>
                   <TableCell>
-                    <a href="#" className="text-primary hover:underline">
+                    <a href={`/catalog/${m.id}`} className="text-primary hover:underline">
                       {m.name}
                     </a>
                   </TableCell>
