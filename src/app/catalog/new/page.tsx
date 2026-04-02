@@ -199,6 +199,7 @@ export default function NewMetastorePage() {
 
   function handleFinish() {
     setShowAssignModal(false)
+    router.push("/catalog/1")
   }
 
   return (
@@ -343,7 +344,7 @@ export default function NewMetastorePage() {
           <Button variant="outline" size="sm" onClick={() => router.push("/catalog")}>
             Cancel
           </Button>
-          <Button size="sm" disabled={!canSubmit} onClick={() => router.push("/catalog")}>
+          <Button size="sm" disabled={!canSubmit} onClick={() => router.push("/catalog/1")}>
             Create metastore
           </Button>
         </div>

@@ -152,7 +152,7 @@ function NewWorkspaceForm() {
   const canSubmit = name.trim() && cloud && region
 
   function handleCreate() {
-    router.push("/workspaces")
+    router.push("/workspaces/1")
   }
 
   return (

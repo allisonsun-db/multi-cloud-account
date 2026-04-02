@@ -376,10 +376,9 @@ export default function MetastoreDetailPage() {
                     filteredWorkspaces.map((w) => (
                       <TableRow
                         key={w.id}
-                        className="cursor-pointer"
+                        className="cursor-pointer data-[state=selected]:bg-transparent"
                         onClick={() => toggleWorkspace(w.id)}
                         data-state={selectedWorkspaces.has(w.id) ? "selected" : undefined}
-                        className="data-[state=selected]:bg-transparent"
                       >
                         <TableCell onClick={(e) => e.stopPropagation()}>
                           <Checkbox
