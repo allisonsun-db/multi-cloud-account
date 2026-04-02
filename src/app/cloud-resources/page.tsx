@@ -104,13 +104,11 @@ function Pagination({ page, total, onPage }: { page: number; total: number; onPa
 
 function CredentialConfigTab() {
   const [filter, setFilter] = React.useState("")
-  const [page, setPage] = React.useState(1)
 
   const filtered = CREDENTIALS.filter((c) =>
     c.name.toLowerCase().includes(filter.toLowerCase()) ||
     c.roleArn.toLowerCase().includes(filter.toLowerCase())
   )
-  const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="flex flex-col gap-2">
@@ -120,7 +118,7 @@ function CredentialConfigTab() {
           <Input
             placeholder="Filter credential configurations"
             value={filter}
-            onChange={(e) => { setFilter(e.target.value); setPage(1) }}
+            onChange={(e) => setFilter(e.target.value)}
             className="pl-8"
           />
         </div>
@@ -138,7 +136,7 @@ function CredentialConfigTab() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paged.map((cred) => (
+          {filtered.map((cred) => (
             <TableRow key={cred.id}>
               <TableCell>
                 <a href="#" className="text-primary hover:underline truncate block max-w-[340px]">
@@ -153,8 +151,6 @@ function CredentialConfigTab() {
           ))}
         </TableBody>
       </Table>
-
-      <Pagination page={page} total={filtered.length} onPage={setPage} />
     </div>
   )
 }

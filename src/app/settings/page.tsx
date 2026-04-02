@@ -7,11 +7,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { ExternalLink, ArrowRight, Check, X, CircleCheck } from "lucide-react"
-import { PencilIcon } from "@/components/icons"
+import { ExternalLink, ArrowRight, Check, X, CircleCheck, Loader2 } from "lucide-react"
+import { PencilIcon, LoadingIcon } from "@/components/icons"
 import { CLOUD_LOGO } from "@/components/ui/location-picker"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { toast } from "sonner"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden"
 
@@ -55,7 +56,35 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
   const [redirectRow2, setRedirectRow2] = React.useState(false)
   const [multiCloud, setMultiCloud] = React.useState(false)
   const [multiCloudModal, setMultiCloudModal] = React.useState(false)
+  const [multiCloudLoading, setMultiCloudLoading] = React.useState(false)
+  const [loadingProgress, setLoadingProgress] = React.useState(0)
+  const toastShownRef = React.useRef(false)
   const [cloudProviders, setCloudProviders] = React.useState({ AWS: true, GCP: true, Azure: false })
+
+  React.useEffect(() => {
+    if (!multiCloudLoading) return
+    setLoadingProgress(0)
+    const interval = setInterval(() => {
+      setLoadingProgress((prev) => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          setTimeout(() => {
+            setMultiCloud(true)
+            setMultiCloudModal(false)
+            setMultiCloudLoading(false)
+            setLoadingProgress(0)
+            if (!toastShownRef.current) {
+              toastShownRef.current = true
+              toast.success("Multi-cloud enabled")
+            }
+          }, 600)
+          return 100
+        }
+        return prev + 1
+      })
+    }, 25)
+    return () => clearInterval(interval)
+  }, [multiCloudLoading])
 
   return (
     <div className="flex flex-col gap-8 w-full">
@@ -165,7 +194,10 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
             </div>
             <div className="shrink-0">
               {multiCloud ? (
-                <Button variant="outline" size="sm" onClick={() => setMultiCloud(false)}>Disable</Button>
+                <span className="flex items-center gap-1.5 text-sm text-foreground">
+                  <CircleCheck className="h-4 w-4 text-[var(--success)]" />
+                  Enabled
+                </span>
               ) : (
                 <Button variant="outline" size="sm" className="shadow-xs" onClick={() => setMultiCloudModal(true)}>Enable</Button>
               )}
@@ -221,35 +253,79 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
       </div>
 
       {/* Multi-cloud enable modal */}
-      <Dialog open={multiCloudModal} onOpenChange={(o) => { if (!o) setMultiCloudModal(false) }}>
+      <Dialog open={multiCloudModal} onOpenChange={(o) => { if (!o) { setMultiCloudModal(false); setMultiCloudLoading(false); setLoadingProgress(0) } }}>
         <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden">
           <VisuallyHidden><DialogTitle>Enable multi-cloud</DialogTitle></VisuallyHidden>
-          <div className="flex flex-col items-center gap-5 px-8 pt-10 pb-8 text-center">
-            <MultiCloudLogosGraphic />
-            <div className="flex flex-col gap-1.5">
-              <h2 className="text-lg font-semibold text-foreground">Enable multi-cloud</h2>
-              <p className="text-sm text-muted-foreground">Enterprise management across clouds</p>
-            </div>
-            <div className="w-full bg-muted rounded-md px-4 py-4 flex flex-col gap-3 text-left">
-              {[
-                "Unify data and AI across clouds",
-                "Shift workloads without moving data",
-                "Universal flex, billing, and management",
-              ].map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <CircleCheck className="h-4 w-4 text-[var(--success)] shrink-0" />
-                  <span className="text-sm text-foreground">{item}</span>
+
+          {multiCloudLoading ? (
+            /* ── Loading view ── */
+            <div className="flex flex-col gap-5 px-8 pt-10 pb-8">
+              <div className="flex justify-center">
+                <div className="flex items-center justify-center size-16 rounded-full bg-primary/10">
+                  <LoadingIcon size={28} className="text-primary animate-spin" />
                 </div>
-              ))}
+              </div>
+              <div className="flex flex-col gap-1.5 text-center">
+                <h2 className="text-lg font-semibold text-foreground">Enabling multi-cloud</h2>
+                <p className="text-sm text-muted-foreground">We're configuring your account with multi-cloud capabilities…</p>
+              </div>
+
+              {/* Steps */}
+              <div className="flex flex-col gap-3">
+                {([
+                  { label: "Setting up your URL",              threshold: 25 },
+                  { label: "Configuring organization settings", threshold: 50 },
+                  { label: "Linking accounts",                  threshold: 75 },
+                  { label: "Finalizing setup",                  threshold: 100 },
+                ] as const).map(({ label, threshold }) => {
+                  const done    = loadingProgress >= threshold
+                  const active  = !done && loadingProgress >= threshold - 25
+                  return (
+                    <div key={label} className="flex items-center gap-3">
+                      {done ? (
+                        <Check className="h-4 w-4 text-[var(--success)] shrink-0" />
+                      ) : active ? (
+                        <Loader2 className="h-4 w-4 text-muted-foreground shrink-0 animate-spin" />
+                      ) : (
+                        <span className="h-4 w-4 shrink-0" />
+                      )}
+                      <span className={cn("text-sm", done || active ? "text-foreground" : "text-muted-foreground")}>
+                        {label}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={() => { setMultiCloud(true); setMultiCloudModal(false) }}
-            >
-              Get started
-            </Button>
-          </div>
+          ) : (
+            /* ── Default view ── */
+            <div className="flex flex-col items-center gap-5 px-8 pt-10 pb-8 text-center">
+              <MultiCloudLogosGraphic />
+              <div className="flex flex-col gap-1.5">
+                <h2 className="text-lg font-semibold text-foreground">Enable multi-cloud</h2>
+                <p className="text-sm text-muted-foreground">Enterprise management across clouds</p>
+              </div>
+              <div className="w-full bg-muted rounded-md px-4 py-4 flex flex-col gap-3 text-left">
+                {[
+                  "Unify data and AI across clouds",
+                  "Shift workloads without moving data",
+                  "Universal flex, billing, and management",
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-3">
+                    <CircleCheck className="h-4 w-4 text-[var(--success)] shrink-0" />
+                    <span className="text-sm text-foreground">{item}</span>
+                  </div>
+                ))}
+              </div>
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={() => setMultiCloudLoading(true)}
+              >
+                Get started
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
