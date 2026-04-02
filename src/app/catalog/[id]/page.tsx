@@ -185,7 +185,9 @@ export default function MetastoreDetailPage() {
   const [autoAssign, setAutoAssign] = React.useState(false)
 
   const filteredWorkspaces = WORKSPACES.filter((w) =>
-    !wsFilter || w.name.toLowerCase().includes(wsFilter.toLowerCase())
+    w.cloud === ms.cloud &&
+    w.region === ms.region &&
+    (!wsFilter || w.name.toLowerCase().includes(wsFilter.toLowerCase()))
   )
 
   function toggleWorkspace(id: string) {
@@ -243,14 +245,14 @@ export default function MetastoreDetailPage() {
                 <DetailSection title="Storage">
                   <KVRow label="Storage root path" info>
                     {ms.storagePath
-                      ? <span className="font-mono text-xs">{ms.storagePath}</span>
+                      ? <span className="font-mono text-[12px]">{ms.storagePath}</span>
                       : <span className="text-muted-foreground">—</span>
                     }
                   </KVRow>
                   {ms.cloud === "AWS" && (
                     <KVRow label="IAM role ARN" info>
                       {ms.iamRoleArn
-                        ? <span className="font-mono text-xs">{ms.iamRoleArn}</span>
+                        ? <span className="font-mono text-[12px]">{ms.iamRoleArn}</span>
                         : <span className="text-muted-foreground">—</span>
                       }
                     </KVRow>

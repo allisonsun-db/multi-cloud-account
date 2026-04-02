@@ -60,23 +60,91 @@ type WorkspaceRow = {
 }
 
 const WORKSPACES: WorkspaceRow[] = [
-  { id: "w1",  name: "prod-analytics",       status: "Running",      cloud: "AWS",   region: "us-east-1",      currentMetastore: "prod-metastore" },
-  { id: "w2",  name: "dev-sandbox",           status: "Running",      cloud: "AWS",   region: "us-east-1" },
-  { id: "w3",  name: "ml-training",           status: "Running",      cloud: "AWS",   region: "us-east-1",      currentMetastore: "ml-metastore" },
-  { id: "w4",  name: "data-ingestion",        status: "Running",      cloud: "AWS",   region: "us-east-1" },
-  { id: "w5",  name: "staging-env",           status: "Running",      cloud: "AWS",   region: "us-west-2" },
-  { id: "w6",  name: "azure-prod",            status: "Running",      cloud: "Azure", region: "eastus" },
-  { id: "w7",  name: "azure-dev",             status: "Running", cloud: "Azure", region: "eastus" },
-  { id: "w13", name: "westus2-prod",          status: "Running",      cloud: "Azure", region: "westus2",          currentMetastore: "legacy-metastore" },
-  { id: "w14", name: "westus2-dev",           status: "Running",      cloud: "Azure", region: "westus2" },
-  { id: "w15", name: "westus2-staging",       status: "Running",      cloud: "Azure", region: "westus2" },
-  { id: "w16", name: "westus2-ml",            status: "Running",      cloud: "Azure", region: "westus2" },
-  { id: "w17", name: "westus2-data-eng",      status: "Running", cloud: "Azure", region: "westus2" },
-  { id: "w8",  name: "gcp-analytics",         status: "Running",      cloud: "GCP",   region: "us-central1" },
-  { id: "w9",  name: "eu-compliance",         status: "Running",      cloud: "AWS",   region: "eu-west-1" },
-  { id: "w10", name: "apac-reporting",        status: "Running",      cloud: "AWS",   region: "ap-southeast-1" },
-  { id: "w11", name: "us-east-1-reporting",   status: "Running",      cloud: "AWS",   region: "us-east-1" },
-  { id: "w12", name: "us-east-1-experiments", status: "Running",      cloud: "AWS",   region: "us-east-1" },
+  // AWS us-east-1
+  { id: "w1",  name: "prod-analytics",         status: "Running", cloud: "AWS",   region: "us-east-1",       currentMetastore: "prod-metastore" },
+  { id: "w2",  name: "dev-sandbox",             status: "Running", cloud: "AWS",   region: "us-east-1" },
+  { id: "w3",  name: "ml-training",             status: "Running", cloud: "AWS",   region: "us-east-1",       currentMetastore: "ml-metastore" },
+  { id: "w4",  name: "data-ingestion",          status: "Running", cloud: "AWS",   region: "us-east-1" },
+  { id: "w11", name: "us-east-1-reporting",     status: "Running", cloud: "AWS",   region: "us-east-1" },
+  { id: "w12", name: "us-east-1-experiments",   status: "Running", cloud: "AWS",   region: "us-east-1" },
+  // AWS us-east-2
+  { id: "w30", name: "ohio-prod",               status: "Running", cloud: "AWS",   region: "us-east-2",       currentMetastore: "prod-metastore" },
+  { id: "w31", name: "ohio-dev",                status: "Running", cloud: "AWS",   region: "us-east-2" },
+  // AWS us-west-1
+  { id: "w32", name: "norcal-analytics",        status: "Running", cloud: "AWS",   region: "us-west-1" },
+  { id: "w33", name: "norcal-dev",              status: "Running", cloud: "AWS",   region: "us-west-1" },
+  // AWS us-west-2
+  { id: "w5",  name: "staging-env",             status: "Running", cloud: "AWS",   region: "us-west-2" },
+  { id: "w34", name: "oregon-prod",             status: "Running", cloud: "AWS",   region: "us-west-2",       currentMetastore: "prod-metastore-west" },
+  { id: "w35", name: "oregon-ml",               status: "Running", cloud: "AWS",   region: "us-west-2" },
+  // AWS eu-west-1
+  { id: "w9",  name: "eu-compliance",           status: "Running", cloud: "AWS",   region: "eu-west-1" },
+  { id: "w36", name: "ireland-analytics",       status: "Running", cloud: "AWS",   region: "eu-west-1",       currentMetastore: "eu-metastore" },
+  // AWS eu-west-2
+  { id: "w37", name: "london-prod",             status: "Running", cloud: "AWS",   region: "eu-west-2" },
+  { id: "w38", name: "london-dev",              status: "Running", cloud: "AWS",   region: "eu-west-2" },
+  // AWS eu-central-1
+  { id: "w39", name: "frankfurt-prod",          status: "Running", cloud: "AWS",   region: "eu-central-1",    currentMetastore: "eu-central-metastore" },
+  { id: "w40", name: "frankfurt-staging",       status: "Running", cloud: "AWS",   region: "eu-central-1" },
+  // AWS ap-southeast-1
+  { id: "w10", name: "apac-reporting",          status: "Running", cloud: "AWS",   region: "ap-southeast-1" },
+  { id: "w41", name: "singapore-prod",          status: "Running", cloud: "AWS",   region: "ap-southeast-1",  currentMetastore: "apac-metastore" },
+  // AWS ap-southeast-2
+  { id: "w42", name: "sydney-prod",             status: "Running", cloud: "AWS",   region: "ap-southeast-2" },
+  { id: "w43", name: "sydney-analytics",        status: "Running", cloud: "AWS",   region: "ap-southeast-2" },
+  // AWS ap-northeast-1
+  { id: "w44", name: "tokyo-prod",              status: "Running", cloud: "AWS",   region: "ap-northeast-1",  currentMetastore: "apac-metastore" },
+  { id: "w45", name: "tokyo-dev",               status: "Running", cloud: "AWS",   region: "ap-northeast-1" },
+  // Azure eastus
+  { id: "w6",  name: "azure-prod",              status: "Running", cloud: "Azure", region: "eastus" },
+  { id: "w7",  name: "azure-dev",               status: "Running", cloud: "Azure", region: "eastus" },
+  { id: "w50", name: "eastus-staging",          status: "Running", cloud: "Azure", region: "eastus" },
+  // Azure eastus2
+  { id: "w51", name: "eastus2-prod",            status: "Running", cloud: "Azure", region: "eastus2",         currentMetastore: "azure-east-metastore" },
+  { id: "w52", name: "eastus2-analytics",       status: "Running", cloud: "Azure", region: "eastus2" },
+  // Azure westus
+  { id: "w53", name: "westus-prod",             status: "Running", cloud: "Azure", region: "westus" },
+  { id: "w54", name: "westus-dev",              status: "Running", cloud: "Azure", region: "westus" },
+  // Azure westus2
+  { id: "w13", name: "westus2-prod",            status: "Running", cloud: "Azure", region: "westus2",         currentMetastore: "legacy-metastore" },
+  { id: "w14", name: "westus2-dev",             status: "Running", cloud: "Azure", region: "westus2" },
+  { id: "w15", name: "westus2-staging",         status: "Running", cloud: "Azure", region: "westus2" },
+  { id: "w16", name: "westus2-ml",              status: "Running", cloud: "Azure", region: "westus2" },
+  { id: "w17", name: "westus2-data-eng",        status: "Running", cloud: "Azure", region: "westus2" },
+  // Azure westeurope
+  { id: "w55", name: "amsterdam-prod",          status: "Running", cloud: "Azure", region: "westeurope",      currentMetastore: "eu-metastore" },
+  { id: "w56", name: "amsterdam-analytics",     status: "Running", cloud: "Azure", region: "westeurope" },
+  // Azure northeurope
+  { id: "w57", name: "ireland-az-prod",         status: "Running", cloud: "Azure", region: "northeurope" },
+  { id: "w58", name: "ireland-az-dev",          status: "Running", cloud: "Azure", region: "northeurope" },
+  // Azure southeastasia
+  { id: "w59", name: "singapore-az-prod",       status: "Running", cloud: "Azure", region: "southeastasia",   currentMetastore: "apac-az-metastore" },
+  { id: "w60", name: "singapore-az-dev",        status: "Running", cloud: "Azure", region: "southeastasia" },
+  // Azure eastasia
+  { id: "w61", name: "hongkong-prod",           status: "Running", cloud: "Azure", region: "eastasia" },
+  { id: "w62", name: "hongkong-dev",            status: "Running", cloud: "Azure", region: "eastasia" },
+  // GCP us-central1
+  { id: "w8",  name: "gcp-analytics",           status: "Running", cloud: "GCP",   region: "us-central1" },
+  { id: "w70", name: "iowa-ml-training",        status: "Running", cloud: "GCP",   region: "us-central1",     currentMetastore: "gcp-central-metastore" },
+  { id: "w71", name: "iowa-data-eng",           status: "Running", cloud: "GCP",   region: "us-central1" },
+  // GCP us-east1
+  { id: "w72", name: "sc-prod",                 status: "Running", cloud: "GCP",   region: "us-east1" },
+  { id: "w73", name: "sc-analytics",            status: "Running", cloud: "GCP",   region: "us-east1" },
+  // GCP us-west1
+  { id: "w74", name: "oregon-gcp-prod",         status: "Running", cloud: "GCP",   region: "us-west1",        currentMetastore: "gcp-west-metastore" },
+  { id: "w75", name: "oregon-gcp-dev",          status: "Running", cloud: "GCP",   region: "us-west1" },
+  // GCP europe-west1
+  { id: "w76", name: "belgium-prod",            status: "Running", cloud: "GCP",   region: "europe-west1",    currentMetastore: "eu-gcp-metastore" },
+  { id: "w77", name: "belgium-analytics",       status: "Running", cloud: "GCP",   region: "europe-west1" },
+  // GCP europe-west2
+  { id: "w78", name: "london-gcp-prod",         status: "Running", cloud: "GCP",   region: "europe-west2" },
+  { id: "w79", name: "london-gcp-dev",          status: "Running", cloud: "GCP",   region: "europe-west2" },
+  // GCP asia-east1
+  { id: "w80", name: "taiwan-prod",             status: "Running", cloud: "GCP",   region: "asia-east1" },
+  { id: "w81", name: "taiwan-analytics",        status: "Running", cloud: "GCP",   region: "asia-east1" },
+  // GCP asia-southeast1
+  { id: "w82", name: "singapore-gcp-prod",      status: "Running", cloud: "GCP",   region: "asia-southeast1", currentMetastore: "apac-gcp-metastore" },
+  { id: "w83", name: "singapore-gcp-dev",       status: "Running", cloud: "GCP",   region: "asia-southeast1" },
 ]
 
 // ─── FormSection ──────────────────────────────────────────────────────────────
@@ -178,7 +246,9 @@ export default function NewMetastorePage() {
   const canSubmit = name.trim() && cloud && region
 
   const filteredWorkspaces = WORKSPACES.filter((w) =>
-    w.name.toLowerCase().includes(wsFilter.toLowerCase())
+    w.cloud === cloud &&
+    w.region === region &&
+    (!wsFilter || w.name.toLowerCase().includes(wsFilter.toLowerCase()))
   )
 
   function toggleWorkspace(id: string) {
@@ -294,7 +364,7 @@ export default function NewMetastorePage() {
                 info
                 hint={
                   <>
-                    Enter the IAM role that Databricks will use to access the S3 bucket.{" "}
+                    Databricks will use the IAM role to access the S3 bucket.{" "}
                     <a href="#" className="text-primary inline-flex items-center gap-0.5">Learn more <ExternalLink className="h-3 w-3" /></a>
                   </>
                 }
@@ -358,12 +428,13 @@ export default function NewMetastorePage() {
           </DialogHeader>
 
           <DialogBody className="flex flex-col gap-3 overflow-hidden">
-            <p className="text-sm text-muted-foreground">Select from workspaces in the same cloud and region.</p>
-            <div className="relative">
+            <p className="text-sm text-foreground">Select from workspaces in the same cloud and region.</p>
+            <div className="relative w-[400px]">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
               <Input
                 placeholder="Filter workspaces"
                 className="pl-8"
+                tabIndex={-1}
                 value={wsFilter}
                 onChange={(e) => setWsFilter(e.target.value)}
               />
