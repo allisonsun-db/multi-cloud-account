@@ -73,7 +73,7 @@ function DialogContent({
             <Button
               variant="ghost"
               size="icon-sm"
-              className="absolute top-3 right-3 text-muted-foreground"
+              className="absolute top-[17px] right-6 text-muted-foreground"
               aria-label="Close"
             >
               <XIcon className="h-4 w-4" />
@@ -90,7 +90,7 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-header"
-      className={cn("flex flex-col gap-1 px-10 pt-10 pb-5", className)}
+      className={cn("flex flex-col gap-1 px-6 pt-6 pb-5", className)}
       {...props}
     />
   )
@@ -109,7 +109,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "flex flex-col-reverse gap-2 px-10 pb-10 pt-5 sm:flex-row sm:justify-end",
+        "flex flex-col-reverse gap-2 px-6 pb-6 pt-5 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -129,7 +129,7 @@ function DialogBody({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="dialog-body"
-      className={cn("px-10", className)}
+      className={cn("px-6", className)}
       {...props}
     />
   )

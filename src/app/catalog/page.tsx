@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -42,6 +43,7 @@ const METASTORES: Metastore[] = [
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CatalogPage() {
+  const router = useRouter()
   const [filter, setFilter] = React.useState("")
   const [location, setLocation] = React.useState("all")
 
@@ -76,7 +78,7 @@ export default function CatalogPage() {
               </div>
               <LocationPicker value={location} onChange={setLocation} cloudRegions={cloudRegions} />
             </div>
-            <Button size="sm">Create metastore</Button>
+            <Button size="sm" onClick={() => router.push("/catalog/new")}>Create metastore</Button>
           </div>
 
           {/* Table */}
