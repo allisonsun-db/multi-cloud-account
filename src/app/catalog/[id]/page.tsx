@@ -313,16 +313,16 @@ export default function MetastoreDetailPage() {
                 <div className="flex flex-col gap-2">
                   <p className="text-sm font-semibold text-foreground">About this metastore</p>
                   <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground w-[150px] shrink-0">Created</span>
+                    <span className="text-sm text-foreground">{ms.createdAt}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground w-[150px] shrink-0">Region</span>
                     <span className="flex items-center gap-1.5 text-sm text-foreground">
                       {CLOUD_ICONS[ms.cloud]}
                       {ms.region}
                     </span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground w-[150px] shrink-0">Created</span>
-                    <span className="text-sm text-foreground">{ms.createdAt}</span>
                   </div>
                 </div>
               </div>

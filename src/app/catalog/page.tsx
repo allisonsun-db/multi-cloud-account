@@ -45,18 +45,20 @@ const METASTORES: Metastore[] = [
 export default function CatalogPage() {
   const router = useRouter()
   const [filter, setFilter] = React.useState("")
-  const [location, setLocation] = React.useState("all")
+  const [locations, setLocations] = React.useState<string[]>([])
 
   const cloudRegions = React.useMemo(() => buildCloudRegions(METASTORES), [])
 
   const filtered = METASTORES.filter((m) => {
     if (filter && !m.name.toLowerCase().includes(filter.toLowerCase())) return false
-    if (location === "all") return true
-    if (location.includes(":")) {
-      const [c, r] = location.split(":")
-      return m.cloud === c && m.region === r
-    }
-    return m.cloud === location
+    if (locations.length === 0) return true
+    return locations.some(loc => {
+      if (loc.includes(":")) {
+        const [c, r] = loc.split(":")
+        return m.cloud === c && m.region === r
+      }
+      return m.cloud === loc
+    })
   })
 
   return (
@@ -76,7 +78,7 @@ export default function CatalogPage() {
                   className="pl-8"
                 />
               </div>
-              <LocationPicker value={location} onChange={setLocation} cloudRegions={cloudRegions} />
+              <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
             </div>
             <Button size="sm" onClick={() => router.push("/catalog/new")}>Create metastore</Button>
           </div>

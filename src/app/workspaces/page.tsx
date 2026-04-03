@@ -269,19 +269,21 @@ function CreateWorkspaceModal({ onCreated }: { onCreated: (ws: Workspace) => voi
 
 export default function WorkspacesPage() {
   const [filter, setFilter] = React.useState("")
-  const [location, setLocation] = React.useState("all")
+  const [locations, setLocations] = React.useState<string[]>([])
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>(WORKSPACES)
 
   const cloudRegions = React.useMemo(() => buildCloudRegions(workspaces), [workspaces])
 
   const filtered = workspaces.filter((w) => {
     if (filter && !w.name.toLowerCase().includes(filter.toLowerCase())) return false
-    if (location === "all") return true
-    if (location.includes(":")) {
-      const [c, r] = location.split(":")
-      return w.cloud === c && w.region === r
-    }
-    return w.cloud === location
+    if (locations.length === 0) return true
+    return locations.some(loc => {
+      if (loc.includes(":")) {
+        const [c, r] = loc.split(":")
+        return w.cloud === c && w.region === r
+      }
+      return w.cloud === loc
+    })
   })
 
   return (
@@ -302,7 +304,7 @@ export default function WorkspacesPage() {
               />
               <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             </div>
-            <LocationPicker value={location} onChange={setLocation} cloudRegions={cloudRegions} />
+            <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
           </div>
           <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
         </div>

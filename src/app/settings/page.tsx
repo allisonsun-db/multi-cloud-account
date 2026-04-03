@@ -51,8 +51,7 @@ const DEFAULT_ACCOUNT_NAME = "Databricks Bakehouse"
 function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: string) => void }) {
   const [accountName, setAccountName] = React.useState(saved)
   const [editing, setEditing] = React.useState(false)
-  const [customUrlEnabled, setCustomUrlEnabled] = React.useState(true)
-  const [redirectRow1, setRedirectRow1] = React.useState(true)
+const [redirectRow1, setRedirectRow1] = React.useState(true)
   const [redirectRow2, setRedirectRow2] = React.useState(false)
   const [multiCloud, setMultiCloud] = React.useState(false)
   const [multiCloudModal, setMultiCloudModal] = React.useState(false)
@@ -137,19 +136,12 @@ function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: s
           <div className="flex items-center justify-between gap-8 px-4 py-4">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-foreground">Custom URL</span>
-              <p className="text-sm text-muted-foreground">
-                Contact your Databricks account team to rename.{" "}
-                <a href="#" className="text-primary inline-flex items-center gap-0.5 hover:underline">
-                  Learn more <ExternalLink className="h-3 w-3" />
-                </a>
-              </p>
             </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-foreground">{customUrlEnabled ? "On" : "Off"}</span>
-                <Switch checked={customUrlEnabled} onCheckedChange={setCustomUrlEnabled} />
-              </div>
-              <span className="text-sm text-accent-foreground">dogfood.staging.databricks.com</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-sm text-foreground">dogfood.staging.databricks.com</span>
+              <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" aria-label="Edit">
+                <PencilIcon size={16} />
+              </Button>
             </div>
           </div>
 
