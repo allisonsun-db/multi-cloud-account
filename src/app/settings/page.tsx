@@ -196,50 +196,7 @@ const [redirectRow1, setRedirectRow1] = React.useState(true)
             </div>
           </div>
 
-          {/* Cloud providers */}
-          {multiCloud && (
-          <>
-            {([
-              { key: "AWS",   name: "Amazon Web Services",  desc: "Deploy workspaces and resources on AWS" },
-              { key: "Azure", name: "Microsoft Azure",      desc: "Deploy workspaces and resources on Azure" },
-              { key: "GCP",   name: "Google Cloud Platform", desc: "Deploy workspaces and resources on GCP" },
-            ] as const).map(({ key, name, desc }) => (
-              <React.Fragment key={key}>
-                <div className="border-t border-border mx-4" />
-                <div className="flex items-center gap-4 px-4 py-3">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-md bg-muted shrink-0">
-                    <img src={CLOUD_LOGO[key]} alt={key} width={24} height={24} className={cn("object-contain", key === "AWS" && "dark:[filter:brightness(0)_invert(1)]")} />
-                  </div>
-                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <span className="text-sm font-semibold text-foreground">{name}</span>
-                    <span className="text-sm text-muted-foreground">{desc}</span>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-sm text-foreground">{cloudProviders[key] ? "Enabled" : "Disabled"}</span>
-                    {(() => {
-                      const isLastEnabled = cloudProviders[key] && Object.values(cloudProviders).filter(Boolean).length === 1
-                      return isLastEnabled ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <span>
-                              <Switch checked disabled />
-                            </span>
-                          </TooltipTrigger>
-                          <TooltipContent>At least one cloud provider must be enabled</TooltipContent>
-                        </Tooltip>
-                      ) : (
-                        <Switch
-                          checked={cloudProviders[key]}
-                          onCheckedChange={(v) => setCloudProviders((prev) => ({ ...prev, [key]: v }))}
-                        />
-                      )
-                    })()}
-                  </div>
-                </div>
-              </React.Fragment>
-            ))}
-          </>
-          )}
+          {/* Cloud providers — hidden for now */}
 
         </div>
       </div>
