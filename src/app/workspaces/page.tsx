@@ -318,7 +318,7 @@ export default function WorkspacesPage() {
         <Tabs defaultValue="workspaces" onValueChange={setActiveTab}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <TabsList variant="line">
+              <TabsList>
                 <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
                 <TabsTrigger value="replication-plans">Replication plans</TabsTrigger>
               </TabsList>
