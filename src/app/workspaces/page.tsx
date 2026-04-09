@@ -290,6 +290,7 @@ function CreateWorkspaceModal({ onCreated }: { onCreated: (ws: Workspace) => voi
 
 export default function WorkspacesPage() {
   const router = useRouter()
+  const [activeTab, setActiveTab] = React.useState("workspaces")
   const [filter, setFilter] = React.useState("")
   const [locations, setLocations] = React.useState<string[]>([])
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>(WORKSPACES)
@@ -314,10 +315,10 @@ export default function WorkspacesPage() {
 
         <h1 className="text-xl font-semibold text-foreground">Workspaces</h1>
 
-        <Tabs defaultValue="workspaces" variant="line">
+        <Tabs defaultValue="workspaces" onValueChange={setActiveTab}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <TabsList>
+              <TabsList variant="line">
                 <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
                 <TabsTrigger value="replication-plans">Replication plans</TabsTrigger>
               </TabsList>
@@ -333,7 +334,10 @@ export default function WorkspacesPage() {
               <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
             </div>
             <div className="pb-1">
-              <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
+              {activeTab === "workspaces"
+                ? <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
+                : <Button size="sm" onClick={() => router.push(`/workspaces/1/replication-plan/new`)}>Create plan</Button>
+              }
             </div>
           </div>
 
