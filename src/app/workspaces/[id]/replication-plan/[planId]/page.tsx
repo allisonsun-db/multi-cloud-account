@@ -5,6 +5,12 @@ import { useParams } from "next/navigation"
 import { AppShell, PageHeader } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
+} from "@/components/ui/dialog"
+import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import {
@@ -13,28 +19,41 @@ import {
 } from "@/components/ui/breadcrumb"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CatalogIcon } from "@/components/icons"
-import { ExternalLink, ChevronDown } from "lucide-react"
+import { ExternalLink, ChevronDown, ArrowRight } from "lucide-react"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
+type ActivityType = "Replication" | "Failover"
 
-interface ReplicationRun {
+interface ActivityRun {
   id: string
   startedAt: string
   duration: string
   status: ReplicationStatus
-  itemsReplicated: number
+  activity: ActivityType
 }
 
-const RUNS: ReplicationRun[] = [
-  { id: "run-18", startedAt: "Apr 9, 2026 at 9:45 AM", duration: "1m 12s", status: "running",   itemsReplicated: 0 },
-  { id: "run-17", startedAt: "Apr 9, 2026 at 9:30 AM", duration: "1m 08s", status: "succeeded", itemsReplicated: 142 },
-  { id: "run-16", startedAt: "Apr 9, 2026 at 9:15 AM", duration: "1m 21s", status: "succeeded", itemsReplicated: 138 },
-  { id: "run-15", startedAt: "Apr 9, 2026 at 9:00 AM", duration: "0m 54s", status: "failed",    itemsReplicated: 0 },
-  { id: "run-14", startedAt: "Apr 9, 2026 at 8:45 AM", duration: "1m 03s", status: "succeeded", itemsReplicated: 141 },
-  { id: "run-13", startedAt: "Apr 9, 2026 at 8:30 AM", duration: "1m 17s", status: "succeeded", itemsReplicated: 139 },
-  { id: "run-12", startedAt: "Apr 9, 2026 at 8:15 AM", duration: "1m 09s", status: "succeeded", itemsReplicated: 140 },
-  { id: "run-11", startedAt: "Apr 9, 2026 at 8:00 AM", duration: "1m 22s", status: "succeeded", itemsReplicated: 145 },
+const RUNS: ActivityRun[] = [
+  { id: "run-18", startedAt: "Apr 9, 2026 at 9:45 AM", duration: "1m 12s", status: "running",   activity: "Replication" },
+  { id: "run-17", startedAt: "Apr 9, 2026 at 9:30 AM", duration: "1m 08s", status: "succeeded", activity: "Replication" },
+  { id: "run-16", startedAt: "Apr 9, 2026 at 9:15 AM", duration: "1m 21s", status: "succeeded", activity: "Failover"    },
+  { id: "run-15", startedAt: "Apr 9, 2026 at 9:00 AM", duration: "0m 54s", status: "failed",    activity: "Replication" },
+  { id: "run-14", startedAt: "Apr 9, 2026 at 8:45 AM", duration: "1m 03s", status: "succeeded", activity: "Replication" },
+  { id: "run-13", startedAt: "Apr 9, 2026 at 8:30 AM", duration: "1m 17s", status: "succeeded", activity: "Replication" },
+  { id: "run-12", startedAt: "Apr 9, 2026 at 8:15 AM", duration: "1m 09s", status: "succeeded", activity: "Replication" },
+  { id: "run-11", startedAt: "Apr 9, 2026 at 8:00 AM", duration: "1m 22s", status: "succeeded", activity: "Replication" },
 ]
+
+// Compute from/to by replaying runs chronologically, swapping on each failover
+function computeWorkspaces(runs: ActivityRun[], initialPrimary: string, initialReplica: string) {
+  let primary = initialPrimary
+  let replica = initialReplica
+  const result: Record<string, { from: string; to: string }> = {}
+  ;[...runs].reverse().forEach((run) => {
+    result[run.id] = { from: primary, to: replica }
+    if (run.activity === "Failover") [primary, replica] = [replica, primary]
+  })
+  return result
+}
 
 function ReplicationFlowIndicator() {
   // Exact Figma dimensions (node 5010-1877): 80×19 frame, line at y=10, arrowhead 8×8 at x=76 y=6
@@ -75,6 +94,7 @@ export default function ReplicationPlanPage() {
 
   const primaryWs = { label: "ws-prod-east", cloud: "AWS", region: "us-east-1" }
   const replicaWs  = { label: "ws-prod-dr-west", cloud: "AWS", region: "us-west-2" }
+  const workspaceMap = computeWorkspaces(RUNS, primaryWs.label, replicaWs.label)
   const catalogs = ["main", "prod_catalog", "analytics", "ml_catalog"]
   const storageMappings = [
     { source: "s3://primary-bucket/metastore", destination: "s3://dr-bucket/metastore" },
@@ -83,6 +103,7 @@ export default function ReplicationPlanPage() {
   const [expanded, setExpanded] = React.useState(false)
   const [hoveredCatalog, setHoveredCatalog] = React.useState<string | null>(null)
   const [hoveredStorage, setHoveredStorage] = React.useState<string | null>(null)
+  const [failoverOpen, setFailoverOpen] = React.useState(false)
 
   return (
     <AppShell activeItem="workspaces">
@@ -105,10 +126,18 @@ export default function ReplicationPlanPage() {
           title="my-replication-plan"
           actions={
             <>
-              <Button variant="ghost" size="icon-sm">
-                <OverflowIcon className="h-4 w-4" />
-              </Button>
-              <Button size="sm">Start failover</Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon-sm">
+                    <OverflowIcon className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>Edit replication plan</DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button size="sm" onClick={() => setFailoverOpen(true)}>Start failover</Button>
             </>
           }
         />
@@ -135,7 +164,7 @@ export default function ReplicationPlanPage() {
         </div>
 
         {/* Workspaces */}
-        <div className="rounded-md border border-border flex flex-col">
+        <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
           <div className="flex items-start justify-center gap-0.5 px-4 py-6 shadow-xs">
             {/* Primary workspace */}
             <div className="flex flex-col gap-1.5">
@@ -166,7 +195,7 @@ export default function ReplicationPlanPage() {
                             onMouseEnter={() => setHoveredCatalog(c)}
                             onMouseLeave={() => setHoveredCatalog(null)}
                           >
-                            <CatalogIcon className="h-4 w-4 shrink-0" />
+                            <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
                             <span>{c}</span>
                           </div>
                         ))}
@@ -224,7 +253,7 @@ export default function ReplicationPlanPage() {
                             onMouseEnter={() => setHoveredCatalog(c)}
                             onMouseLeave={() => setHoveredCatalog(null)}
                           >
-                            <CatalogIcon className="h-4 w-4 shrink-0" />
+                            <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
                             <span>{c}</span>
                           </div>
                         ))}
@@ -253,14 +282,16 @@ export default function ReplicationPlanPage() {
         </div>
 
         {/* Replication runs */}
-        <div className="rounded-md border border-border flex flex-col">
+        <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
           <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
-            <p className="text-sm font-semibold">Replication runs</p>
+            <p className="text-sm font-semibold">Activity</p>
           </div>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead className="pl-4 w-8"></TableHead>
+                <TableHead>Activity</TableHead>
+                <TableHead>Workspaces</TableHead>
                 <TableHead>Started</TableHead>
               </TableRow>
             </TableHeader>
@@ -268,6 +299,14 @@ export default function ReplicationPlanPage() {
               {RUNS.map((run) => (
                 <TableRow key={run.id}>
                   <TableCell className="pl-4"><StatusIcon status={run.status} /></TableCell>
+                  <TableCell>{run.activity}</TableCell>
+                  <TableCell>
+                    <span className="flex items-center gap-1.5 text-sm">
+                      <span>{workspaceMap[run.id].from}</span>
+                      <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span>{workspaceMap[run.id].to}</span>
+                    </span>
+                  </TableCell>
                   <TableCell>{run.startedAt}</TableCell>
                 </TableRow>
               ))}
@@ -276,6 +315,23 @@ export default function ReplicationPlanPage() {
         </div>
 
       </div>
+
+      <Dialog open={failoverOpen} onOpenChange={setFailoverOpen}>
+        <DialogContent className="max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Start failover</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <p className="text-sm text-accent-foreground">
+              This will promote <span className="font-semibold text-foreground">{replicaWs.label}</span> as the new primary workspace and redirect traffic away from <span className="font-semibold text-foreground">{primaryWs.label}</span>.
+            </p>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setFailoverOpen(false)}>Cancel</Button>
+            <Button size="sm" onClick={() => setFailoverOpen(false)}>Start failover</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   )
 }

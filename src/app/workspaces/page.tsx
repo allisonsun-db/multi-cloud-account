@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
-import { CheckCircleIcon } from "@/components/icons"
+import { CheckCircleIcon, XCircleIcon } from "@/components/icons"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ExternalLink, Search, ChevronRight } from "lucide-react"
 import { LocationPicker, buildCloudRegions, CLOUD_ICONS, CLOUD_LOGO } from "@/components/ui/location-picker"
@@ -20,6 +20,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -57,6 +58,26 @@ const WORKSPACES: Workspace[] = [
   { id: "18", name: "supply-chain-analytics", status: "Running", cloud: "Azure", pricingTier: "Enterprise", region: "northeurope",       storage: "Default",            credentialName: "Serverless and classic",  created: "03/17/2026",        metastore: "prod-metastore" },
   { id: "19", name: "feature-store-prod",     status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "asia-east1",        storage: "Default",            credentialName: "Serverless",              created: "03/16/2026",        metastore: "prod-metastore" },
   { id: "20", name: "model-serving-prod",     status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",            credentialName: "Serverless",              created: "03/15/2026",        metastore: "prod-metastore" },
+]
+
+// ─── Replication Plans ─────────────────────────────────────────────────────────
+
+type ReplicationPlan = {
+  id: string
+  name: string
+  primaryWorkspace: string
+  primaryCloud: "AWS" | "Azure" | "GCP"
+  replicaWorkspace: string
+  replicaCloud: "AWS" | "Azure" | "GCP"
+  status: "Active" | "Failed"
+  lastRun: string
+}
+
+const REPLICATION_PLANS: ReplicationPlan[] = [
+  { id: "plan-1", name: "my-replication-plan",    primaryWorkspace: "ws-prod-east",    primaryCloud: "AWS",   replicaWorkspace: "ws-prod-dr-west",    replicaCloud: "AWS",   status: "Active", lastRun: "Apr 9, 2026 at 9:45 AM" },
+  { id: "plan-2", name: "staging-dr-plan",         primaryWorkspace: "ws-staging-east", primaryCloud: "Azure", replicaWorkspace: "ws-staging-dr-west",  replicaCloud: "Azure", status: "Active", lastRun: "Apr 9, 2026 at 9:30 AM" },
+  { id: "plan-3", name: "analytics-backup-plan",   primaryWorkspace: "analytics-prod",  primaryCloud: "AWS",   replicaWorkspace: "analytics-dr",        replicaCloud: "AWS",   status: "Active", lastRun: "Apr 8, 2026 at 4:00 PM" },
+  { id: "plan-4", name: "ml-platform-dr",          primaryWorkspace: "ml-platform-prod",primaryCloud: "GCP",   replicaWorkspace: "ml-platform-dr-east", replicaCloud: "GCP",   status: "Failed", lastRun: "Apr 8, 2026 at 2:15 PM" },
 ]
 
 // ─── Create Workspace Modal ────────────────────────────────────────────────────
@@ -268,6 +289,7 @@ function CreateWorkspaceModal({ onCreated }: { onCreated: (ws: Workspace) => voi
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function WorkspacesPage() {
+  const router = useRouter()
   const [filter, setFilter] = React.useState("")
   const [locations, setLocations] = React.useState<string[]>([])
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>(WORKSPACES)
@@ -292,22 +314,30 @@ export default function WorkspacesPage() {
 
         <h1 className="text-xl font-semibold text-foreground">Workspaces</h1>
 
-        {/* Filters + action */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="relative w-56">
-              <Input
-                placeholder="Filter workspaces"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="pr-8"
-              />
-              <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Tabs defaultValue="workspaces" variant="line">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <TabsList>
+                <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
+                <TabsTrigger value="replication-plans">Replication plans</TabsTrigger>
+              </TabsList>
+              <div className="relative w-56">
+                <Input
+                  placeholder="Filter workspaces"
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="pr-8"
+                />
+                <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
             </div>
-            <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
+            <div className="pb-1">
+              <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
+            </div>
           </div>
-          <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
-        </div>
+
+          <TabsContent value="workspaces" className="mt-2">
 
         {/* Table */}
         <div>
@@ -331,7 +361,7 @@ export default function WorkspacesPage() {
                 <TableRow key={ws.id}>
                   <TableCell className="w-8">
                     <Tooltip>
-                      <TooltipTrigger>
+                      <TooltipTrigger className="flex items-center">
                         <CheckCircleIcon size={14} className="text-[var(--success)]" />
                       </TooltipTrigger>
                       <TooltipContent>Running</TooltipContent>
@@ -381,6 +411,51 @@ export default function WorkspacesPage() {
             </TableBody>
           </Table>
         </div>
+          </TabsContent>
+
+          <TabsContent value="replication-plans" className="mt-2">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-8" />
+                  <TableHead>Name</TableHead>
+                  <TableHead>Primary workspace</TableHead>
+                  <TableHead>Replica workspace</TableHead>
+                  <TableHead>Last run</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {REPLICATION_PLANS.map((plan) => (
+                  <TableRow key={plan.id} className="cursor-pointer" onClick={() => router.push(`/workspaces/1/replication-plan/${plan.id}`)}>
+                    <TableCell className="w-8">
+                      <Tooltip>
+                        <TooltipTrigger className="flex items-center">
+                          {plan.status === "Active" && <CheckCircleIcon size={14} className="text-[var(--success)]" />}
+                          {plan.status === "Failed" && <XCircleIcon size={14} className="text-destructive" />}
+                        </TooltipTrigger>
+                        <TooltipContent>{plan.status}</TooltipContent>
+                      </Tooltip>
+                    </TableCell>
+                    <TableCell>{plan.name}</TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-2">
+                        {CLOUD_ICONS[plan.primaryCloud]}
+                        {plan.primaryWorkspace}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-2">
+                        {CLOUD_ICONS[plan.replicaCloud]}
+                        {plan.replicaWorkspace}
+                      </span>
+                    </TableCell>
+                    <TableCell>{plan.lastRun}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TabsContent>
+        </Tabs>
 
       </div>
     </AppShell>

@@ -26,12 +26,12 @@ import {
 
 const PREREQS = [
   {
-    label: "Secondary workspace set up",
-    description: "A workspace in your secondary cloud and region.",
+    label: "Secondary metastore set up",
+    description: "A metastore in the secondary region.",
   },
   {
-    label: "Secondary metastore set up",
-    description: "A metastore assigned to the secondary workspace.",
+    label: "Secondary workspace set up",
+    description: "A workspace in the secondary region with the secondary metastore assigned.",
   },
   {
     label: "Users provisioned",
@@ -118,14 +118,14 @@ export default function CreateReplicationPlanPage() {
               <DialogTitle>Before you begin</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <p className="text-sm text-muted-foreground mb-4">Make sure the following are in place before creating a replication plan.</p>
+              <p className="text-sm text-accent-foreground mb-4">Make sure the following are in place before creating a replication plan.</p>
               <div className="flex flex-col gap-0">
                 {PREREQS.map((prereq, i) => (
                   <div key={prereq.label} className="flex items-start gap-3 py-2">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground mt-0.5 text-xs font-semibold">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-grey-100 text-muted-foreground mt-0.5 text-xs font-semibold">
                       {i + 1}
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-0.5">
                       <span className="text-sm font-semibold">{prereq.label}</span>
                       <span className="text-sm text-muted-foreground">{prereq.description}</span>
                     </div>
