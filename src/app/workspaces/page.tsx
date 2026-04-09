@@ -112,7 +112,7 @@ function RadioTile({
           {selected && <span className="block size-1.5 rounded-sm bg-background" />}
         </span>
       </div>
-      <p className="text-sm text-muted-foreground">{option.description}</p>
+      <p className="text-sm text-accent-foreground">{option.description}</p>
     </button>
   )
 }

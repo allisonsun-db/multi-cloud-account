@@ -334,3 +334,23 @@
     background-color: rgba(189, 205, 219, 0.08);
   }
 }
+
+@keyframes dash-flow {
+  from { stroke-dashoffset: 0; }
+  to   { stroke-dashoffset: -10; }
+}
+
+@keyframes data-packet {
+  0%   { transform: translateX(-12px); opacity: 0; }
+  10%  { opacity: 1; }
+  65%  { opacity: 1; }
+  80%  { opacity: 0; }
+  100% { transform: translateX(80px); opacity: 0; }
+}
+
+@keyframes flow-dot {
+  0%   { transform: translateX(0);    opacity: 0; }
+  20%  { opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateX(56px); opacity: 0; }
+}

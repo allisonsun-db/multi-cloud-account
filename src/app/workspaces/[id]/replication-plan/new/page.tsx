@@ -12,10 +12,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Plus, ArrowRight } from "lucide-react"
-import { TrashIcon } from "@/components/icons"
+import { TrashIcon, CatalogIcon } from "@/components/icons"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { Select as SelectPrimitive } from "radix-ui"
 import { CheckIcon } from "lucide-react"
@@ -27,19 +27,19 @@ import {
 const PREREQS = [
   {
     label: "Secondary workspace set up",
-    description: "A Databricks workspace exists in your target region and cloud.",
+    description: "A workspace in your secondary cloud and region.",
   },
   {
     label: "Secondary metastore set up",
-    description: "A Unity Catalog metastore is attached to the secondary workspace.",
+    description: "A metastore assigned to the secondary workspace.",
   },
   {
     label: "Users provisioned",
     description: "Users and service principals have been provisioned in the secondary workspace.",
   },
   {
-    label: "Object storage buckets in secondary region",
-    description: "Storage buckets for the metastore root and any external locations are created in the secondary region.",
+    label: "Storage locations in secondary region",
+    description: "Storage buckets for the metastore and any external locations for the secondary region.",
   },
 ]
 
@@ -149,7 +149,7 @@ export default function CreateReplicationPlanPage() {
 
           <div className="rounded-md border border-border flex flex-col">
             <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
-              <p className="text-sm font-semibold">Basics</p>
+              <p className="text-sm font-semibold">Plan details</p>
             </div>
             <div className="flex flex-col gap-4 px-4 py-4">
               <div className="flex flex-col gap-2">
@@ -240,30 +240,51 @@ export default function CreateReplicationPlanPage() {
 
           <div className="rounded-md border border-border flex flex-col">
             <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
-              <p className="text-sm font-semibold">Select what to replicate</p>
+              <p className="text-sm font-semibold">Replication scope</p>
             </div>
 
             {/* Data */}
-            <div className="flex flex-col gap-3 px-4 py-4 border-b border-border">
+            <div className="flex flex-col gap-3 px-4 py-4">
               <div>
                 <p className="text-sm font-semibold">Data</p>
                 <p className="text-sm text-muted-foreground">Select catalogs from the primary workspace to replicate.</p>
               </div>
-              <div className="flex flex-col gap-2">
-                {CATALOGS.map((catalog) => (
-                  <div key={catalog} className="flex items-center gap-2">
+              {primaryWorkspace && drWorkspace ? (
+                <div className="rounded-md border border-border flex flex-col">
+                  <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border sticky top-0 bg-background z-10">
                     <Checkbox
-                      id={`catalog-${catalog}`}
-                      checked={!!selectedCatalogs[catalog]}
+                      id="catalog-all"
+                      checked={CATALOGS.every((c) => !!selectedCatalogs[c])}
                       onCheckedChange={(value) =>
-                        setSelectedCatalogs((prev) => ({ ...prev, [catalog]: !!value }))
+                        setSelectedCatalogs(Object.fromEntries(CATALOGS.map((c) => [c, !!value])))
                       }
                     />
-                    <Label htmlFor={`catalog-${catalog}`} className="font-normal">{catalog}</Label>
+                    <Label htmlFor="catalog-all" className="font-normal">All catalogs</Label>
                   </div>
-                ))}
-              </div>
+                  <div className="max-h-[220px] overflow-y-auto">
+                  {CATALOGS.map((catalog) => (
+                    <div key={catalog} className="flex items-center gap-2 px-3 py-2">
+                      <Checkbox
+                        id={`catalog-${catalog}`}
+                        checked={!!selectedCatalogs[catalog]}
+                        onCheckedChange={(value) =>
+                          setSelectedCatalogs((prev) => ({ ...prev, [catalog]: !!value }))
+                        }
+                      />
+                      <Label htmlFor={`catalog-${catalog}`} className="font-normal flex items-center gap-1.5">
+                        <CatalogIcon className="h-4 w-4 text-muted-foreground" />
+                        {catalog}
+                      </Label>
+                    </div>
+                  ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">Select a primary and replica workspace to see available catalogs.</p>
+              )}
             </div>
+
+            <div className="border-t border-border mx-4" />
 
             {/* Workspace assets */}
             <div className="flex flex-col gap-1 px-4 py-4">
@@ -273,22 +294,21 @@ export default function CreateReplicationPlanPage() {
                   checked={replicateWorkspaceAssets}
                   onCheckedChange={setReplicateWorkspaceAssets}
                 />
-                <p className="text-sm text-muted-foreground">Replicate all notebooks, jobs, and dashboards.</p>
+                <p className="text-sm text-muted-foreground">Replicate notebooks, jobs, dashboards, queries, clusters, SQL warehouses folders and files.</p>
               </div>
             </div>
           </div>
 
           <div className="rounded-md border border-border flex flex-col">
             <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
-              <p className="text-sm font-semibold">Map storage locations</p>
+              <p className="text-sm font-semibold">Storage mappings</p>
             </div>
             <div className="flex flex-col gap-3 px-4 py-4">
-              <p className="text-sm text-muted-foreground">Map source storage paths to their destination paths in the DR region.</p>
               <div className="flex flex-col gap-2">
                 {locationMappings.map((mapping, i) => (
                   <div key={i} className="flex items-end gap-2">
                     <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Source</span>}
+                      {i === 0 && <span className="text-sm font-semibold text-foreground">Source location</span>}
                       <Input
                         placeholder="s3://primary-bucket/path"
                         value={mapping.source}
@@ -297,7 +317,7 @@ export default function CreateReplicationPlanPage() {
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground mb-2" />
                     <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Destination</span>}
+                      {i === 0 && <span className="text-sm font-semibold text-foreground">Replica location</span>}
                       <Input
                         placeholder="s3://dr-bucket/path"
                         value={mapping.destination}
@@ -319,21 +339,22 @@ export default function CreateReplicationPlanPage() {
               <div>
                 <Button variant="outline" size="sm" onClick={addMapping}>
                   <Plus className="h-4 w-4" />
-                  Add mapping
+                  Add location
                 </Button>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>
-              Create plan
-            </Button>
-          </div>
 
+        </div>
+
+        <div className="sticky bottom-0 bg-background flex items-center justify-end gap-2 px-4 py-4">
+          <Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>
+            Cancel
+          </Button>
+          <Button size="sm" onClick={() => router.push(`/workspaces/${workspaceId}/replication-plan/plan-1`)}>
+            Create plan
+          </Button>
         </div>
       </div>
     </AppShell>
