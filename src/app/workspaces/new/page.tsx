@@ -274,6 +274,21 @@ function NewWorkspaceForm() {
                 <span className="text-sm text-accent-foreground">Enable</span>
               </div>
             </FormRow>
+            {cloud === "GCP" && <>
+            <FormRow label="Network configuration">
+              <Select value={computeNetworkConfig || undefined} onValueChange={setComputeNetworkConfig}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select network configuration" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="new-network" className="text-primary focus:text-primary">Add new network configuration</SelectItem>
+                  <SelectItem value="prod-vpc-config">prod-vpc-config</SelectItem>
+                  <SelectItem value="staging-private-link">staging-private-link</SelectItem>
+                  <SelectItem value="analytics-vpc">analytics-vpc</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormRow>
+            </>}
             {cloud === "Azure" && <>
             <FormRow label="Resource group" info>
               <Input
@@ -304,9 +319,9 @@ function NewWorkspaceForm() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="new-network" className="text-primary focus:text-primary">Add new network configuration</SelectItem>
-                  <SelectItem value="default">Default network</SelectItem>
-                  <SelectItem value="custom-vpc">Custom VPC</SelectItem>
-                  <SelectItem value="private-link">Private link only</SelectItem>
+                  <SelectItem value="prod-vpc-config">prod-vpc-config</SelectItem>
+                  <SelectItem value="staging-private-link">staging-private-link</SelectItem>
+                  <SelectItem value="analytics-vpc">analytics-vpc</SelectItem>
                 </SelectContent>
               </Select>
             </FormRow>
@@ -384,9 +399,9 @@ function NewWorkspaceForm() {
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">Default network</SelectItem>
-                  <SelectItem value="custom-vpc">Custom VPC</SelectItem>
-                  <SelectItem value="private-link">Private link only</SelectItem>
+                  <SelectItem value="prod-ncc">prod-ncc</SelectItem>
+                  <SelectItem value="staging-ncc">staging-ncc</SelectItem>
+                  <SelectItem value="analytics-ncc">analytics-ncc</SelectItem>
                 </SelectContent>
               </Select>
             </FormRow>

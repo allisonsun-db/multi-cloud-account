@@ -184,7 +184,7 @@ function CreateWorkspaceModal({ onCreated }: { onCreated: (ws: Workspace) => voi
 
           {/* Deployment */}
           <div className="flex flex-col gap-2">
-            <Label>Deployment</Label>
+            <Label>Compute and storage</Label>
             <div className="flex gap-2">
               {DEPLOYMENT_OPTIONS.map((option) => (
                 <RadioTile

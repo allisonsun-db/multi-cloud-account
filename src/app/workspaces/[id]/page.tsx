@@ -13,6 +13,8 @@ import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem,
   BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { Switch } from "@/components/ui/switch"
+import { PlusIcon } from "@/components/icons"
 import { cn } from "@/lib/utils"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 
@@ -60,10 +62,12 @@ function DetailSection({
   title,
   children,
   defaultOpen = true,
+  editable = true,
 }: {
   title: string
   children: React.ReactNode
   defaultOpen?: boolean
+  editable?: boolean
 }) {
   const [open, setOpen] = React.useState(defaultOpen)
   return (
@@ -71,7 +75,7 @@ function DetailSection({
       <div className="flex items-center justify-between px-3 py-1.5 bg-muted">
         <span className="text-sm font-semibold text-foreground">{title}</span>
         <div className="flex items-center gap-1">
-          {open && (
+          {open && editable && (
             <Button variant="ghost" size="icon-sm" aria-label={`Edit ${title}`}>
               <Pencil className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -124,6 +128,7 @@ export default function WorkspaceDetailPage() {
   const router = useRouter()
   const ws = WORKSPACES.find((w) => w.id === params.id) ?? WORKSPACES[0]
   const url = `https://e2-dogfood.staging.cloud.databricks.com/`
+  const [missionCritical, setMissionCritical] = React.useState(false)
 
   return (
     <AppShell activeItem="workspaces">
@@ -161,6 +166,7 @@ export default function WorkspaceDetailPage() {
           <TabsList variant="line" className="w-full justify-start border-b border-border">
             <TabsTrigger value="overview" className="flex-none">Overview</TabsTrigger>
             <TabsTrigger value="permissions" className="flex-none">Permissions</TabsTrigger>
+            <TabsTrigger value="addons" className="flex-none">Add-ons</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview">
@@ -266,6 +272,14 @@ export default function WorkspaceDetailPage() {
                   <KVRow label="Enforce data processing geography" info>Not enabled</KVRow>
                 </DetailSection>
 
+                {/* Mission critical */}
+                <DetailSection title="Mission critical" editable={false}>
+                  <KVRow label="Mission critical" info>
+                    <Switch checked={missionCritical} onCheckedChange={setMissionCritical} />
+                  </KVRow>
+                  {missionCritical && <KVRow label="Replication plan" info><Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${ws.id}/replication-plan/new`)}>Create plan</Button></KVRow>}
+                </DetailSection>
+
               </div>
 
               {/* ── Sidebar ── */}
@@ -295,6 +309,10 @@ export default function WorkspaceDetailPage() {
 
           <TabsContent value="permissions">
             <p className="text-sm text-muted-foreground mt-4">Permissions content.</p>
+          </TabsContent>
+
+          <TabsContent value="addons">
+            <p className="text-sm text-muted-foreground mt-4">Add-ons content.</p>
           </TabsContent>
         </Tabs>
 
