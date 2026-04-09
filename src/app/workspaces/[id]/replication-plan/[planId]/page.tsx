@@ -170,18 +170,20 @@ export default function ReplicationPlanPage() {
             <div className="flex flex-col gap-1.5">
               <p className="text-sm font-semibold">Primary workspace</p>
               <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] w-[300px]">
-                <div className="flex items-center gap-2 text-sm px-3 py-2.5">
+                <div
+                  className="flex items-center gap-2 text-sm px-3 py-2.5 cursor-pointer select-none"
+                  onClick={() => setExpanded((v) => !v)}
+                >
                   {CLOUD_ICONS[primaryWs.cloud]}
-                  <a href={`/workspaces/${workspaceId}`} className="flex items-center gap-2 flex-1 hover:underline">
+                  <a
+                    href={`/workspaces/${workspaceId}`}
+                    className="flex items-center gap-2 flex-1 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <span>{primaryWs.label}</span>
                     <span className="text-muted-foreground">({primaryWs.region})</span>
                   </a>
-                  <button
-                    onClick={() => setExpanded((v) => !v)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
-                  </button>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
                 </div>
                 {expanded && (
                   <div className="border-t border-border divide-y divide-border">
@@ -228,18 +230,20 @@ export default function ReplicationPlanPage() {
             <div className="flex flex-col gap-1.5">
               <p className="text-sm font-semibold">Replica workspace</p>
               <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] w-[300px]">
-                <div className="flex items-center gap-2 text-sm px-3 py-2.5">
+                <div
+                  className="flex items-center gap-2 text-sm px-3 py-2.5 cursor-pointer select-none"
+                  onClick={() => setExpanded((v) => !v)}
+                >
                   {CLOUD_ICONS[replicaWs.cloud]}
-                  <a href="/workspaces/ws-prod-dr-west" className="flex items-center gap-2 flex-1 hover:underline">
+                  <a
+                    href="/workspaces/ws-prod-dr-west"
+                    className="flex items-center gap-2 flex-1 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <span>{replicaWs.label}</span>
                     <span className="text-muted-foreground">({replicaWs.region})</span>
                   </a>
-                  <button
-                    onClick={() => setExpanded((v) => !v)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ChevronDown className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
-                  </button>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
                 </div>
                 {expanded && (
                   <div className="border-t border-border divide-y divide-border">
