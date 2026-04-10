@@ -58,9 +58,7 @@ function computeWorkspaces(runs: ActivityRun[], initialPrimary: string, initialR
   return result
 }
 
-function ReplicationFlowIndicator() {
-  // Exact Figma dimensions (node 5010-1877): 80×19 frame, line at y=10, arrowhead 8×8 at x=76 y=6
-  // Dashes animated left→right via stroke-dashoffset
+function ReplicationFlowIndicator({ reversed = false }: { reversed?: boolean }) {
   return (
     <div className="mt-[38px] shrink-0" style={{ width: 84, height: 19 }}>
       <svg
@@ -69,6 +67,7 @@ function ReplicationFlowIndicator() {
         viewBox="0 0 84 19"
         fill="none"
         className="text-muted-foreground"
+        style={reversed ? { transform: "scaleX(-1)" } : undefined}
       >
         <line
           x1="0" y1="10" x2="76" y2="10"
@@ -77,7 +76,6 @@ function ReplicationFlowIndicator() {
           strokeDasharray="6 4"
           style={{ animation: "dash-flow 0.6s linear infinite" }}
         />
-        {/* 8×8 filled triangle arrowhead at x=76, centered at y=10 */}
         <polygon points="76,6 84,10 76,14" fill="currentColor" />
       </svg>
     </div>
@@ -97,7 +95,8 @@ export default function ReplicationPlanPage() {
 
   const primaryWs = { label: "ws-prod-east", cloud: "AWS", region: "us-east-1" }
   const replicaWs  = { label: "ws-prod-dr-west", cloud: "AWS", region: "us-west-2" }
-  const workspaceMap = computeWorkspaces(RUNS, primaryWs.label, replicaWs.label)
+  const [runs, setRuns] = React.useState<ActivityRun[]>(RUNS)
+  const workspaceMap = computeWorkspaces(runs, primaryWs.label, replicaWs.label)
   const catalogs = ["main", "prod_catalog", "analytics", "ml_catalog"]
   const storageMappings = [
     { source: "s3://primary-bucket/metastore", destination: "s3://dr-bucket/metastore" },
@@ -108,6 +107,7 @@ export default function ReplicationPlanPage() {
   const [hoveredStorage, setHoveredStorage] = React.useState<string | null>(null)
   const [failoverOpen, setFailoverOpen] = React.useState(false)
   const [failoverConfirm, setFailoverConfirm] = React.useState("")
+  const [failedOver, setFailedOver] = React.useState(false)
   const [arrowY, setArrowY] = React.useState<number | null>(null)
   const cardsRef = React.useRef<HTMLDivElement>(null)
 
@@ -195,7 +195,7 @@ export default function ReplicationPlanPage() {
                 className="absolute pointer-events-none z-10"
                 style={{ top: arrowY - 6, left: "50%", transform: "translateX(-42px)" }}
               >
-                <svg width="84" height="12" viewBox="0 0 84 12" fill="none" className="text-primary">
+                <svg width="84" height="12" viewBox="0 0 84 12" fill="none" className="text-primary" style={failedOver ? { transform: "scaleX(-1)" } : undefined}>
                   <line x1="0" y1="6" x2="76" y2="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 4"
                     style={{ animation: "dash-flow 0.6s linear infinite" }} />
                   <polygon points="76,2 84,6 76,10" fill="currentColor" />
@@ -204,7 +204,7 @@ export default function ReplicationPlanPage() {
             )}
             {/* Primary workspace */}
             <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-semibold">Primary workspace</p>
+              <p className="text-sm font-semibold">{failedOver ? "Secondary workspace" : "Primary workspace"}</p>
               <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] w-[300px]">
                 <div
                   className="flex items-center gap-2 text-sm px-3 py-2.5 cursor-pointer select-none"
@@ -259,11 +259,11 @@ export default function ReplicationPlanPage() {
               </div>
             </div>
 
-            <ReplicationFlowIndicator />
+            <ReplicationFlowIndicator reversed={failedOver} />
 
             {/* Secondary workspace */}
             <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-semibold">Secondary workspace</p>
+              <p className="text-sm font-semibold">{failedOver ? "Primary workspace" : "Secondary workspace"}</p>
               <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] w-[300px]">
                 <div
                   className="flex items-center gap-2 text-sm px-3 py-2.5 cursor-pointer select-none"
@@ -341,7 +341,7 @@ export default function ReplicationPlanPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {RUNS.map((run) => (
+              {runs.map((run) => (
                 <TableRow key={run.id}>
                   <TableCell className="pl-4"><StatusIcon status={run.status} /></TableCell>
                   <TableCell>{run.activity}</TableCell>
@@ -401,7 +401,14 @@ export default function ReplicationPlanPage() {
           </DialogBody>
           <DialogFooter>
             <Button variant="outline" size="sm" onClick={() => { setFailoverOpen(false); setFailoverConfirm("") }}>Cancel</Button>
-            <Button size="sm" disabled={failoverConfirm !== primaryWs.label} onClick={() => { setFailoverOpen(false); setFailoverConfirm("") }}>Start failover</Button>
+            <Button size="sm" disabled={failoverConfirm !== primaryWs.label} onClick={() => {
+              const isNowFailedOver = !failedOver
+              const newId = `run-${Date.now()}`
+              setRuns((prev) => [{ id: newId, startedAt: "Apr 10, 2026 at 11:00 AM", duration: "1m 05s", status: "succeeded", activity: "Failover", rpo: currentRpo }, ...prev])
+              setFailedOver(isNowFailedOver)
+              setFailoverOpen(false)
+              setFailoverConfirm("")
+            }}>Start failover</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
