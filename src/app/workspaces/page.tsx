@@ -424,7 +424,7 @@ export default function WorkspacesPage() {
                   <TableHead className="w-8" />
                   <TableHead>Name</TableHead>
                   <TableHead>Primary workspace</TableHead>
-                  <TableHead>Replica workspace</TableHead>
+                  <TableHead>Secondary workspace</TableHead>
                   <TableHead>Last run</TableHead>
                 </TableRow>
               </TableHeader>

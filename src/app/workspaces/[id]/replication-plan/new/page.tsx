@@ -197,7 +197,7 @@ export default function CreateReplicationPlanPage() {
                   </Select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="dr-workspace">Replica workspace</Label>
+                  <Label htmlFor="dr-workspace">Secondary workspace</Label>
                   <Select value={drWorkspace} onValueChange={setDrWorkspace}>
                     <SelectTrigger id="dr-workspace" className="w-full">
                       <span className="sr-only"><SelectValue /></span>
@@ -315,7 +315,7 @@ export default function CreateReplicationPlanPage() {
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground mb-2" />
                     <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Replica location</span>}
+                      {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary location</span>}
                       <Input
                         placeholder="s3://dr-bucket/path"
                         value={mapping.destination}

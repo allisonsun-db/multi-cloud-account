@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CatalogIcon } from "@/components/icons"
-import { ExternalLink, ChevronDown, ArrowRight } from "lucide-react"
+import { ExternalLink, ChevronDown, ArrowRight, Info } from "lucide-react"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
 type ActivityType = "Replication" | "Failover"
@@ -30,17 +30,18 @@ interface ActivityRun {
   duration: string
   status: ReplicationStatus
   activity: ActivityType
+  rpo: string
 }
 
 const RUNS: ActivityRun[] = [
-  { id: "run-18", startedAt: "Apr 9, 2026 at 9:45 AM", duration: "1m 12s", status: "running",   activity: "Replication" },
-  { id: "run-17", startedAt: "Apr 9, 2026 at 9:30 AM", duration: "1m 08s", status: "succeeded", activity: "Replication" },
-  { id: "run-16", startedAt: "Apr 9, 2026 at 9:15 AM", duration: "1m 21s", status: "succeeded", activity: "Failover"    },
-  { id: "run-15", startedAt: "Apr 9, 2026 at 9:00 AM", duration: "0m 54s", status: "failed",    activity: "Replication" },
-  { id: "run-14", startedAt: "Apr 9, 2026 at 8:45 AM", duration: "1m 03s", status: "succeeded", activity: "Replication" },
-  { id: "run-13", startedAt: "Apr 9, 2026 at 8:30 AM", duration: "1m 17s", status: "succeeded", activity: "Replication" },
-  { id: "run-12", startedAt: "Apr 9, 2026 at 8:15 AM", duration: "1m 09s", status: "succeeded", activity: "Replication" },
-  { id: "run-11", startedAt: "Apr 9, 2026 at 8:00 AM", duration: "1m 22s", status: "succeeded", activity: "Replication" },
+  { id: "run-18", startedAt: "Apr 9, 2026 at 9:45 AM", duration: "1m 12s", status: "running",   activity: "Replication", rpo: "5m"  },
+  { id: "run-17", startedAt: "Apr 9, 2026 at 9:30 AM", duration: "1m 08s", status: "succeeded", activity: "Replication", rpo: "10m" },
+  { id: "run-16", startedAt: "Apr 9, 2026 at 9:15 AM", duration: "1m 21s", status: "succeeded", activity: "Failover",    rpo: "5m"  },
+  { id: "run-15", startedAt: "Apr 9, 2026 at 9:00 AM", duration: "0m 54s", status: "failed",    activity: "Replication", rpo: "15m" },
+  { id: "run-14", startedAt: "Apr 9, 2026 at 8:45 AM", duration: "1m 03s", status: "succeeded", activity: "Replication", rpo: "5m"  },
+  { id: "run-13", startedAt: "Apr 9, 2026 at 8:30 AM", duration: "1m 17s", status: "succeeded", activity: "Replication", rpo: "10m" },
+  { id: "run-12", startedAt: "Apr 9, 2026 at 8:15 AM", duration: "1m 09s", status: "succeeded", activity: "Replication", rpo: "5m"  },
+  { id: "run-11", startedAt: "Apr 9, 2026 at 8:00 AM", duration: "1m 22s", status: "succeeded", activity: "Replication", rpo: "10m" },
 ]
 
 // Compute from/to by replaying runs chronologically, swapping on each failover
@@ -255,9 +256,9 @@ export default function ReplicationPlanPage() {
 
             <ReplicationFlowIndicator />
 
-            {/* Replica workspace */}
+            {/* Secondary workspace */}
             <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-semibold">Replica workspace</p>
+              <p className="text-sm font-semibold">Secondary workspace</p>
               <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] w-[300px]">
                 <div
                   className="flex items-center gap-2 text-sm px-3 py-2.5 cursor-pointer select-none"
@@ -277,7 +278,7 @@ export default function ReplicationPlanPage() {
                 {expanded && (
                   <div className="border-t border-border divide-y divide-border">
                     <div className="px-3 py-2">
-                      <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Replicated catalogs</p>
+                      <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Secondary catalogs</p>
                       <div className="flex flex-col gap-0.5">
                         {catalogs.map((c) => (
                           <div
@@ -326,6 +327,12 @@ export default function ReplicationPlanPage() {
                 <TableHead>Activity</TableHead>
                 <TableHead>Workspaces</TableHead>
                 <TableHead>Started</TableHead>
+                <TableHead>
+                  <span className="flex items-center gap-1">
+                    Recovery point objective (RPO)
+                    <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  </span>
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -341,6 +348,7 @@ export default function ReplicationPlanPage() {
                     </span>
                   </TableCell>
                   <TableCell>{run.startedAt}</TableCell>
+                  <TableCell>{run.status === "failed" ? <span className="text-muted-foreground">—</span> : run.rpo}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
