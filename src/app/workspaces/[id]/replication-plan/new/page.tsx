@@ -249,7 +249,7 @@ export default function CreateReplicationPlanPage() {
                 <p className="text-sm font-semibold">Data</p>
                 <p className="text-sm text-muted-foreground">Select catalogs from the primary workspace to replicate.</p>
               </div>
-              {primaryWorkspace && drWorkspace ? (
+              {primaryWorkspace && drWorkspace && (
                 <div className="rounded-md border border-border flex flex-col">
                   <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border sticky top-0 bg-background z-10">
                     <Checkbox
@@ -279,8 +279,6 @@ export default function CreateReplicationPlanPage() {
                   ))}
                   </div>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">Select a primary and replica workspace to see available catalogs.</p>
               )}
             </div>
 

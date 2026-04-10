@@ -104,6 +104,24 @@ export default function ReplicationPlanPage() {
   const [hoveredCatalog, setHoveredCatalog] = React.useState<string | null>(null)
   const [hoveredStorage, setHoveredStorage] = React.useState<string | null>(null)
   const [failoverOpen, setFailoverOpen] = React.useState(false)
+  const [arrowY, setArrowY] = React.useState<number | null>(null)
+  const cardsRef = React.useRef<HTMLDivElement>(null)
+
+  function onRowEnter(key: string, type: "catalog" | "storage", e: React.MouseEvent<HTMLDivElement>) {
+    if (type === "catalog") setHoveredCatalog(key)
+    else setHoveredStorage(key)
+    if (cardsRef.current) {
+      const rowRect = e.currentTarget.getBoundingClientRect()
+      const containerRect = cardsRef.current.getBoundingClientRect()
+      setArrowY(rowRect.top - containerRect.top + rowRect.height / 2)
+    }
+  }
+
+  function onRowLeave(type: "catalog" | "storage") {
+    if (type === "catalog") setHoveredCatalog(null)
+    else setHoveredStorage(null)
+    setArrowY(null)
+  }
 
   return (
     <AppShell activeItem="workspaces">
@@ -165,7 +183,19 @@ export default function ReplicationPlanPage() {
 
         {/* Workspaces */}
         <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
-          <div className="flex items-start justify-center gap-0.5 px-4 py-6 shadow-xs">
+          <div ref={cardsRef} className="relative flex items-start justify-center gap-0.5 px-4 py-6 shadow-xs">
+            {arrowY !== null && (
+              <div
+                className="absolute pointer-events-none z-10"
+                style={{ top: arrowY - 6, left: "50%", transform: "translateX(-42px)" }}
+              >
+                <svg width="84" height="12" viewBox="0 0 84 12" fill="none" className="text-primary">
+                  <line x1="0" y1="6" x2="76" y2="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 4"
+                    style={{ animation: "dash-flow 0.6s linear infinite" }} />
+                  <polygon points="76,2 84,6 76,10" fill="currentColor" />
+                </svg>
+              </div>
+            )}
             {/* Primary workspace */}
             <div className="flex flex-col gap-1.5">
               <p className="text-sm font-semibold">Primary workspace</p>
@@ -194,8 +224,8 @@ export default function ReplicationPlanPage() {
                           <div
                             key={c}
                             className={`flex items-center gap-2 py-1 text-sm rounded px-1 -mx-1 transition-colors ${hoveredCatalog === c ? "bg-primary/10 text-primary" : ""}`}
-                            onMouseEnter={() => setHoveredCatalog(c)}
-                            onMouseLeave={() => setHoveredCatalog(null)}
+                            onMouseEnter={(e) => onRowEnter(c, "catalog", e)}
+                            onMouseLeave={() => onRowLeave("catalog")}
                           >
                             <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
                             <span>{c}</span>
@@ -203,16 +233,15 @@ export default function ReplicationPlanPage() {
                         ))}
                       </div>
                     </div>
-                    {/* Storage locations */}
                     <div className="px-3 py-2">
                       <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Storage locations</p>
                       <div className="flex flex-col gap-0.5">
                         {storageMappings.map((m) => (
                           <div
                             key={m.source}
-                            className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[2px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
-                            onMouseEnter={() => setHoveredStorage(m.source)}
-                            onMouseLeave={() => setHoveredStorage(null)}
+                            className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[3px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
+                            onMouseEnter={(e) => onRowEnter(m.source, "storage", e)}
+                            onMouseLeave={() => onRowLeave("storage")}
                           >
                             {m.source}
                           </div>
@@ -254,8 +283,8 @@ export default function ReplicationPlanPage() {
                           <div
                             key={c}
                             className={`flex items-center gap-2 py-1 text-sm rounded px-1 -mx-1 transition-colors ${hoveredCatalog === c ? "bg-primary/10 text-primary" : ""}`}
-                            onMouseEnter={() => setHoveredCatalog(c)}
-                            onMouseLeave={() => setHoveredCatalog(null)}
+                            onMouseEnter={(e) => onRowEnter(c, "catalog", e)}
+                            onMouseLeave={() => onRowLeave("catalog")}
                           >
                             <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
                             <span>{c}</span>
@@ -269,9 +298,9 @@ export default function ReplicationPlanPage() {
                         {storageMappings.map((m) => (
                           <div
                             key={m.destination}
-                            className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[2px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
-                            onMouseEnter={() => setHoveredStorage(m.source)}
-                            onMouseLeave={() => setHoveredStorage(null)}
+                            className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[3px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
+                            onMouseEnter={(e) => onRowEnter(m.source, "storage", e)}
+                            onMouseLeave={() => onRowLeave("storage")}
                           >
                             {m.destination}
                           </div>
