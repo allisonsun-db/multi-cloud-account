@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CatalogIcon } from "@/components/icons"
 import { ExternalLink, ChevronDown, ArrowRight, Info } from "lucide-react"
+import { toast } from "sonner"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
 type ActivityType = "Replication" | "Failover"
@@ -58,7 +59,7 @@ function computeWorkspaces(runs: ActivityRun[], initialPrimary: string, initialR
   return result
 }
 
-function ReplicationFlowIndicator({ reversed = false }: { reversed?: boolean }) {
+function ReplicationFlowIndicator({ reversed = false, loading = false }: { reversed?: boolean; loading?: boolean }) {
   return (
     <div className="mt-[38px] shrink-0" style={{ width: 84, height: 19 }}>
       <svg
@@ -66,7 +67,7 @@ function ReplicationFlowIndicator({ reversed = false }: { reversed?: boolean }) 
         height="19"
         viewBox="0 0 84 19"
         fill="none"
-        className="text-muted-foreground"
+        className={loading ? "text-border" : "text-muted-foreground"}
         style={reversed ? { transform: "scaleX(-1)" } : undefined}
       >
         <line
@@ -108,6 +109,8 @@ export default function ReplicationPlanPage() {
   const [failoverOpen, setFailoverOpen] = React.useState(false)
   const [failoverConfirm, setFailoverConfirm] = React.useState("")
   const [failedOver, setFailedOver] = React.useState(false)
+  const [failoverLoading, setFailoverLoading] = React.useState(false)
+  const [pendingRunId, setPendingRunId] = React.useState<string | null>(null)
   const [arrowY, setArrowY] = React.useState<number | null>(null)
   const cardsRef = React.useRef<HTMLDivElement>(null)
 
@@ -161,17 +164,22 @@ export default function ReplicationPlanPage() {
                   <DropdownMenuItem className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button size="sm" onClick={() => setFailoverOpen(true)}>Start failover</Button>
+              <Button size="sm" disabled={failoverLoading} onClick={() => setFailoverOpen(true)}>Start failover</Button>
             </>
           }
         />
 
         {/* Stable URL */}
         <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] overflow-hidden flex items-stretch">
-          <div className="bg-green-100 dark:bg-green-950 flex flex-col justify-center px-3 py-2 shrink-0">
+          <div className={`flex flex-col justify-center px-3 py-2 shrink-0 ${failoverLoading ? "bg-muted" : "bg-green-100 dark:bg-green-950"}`}>
             <div className="flex items-center gap-1.5">
-              <CheckCircleIcon className="h-4 w-4 text-[var(--success)]" />
-              <span className="text-sm font-semibold text-[var(--success)] whitespace-nowrap">Active</span>
+              {failoverLoading
+                ? <RunningIcon className="h-4 w-4 text-muted-foreground animate-spin [animation-duration:2s]" />
+                : <CheckCircleIcon className="h-4 w-4 text-[var(--success)]" />
+              }
+              <span className={`text-sm font-semibold whitespace-nowrap ${failoverLoading ? "text-muted-foreground" : "text-[var(--success)]"}`}>
+                {failoverLoading ? "Pending" : "Active"}
+              </span>
             </div>
           </div>
           <div className="flex flex-1 items-center justify-between px-4 py-2 min-w-0">
@@ -259,7 +267,7 @@ export default function ReplicationPlanPage() {
               </div>
             </div>
 
-            <ReplicationFlowIndicator reversed={failedOver} />
+            <ReplicationFlowIndicator reversed={failedOver} loading={failoverLoading} />
 
             {/* Secondary workspace */}
             <div className="flex flex-col gap-1.5">
@@ -404,10 +412,18 @@ export default function ReplicationPlanPage() {
             <Button size="sm" disabled={failoverConfirm !== primaryWs.label} onClick={() => {
               const isNowFailedOver = !failedOver
               const newId = `run-${Date.now()}`
-              setRuns((prev) => [{ id: newId, startedAt: "Apr 10, 2026 at 11:00 AM", duration: "1m 05s", status: "succeeded", activity: "Failover", rpo: currentRpo }, ...prev])
+              setRuns((prev) => [{ id: newId, startedAt: "Apr 10, 2026 at 11:00 AM", duration: "—", status: "running", activity: "Failover", rpo: currentRpo }, ...prev])
               setFailedOver(isNowFailedOver)
               setFailoverOpen(false)
               setFailoverConfirm("")
+              setFailoverLoading(true)
+              setPendingRunId(newId)
+              toast.success("Failover started")
+              setTimeout(() => {
+                setRuns((prev) => prev.map((r) => r.id === newId ? { ...r, status: "succeeded", duration: "1m 05s" } : r))
+                setFailoverLoading(false)
+                setPendingRunId(null)
+              }, 3000)
             }}>Start failover</Button>
           </DialogFooter>
         </DialogContent>
