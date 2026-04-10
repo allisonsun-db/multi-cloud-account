@@ -17,6 +17,8 @@ import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem,
   BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CatalogIcon } from "@/components/icons"
 import { ExternalLink, ChevronDown, ArrowRight, Info } from "lucide-react"
@@ -105,6 +107,7 @@ export default function ReplicationPlanPage() {
   const [hoveredCatalog, setHoveredCatalog] = React.useState<string | null>(null)
   const [hoveredStorage, setHoveredStorage] = React.useState<string | null>(null)
   const [failoverOpen, setFailoverOpen] = React.useState(false)
+  const [failoverConfirm, setFailoverConfirm] = React.useState("")
   const [arrowY, setArrowY] = React.useState<number | null>(null)
   const cardsRef = React.useRef<HTMLDivElement>(null)
 
@@ -123,6 +126,8 @@ export default function ReplicationPlanPage() {
     else setHoveredStorage(null)
     setArrowY(null)
   }
+
+  const currentRpo = RUNS.find((r) => r.status === "succeeded" && r.activity === "Replication")?.rpo ?? "—"
 
   return (
     <AppShell activeItem="workspaces">
@@ -357,7 +362,7 @@ export default function ReplicationPlanPage() {
 
       </div>
 
-      <Dialog open={failoverOpen} onOpenChange={setFailoverOpen}>
+      <Dialog open={failoverOpen} onOpenChange={(open) => { setFailoverOpen(open); if (!open) setFailoverConfirm("") }}>
         <DialogContent className="max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Start failover</DialogTitle>
@@ -366,10 +371,37 @@ export default function ReplicationPlanPage() {
             <p className="text-sm text-accent-foreground">
               This will promote <span className="font-semibold text-foreground">{replicaWs.label}</span> as the new primary workspace and redirect traffic away from <span className="font-semibold text-foreground">{primaryWs.label}</span>.
             </p>
+            <div className="mt-3 rounded-md border border-border">
+              <div className="flex items-center justify-between px-4 py-2 text-sm">
+                <span className="text-muted-foreground">Current RPO</span>
+                <span className="text-foreground">{currentRpo}</span>
+              </div>
+              <div className="h-px bg-border mx-4" />
+              <div className="flex items-center justify-between px-4 py-2 text-sm">
+                <span className="text-muted-foreground">New primary workspace</span>
+                <span className="text-foreground">{replicaWs.label}</span>
+              </div>
+              <div className="h-px bg-border mx-4" />
+              <div className="flex items-center justify-between px-4 py-2 text-sm">
+                <span className="text-muted-foreground">New secondary workspace</span>
+                <span className="text-foreground">{primaryWs.label}</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5 mt-6">
+              <Label htmlFor="failover-confirm" className="font-normal text-accent-foreground">
+                Type <span className="font-semibold text-foreground">{primaryWs.label}</span> to confirm failover
+              </Label>
+              <Input
+                id="failover-confirm"
+                value={failoverConfirm}
+                onChange={(e) => setFailoverConfirm(e.target.value)}
+                placeholder={primaryWs.label}
+              />
+            </div>
           </DialogBody>
           <DialogFooter>
-            <Button variant="outline" size="sm" onClick={() => setFailoverOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={() => setFailoverOpen(false)}>Start failover</Button>
+            <Button variant="outline" size="sm" onClick={() => { setFailoverOpen(false); setFailoverConfirm("") }}>Cancel</Button>
+            <Button size="sm" disabled={failoverConfirm !== primaryWs.label} onClick={() => { setFailoverOpen(false); setFailoverConfirm("") }}>Start failover</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
