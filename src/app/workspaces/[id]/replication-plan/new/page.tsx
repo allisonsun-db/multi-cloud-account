@@ -103,12 +103,12 @@ export default function CreateReplicationPlanPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Create replication plan</BreadcrumbPage>
+                  <BreadcrumbPage>Create failover group</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           }
-          title="Create replication plan"
+          title="Create failover group"
         />
 
         {/* Prerequisites modal */}
@@ -118,7 +118,7 @@ export default function CreateReplicationPlanPage() {
               <DialogTitle>Before you begin</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <p className="text-sm text-accent-foreground mb-4">Make sure the following are in place before creating a replication plan.</p>
+              <p className="text-sm text-accent-foreground mb-4">Make sure the following are in place before creating a failover group.</p>
               <div className="flex flex-col gap-0">
                 {PREREQS.map((prereq, i) => (
                   <div key={prereq.label} className="flex items-start gap-3 py-2">
@@ -243,70 +243,83 @@ export default function CreateReplicationPlanPage() {
               <p className="text-sm font-semibold">Replication scope</p>
             </div>
 
-            {/* Data */}
-            <div className="flex flex-col gap-3 px-4 py-4">
-              <div>
-                <p className="text-sm font-semibold">Data</p>
-                <p className="text-sm text-muted-foreground">Select catalogs from the primary workspace to replicate.</p>
+            {!primaryWorkspace ? (
+              <div className="px-4 py-4">
+                <p className="text-sm text-muted-foreground">Select a primary workspace first.</p>
               </div>
-              {primaryWorkspace && drWorkspace && (
-                <div className="rounded-md border border-border flex flex-col">
-                  <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border sticky top-0 bg-background z-10">
-                    <Checkbox
-                      id="catalog-all"
-                      checked={CATALOGS.every((c) => !!selectedCatalogs[c])}
-                      onCheckedChange={(value) =>
-                        setSelectedCatalogs(Object.fromEntries(CATALOGS.map((c) => [c, !!value])))
-                      }
-                    />
-                    <Label htmlFor="catalog-all" className="font-normal">All catalogs</Label>
+            ) : (
+              <>
+                {/* Data */}
+                <div className="flex flex-col gap-3 px-4 py-4">
+                  <div>
+                    <p className="text-sm font-semibold">Data</p>
+                    <p className="text-sm text-muted-foreground">Select catalogs from the primary workspace to replicate.</p>
                   </div>
-                  <div className="max-h-[220px] overflow-y-auto">
-                  {CATALOGS.map((catalog) => (
-                    <div key={catalog} className="flex items-center gap-2 px-3 py-2">
-                      <Checkbox
-                        id={`catalog-${catalog}`}
-                        checked={!!selectedCatalogs[catalog]}
-                        onCheckedChange={(value) =>
-                          setSelectedCatalogs((prev) => ({ ...prev, [catalog]: !!value }))
-                        }
-                      />
-                      <Label htmlFor={`catalog-${catalog}`} className="font-normal flex items-center gap-1.5">
-                        <CatalogIcon className="h-4 w-4 text-muted-foreground" />
-                        {catalog}
-                      </Label>
+                  {primaryWorkspace && (
+                    <div className="rounded-md border border-border flex flex-col">
+                      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border sticky top-0 bg-background z-10">
+                        <Checkbox
+                          id="catalog-all"
+                          checked={CATALOGS.every((c) => !!selectedCatalogs[c])}
+                          onCheckedChange={(value) =>
+                            setSelectedCatalogs(Object.fromEntries(CATALOGS.map((c) => [c, !!value])))
+                          }
+                        />
+                        <Label htmlFor="catalog-all" className="font-normal">All catalogs</Label>
+                      </div>
+                      <div className="max-h-[220px] overflow-y-auto">
+                      {CATALOGS.map((catalog) => (
+                        <div key={catalog} className="flex items-center gap-2 px-3 py-2">
+                          <Checkbox
+                            id={`catalog-${catalog}`}
+                            checked={!!selectedCatalogs[catalog]}
+                            onCheckedChange={(value) =>
+                              setSelectedCatalogs((prev) => ({ ...prev, [catalog]: !!value }))
+                            }
+                          />
+                          <Label htmlFor={`catalog-${catalog}`} className="font-normal flex items-center gap-1.5">
+                            <CatalogIcon className="h-4 w-4 text-muted-foreground" />
+                            {catalog}
+                          </Label>
+                        </div>
+                      ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
+                </div>
+
+                <div className="border-t border-border mx-4" />
+
+                {/* Workspace assets */}
+                <div className="flex flex-col gap-1 px-4 py-4">
+                  <p className="text-sm font-semibold">Workspace assets</p>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={replicateWorkspaceAssets}
+                      onCheckedChange={setReplicateWorkspaceAssets}
+                    />
+                    <p className="text-sm text-accent-foreground">Replicate notebooks, jobs, dashboards, queries, clusters, SQL warehouses folders and files.</p>
                   </div>
                 </div>
-              )}
-            </div>
-
-            <div className="border-t border-border mx-4" />
-
-            {/* Workspace assets */}
-            <div className="flex flex-col gap-1 px-4 py-4">
-              <p className="text-sm font-semibold">Workspace assets</p>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={replicateWorkspaceAssets}
-                  onCheckedChange={setReplicateWorkspaceAssets}
-                />
-                <p className="text-sm text-muted-foreground">Replicate notebooks, jobs, dashboards, queries, clusters, SQL warehouses folders and files.</p>
-              </div>
-            </div>
+              </>
+            )}
           </div>
 
           <div className="rounded-md border border-border flex flex-col">
             <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
               <p className="text-sm font-semibold">Storage mappings</p>
             </div>
+            {!Object.values(selectedCatalogs).some(Boolean) ? (
+              <div className="px-4 py-4">
+                <p className="text-sm text-muted-foreground">Select catalogs to replicate first.</p>
+              </div>
+            ) : (
             <div className="flex flex-col gap-3 px-4 py-4">
               <div className="flex flex-col gap-2">
                 {locationMappings.map((mapping, i) => (
                   <div key={i} className="flex items-end gap-2">
                     <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Source location</span>}
+                      {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
                       <Input
                         placeholder="s3://primary-bucket/path"
                         value={mapping.source}
@@ -315,7 +328,7 @@ export default function CreateReplicationPlanPage() {
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground mb-2" />
                     <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary location</span>}
+                      {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
                       <Input
                         placeholder="s3://dr-bucket/path"
                         value={mapping.destination}
@@ -341,6 +354,7 @@ export default function CreateReplicationPlanPage() {
                 </Button>
               </div>
             </div>
+            )}
           </div>
 
 
@@ -351,7 +365,7 @@ export default function CreateReplicationPlanPage() {
             Cancel
           </Button>
           <Button size="sm" onClick={() => router.push(`/workspaces/${workspaceId}/replication-plan/plan-1`)}>
-            Create plan
+            Create failover group
           </Button>
         </div>
       </div>

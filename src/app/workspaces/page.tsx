@@ -320,7 +320,7 @@ export default function WorkspacesPage() {
             <div className="flex items-center gap-2">
               <TabsList>
                 <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
-                <TabsTrigger value="replication-plans">Replication plans</TabsTrigger>
+                <TabsTrigger value="replication-plans">Failover groups</TabsTrigger>
               </TabsList>
               <div className="relative w-56">
                 <Input
@@ -336,7 +336,7 @@ export default function WorkspacesPage() {
             <div className="pb-1">
               {activeTab === "workspaces"
                 ? <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
-                : <Button size="sm" onClick={() => router.push(`/workspaces/1/replication-plan/new`)}>Create plan</Button>
+                : <Button size="sm" onClick={() => router.push(`/workspaces/1/replication-plan/new`)}>Create failover group</Button>
               }
             </div>
           </div>

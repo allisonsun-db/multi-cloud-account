@@ -277,7 +277,7 @@ export default function WorkspaceDetailPage() {
                   <KVRow label="Mission critical" info>
                     <Switch checked={missionCritical} onCheckedChange={setMissionCritical} />
                   </KVRow>
-                  {missionCritical && <KVRow label="Replication plan" info><Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${ws.id}/replication-plan/new`)}>Create plan</Button></KVRow>}
+                  {missionCritical && <KVRow label="Failover group" info><Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${ws.id}/replication-plan/new`)}>Create failover group</Button></KVRow>}
                 </DetailSection>
 
               </div>

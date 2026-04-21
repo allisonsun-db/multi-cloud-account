@@ -160,7 +160,7 @@ export default function ReplicationPlanPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Edit replication plan</DropdownMenuItem>
+                  <DropdownMenuItem>Edit failover group</DropdownMenuItem>
                   <DropdownMenuItem className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -232,7 +232,7 @@ export default function ReplicationPlanPage() {
                 {expanded && (
                   <div className="border-t border-border divide-y divide-border">
                     <div className="px-3 py-2">
-                      <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Selected catalogs</p>
+                      <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Catalogs</p>
                       <div className="flex flex-col gap-0.5">
                         {catalogs.map((c) => (
                           <div
@@ -291,7 +291,7 @@ export default function ReplicationPlanPage() {
                 {expanded && (
                   <div className="border-t border-border divide-y divide-border">
                     <div className="px-3 py-2">
-                      <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Secondary catalogs</p>
+                      <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Catalogs</p>
                       <div className="flex flex-col gap-0.5">
                         {catalogs.map((c) => (
                           <div
@@ -379,20 +379,16 @@ export default function ReplicationPlanPage() {
             <p className="text-sm text-accent-foreground">
               This will promote <span className="font-semibold text-foreground">{replicaWs.label}</span> as the new primary workspace and redirect traffic away from <span className="font-semibold text-foreground">{primaryWs.label}</span>.
             </p>
-            <div className="mt-3 rounded-md border border-border">
-              <div className="flex items-center justify-between px-4 py-2 text-sm">
-                <span className="text-muted-foreground">Current RPO</span>
-                <span className="text-foreground">{currentRpo}</span>
-              </div>
-              <div className="h-px bg-border mx-4" />
-              <div className="flex items-center justify-between px-4 py-2 text-sm">
-                <span className="text-muted-foreground">New primary workspace</span>
-                <span className="text-foreground">{replicaWs.label}</span>
-              </div>
-              <div className="h-px bg-border mx-4" />
-              <div className="flex items-center justify-between px-4 py-2 text-sm">
-                <span className="text-muted-foreground">New secondary workspace</span>
-                <span className="text-foreground">{primaryWs.label}</span>
+            <div className="mt-3 rounded-md border border-border text-sm">
+              <div className="grid grid-cols-[auto_1fr] gap-x-8 px-4">
+                <span className="text-muted-foreground py-2">Current RPO</span>
+                <span className="text-foreground py-2">{currentRpo}</span>
+                <div className="col-span-2 h-px bg-border" />
+                <span className="text-muted-foreground py-2">New primary workspace</span>
+                <span className="text-foreground py-2">{replicaWs.label}</span>
+                <div className="col-span-2 h-px bg-border" />
+                <span className="text-muted-foreground py-2">New secondary workspace</span>
+                <span className="text-foreground py-2">{primaryWs.label}</span>
               </div>
             </div>
             <div className="flex flex-col gap-1.5 mt-6">
