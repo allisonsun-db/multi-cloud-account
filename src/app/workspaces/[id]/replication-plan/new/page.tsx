@@ -149,12 +149,12 @@ export default function CreateReplicationPlanPage() {
 
           <div className="rounded-md border border-border flex flex-col">
             <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
-              <p className="text-sm font-semibold">Plan details</p>
+              <p className="text-sm font-semibold">Details</p>
             </div>
             <div className="flex flex-col gap-4 px-4 py-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="plan-name">Plan name</Label>
-                <Input id="plan-name" placeholder="my-replication-plan" />
+                <Label htmlFor="plan-name">Failover group name</Label>
+                <Input id="plan-name" placeholder="my-failover-group" />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
