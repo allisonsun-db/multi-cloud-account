@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useParams, useRouter } from "next/navigation"
 import {
-  MoreVertical, ExternalLink, Copy, Pencil,
+  MoreVertical, Pencil,
   ChevronUp, ChevronDown, Info, CircleCheck,
 } from "lucide-react"
 import { AppShell, PageHeader } from "@/components/shell"
@@ -14,7 +14,7 @@ import {
   BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
 import { Switch } from "@/components/ui/switch"
-import { PlusIcon } from "@/components/icons"
+import { PlusIcon, CopyIcon, NewWindowIcon } from "@/components/icons"
 import { cn } from "@/lib/utils"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 
@@ -155,7 +155,7 @@ export default function WorkspaceDetailPage() {
                 <MoreVertical className="h-4 w-4" />
               </Button>
               <Button size="sm">
-                <ExternalLink className="h-4 w-4" />
+                <NewWindowIcon className="h-4 w-4" />
                 Open workspace
               </Button>
             </>
@@ -187,10 +187,10 @@ export default function WorkspaceDetailPage() {
                     <span className="text-sm text-foreground truncate">{url}</span>
                     <div className="flex items-center gap-1 shrink-0 ml-2">
                       <Button variant="ghost" size="icon-sm" aria-label="Copy URL">
-                        <Copy className="h-4 w-4" />
+                        <CopyIcon className="h-4 w-4 text-muted-foreground" />
                       </Button>
                       <Button variant="ghost" size="icon-sm" aria-label="Open workspace">
-                        <ExternalLink className="h-4 w-4" />
+                        <NewWindowIcon className="h-4 w-4 text-muted-foreground" />
                       </Button>
                     </div>
                   </div>

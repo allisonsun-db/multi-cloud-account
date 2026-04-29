@@ -20,8 +20,8 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
-import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CatalogIcon } from "@/components/icons"
-import { ExternalLink, ChevronDown, ArrowRight, Info } from "lucide-react"
+import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CatalogIcon, NewWindowIcon } from "@/components/icons"
+import { ChevronDown, ArrowRight, Info } from "lucide-react"
 import { toast } from "sonner"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
@@ -190,10 +190,10 @@ export default function ReplicationPlanPage() {
             </div>
             <div className="flex items-center gap-1 shrink-0 ml-2">
               <Button variant="ghost" size="icon-sm" aria-label="Copy URL">
-                <CopyIcon className="h-4 w-4" />
+                <CopyIcon className="h-4 w-4 text-muted-foreground" />
               </Button>
               <Button variant="ghost" size="icon-sm" aria-label="Open">
-                <ExternalLink className="h-4 w-4" />
+                <NewWindowIcon className="h-4 w-4 text-muted-foreground" />
               </Button>
             </div>
           </div>
