@@ -46,7 +46,7 @@ function MultiCloudLogosGraphic() {
 
 // ─── Account Settings Tab ─────────────────────────────────────────────────────
 
-const DEFAULT_ACCOUNT_NAME = "Databricks Bakehouse"
+const DEFAULT_ACCOUNT_NAME = "OmniMart"
 
 function AccountSettingsTab({ saved, onSave }: { saved: string; onSave: (name: string) => void }) {
   const [accountName, setAccountName] = React.useState(saved)
@@ -138,7 +138,7 @@ const [redirectRow1, setRedirectRow1] = React.useState(true)
               <span className="text-sm font-semibold text-foreground">Custom URL</span>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <span className="text-sm text-foreground">dogfood.staging.databricks.com</span>
+              <span className="text-sm text-foreground">omnimart.databricks.com</span>
               <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" aria-label="Edit">
                 <PencilIcon size={16} />
               </Button>
@@ -154,7 +154,7 @@ const [redirectRow1, setRedirectRow1] = React.useState(true)
               <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
                 <span className="text-sm text-foreground">e2-spog.staging.cloud.databricks.com</span>
                 <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="text-sm rounded bg-muted px-2 py-0.5 text-foreground">dogfood.staging.databricks.com</span>
+                <span className="text-sm rounded bg-muted px-2 py-0.5 text-foreground">omnimart.databricks.com</span>
                 <div className="ml-auto flex items-center gap-2">
                   <span className="text-sm text-foreground">{redirectRow1 ? "On" : "Off"}</span>
                   <Switch checked={redirectRow1} onCheckedChange={setRedirectRow1} />
@@ -163,7 +163,7 @@ const [redirectRow1, setRedirectRow1] = React.useState(true)
               <div className="flex items-center gap-3 px-4 py-3">
                 <span className="text-sm text-accent-foreground">All previous workspace URLs</span>
                 <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="text-sm rounded bg-muted px-2 py-0.5 text-foreground">dogfood.staging.databricks.com</span>
+                <span className="text-sm rounded bg-muted px-2 py-0.5 text-foreground">omnimart.databricks.com</span>
                 <div className="ml-auto flex items-center gap-2">
                   <span className="text-sm text-foreground">{redirectRow2 ? "On" : "Off"}</span>
                   <Switch checked={redirectRow2} onCheckedChange={setRedirectRow2} />

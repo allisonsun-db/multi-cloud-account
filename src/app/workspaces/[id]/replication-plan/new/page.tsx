@@ -60,23 +60,21 @@ export default function CreateReplicationPlanPage() {
   const WORKSPACES = [
     { value: "ws-prod-east",       label: "ws-prod-east",       cloud: "AWS",   region: "us-east-1" },
     { value: "ws-prod-west",       label: "ws-prod-west",       cloud: "AWS",   region: "us-west-2" },
-    { value: "ws-staging-primary", label: "ws-staging-primary", cloud: "Azure", region: "eastus" },
-    { value: "ws-analytics-eu",    label: "ws-analytics-eu",    cloud: "Azure", region: "westeurope" },
-    { value: "ws-data-eng",        label: "ws-data-eng",        cloud: "GCP",   region: "us-central1" },
-    { value: "ws-ml-platform",     label: "ws-ml-platform",     cloud: "GCP",   region: "us-east1" },
-  ]
-
-  const DR_WORKSPACES = [
     { value: "ws-prod-dr-west",    label: "ws-prod-dr-west",    cloud: "AWS",   region: "us-west-2" },
     { value: "ws-prod-dr-eu",      label: "ws-prod-dr-eu",      cloud: "AWS",   region: "eu-west-1" },
+    { value: "ws-staging-primary", label: "ws-staging-primary", cloud: "Azure", region: "eastus" },
     { value: "ws-staging-dr",      label: "ws-staging-dr",      cloud: "Azure", region: "westus2" },
+    { value: "ws-analytics-eu",    label: "ws-analytics-eu",    cloud: "Azure", region: "westeurope" },
     { value: "ws-analytics-dr",    label: "ws-analytics-dr",    cloud: "Azure", region: "northeurope" },
+    { value: "ws-data-eng",        label: "ws-data-eng",        cloud: "GCP",   region: "us-central1" },
     { value: "ws-data-eng-dr",     label: "ws-data-eng-dr",     cloud: "GCP",   region: "us-west1" },
+    { value: "ws-ml-platform",     label: "ws-ml-platform",     cloud: "GCP",   region: "us-east1" },
     { value: "ws-ml-dr",           label: "ws-ml-dr",           cloud: "GCP",   region: "europe-west1" },
   ]
 
   const selectedPrimary = WORKSPACES.find((w) => w.value === primaryWorkspace)
-  const selectedDR = DR_WORKSPACES.find((w) => w.value === drWorkspace)
+  const selectedDR = WORKSPACES.find((w) => w.value === drWorkspace)
+  const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
 
   function addMapping() {
     setLocationMappings((prev) => [...prev, { source: "", destination: "" }])
@@ -211,7 +209,7 @@ export default function CreateReplicationPlanPage() {
                       )}
                     </SelectTrigger>
                     <SelectContent>
-                      {DR_WORKSPACES.map((ws) => (
+                      {WORKSPACES.map((ws) => (
                         <SelectPrimitive.Item
                           key={ws.value}
                           value={ws.value}
@@ -235,6 +233,9 @@ export default function CreateReplicationPlanPage() {
                   </Select>
                 </div>
               </div>
+              {sameWorkspaceError && (
+                <p className="text-sm text-destructive">Primary and secondary workspaces cannot be the same.</p>
+              )}
             </div>
           </div>
 
