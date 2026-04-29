@@ -186,7 +186,7 @@ export default function ReplicationPlanPage() {
           </div>
           <div className="flex flex-1 items-center justify-between px-4 py-2 min-w-0">
             <div className="flex flex-col gap-0.5 min-w-0">
-              <span className="text-sm text-foreground truncate">https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126</span>
+              <a href="https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126" target="_blank" rel="noopener noreferrer" className="text-sm text-primary truncate hover:underline">https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126</a>
             </div>
             <div className="flex items-center gap-1 shrink-0 ml-2">
               <Button variant="ghost" size="icon-sm" aria-label="Copy URL">
