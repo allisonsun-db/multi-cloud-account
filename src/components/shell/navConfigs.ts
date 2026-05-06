@@ -75,6 +75,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
           { id: "catalog",          label: "Catalog",          icon: CatalogIcon,     href: "/catalog" },
           { id: "user-management",  label: "User management",  icon: UserGroupIcon,   href: "https://db-ui-mockups.vercel.app/user-management" },
           { id: "security",         label: "Security",         icon: ShieldCheckIcon, href: "https://db-ui-mockups.vercel.app/security" },
+          { id: "resilience",       label: "Resilience",       icon: ShieldIcon,      href: "/resilience" },
           { id: "cloud-resources",  label: "Cloud resources",  icon: CloudIcon,       href: "/cloud-resources" },
           { id: "previews",         label: "Previews",         icon: GiftIcon,        href: "/previews" },
           { id: "settings",         label: "Settings",         icon: GearIcon,        href: "/settings" },
@@ -102,62 +103,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         items: [
           { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
           { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
-          { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
-        ],
-      },
-      {
-        label: "Identity and access",
-        items: [
-          { id: "identities",        label: "Identities",        icon: UserGroupIcon },
-          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon },
-        ],
-      },
-      {
-        label: "AI",
-        items: [
-          { id: "glean-mcp", label: "Glean/MCP", icon: McpIcon },
-          { id: "genie",     label: "Genie",     icon: AssistantIcon },
-        ],
-      },
-      {
-        label: "Account",
-        items: [
-          { id: "feature-preview", label: "Features & previews",       icon: ChecklistIcon },
-          { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
-          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
-        ],
-      },
-      {
-        label: "Preferences",
-        icon: GearIcon,
-        items: [
-          { id: "appearance",  label: "Appearance",        icon: SunIcon },
-          { id: "notifications",  label: "Notifications", icon: MailIcon },
-        ],
-      },
-    ],
-  },
-
-  "C": {
-    layout: "sections",
-    maxItemsPerSection: 3,
-    sections: [
-      {
-        label: "Governance",
-        items: [
-          { id: "data",         label: "Data",        icon: DataIcon },
-          { id: "cost",         label: "Cost",        icon: DollarIcon },
-          { id: "tags",         label: "Tags",        icon: TagIcon },
-          { id: "performance",  label: "Performance", icon: SpeedometerIcon },
-          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon },
-          { id: "ai-gateway",   label: "AI gateway",  icon: SparkleDoubleIcon },
-        ],
-      },
-      {
-        label: "Cloud infrastructure",
-        items: [
-          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
-          { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
+          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
           { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
         ],
       },
@@ -181,14 +127,57 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
           { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
           { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
           { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
+          { id: "preferences",     label: "Preferences",            icon: GearIcon },
+        ],
+      },
+    ],
+  },
+
+  "C": {
+    layout: "sections",
+    maxItemsPerSection: 2,
+    sections: [
+      {
+        label: "Governance",
+        items: [
+          { id: "data",         label: "Data",        icon: DataIcon },
+          { id: "cost",         label: "Cost",        icon: DollarIcon },
+          { id: "tags",         label: "Tags",        icon: TagIcon },
+          { id: "performance",  label: "Performance", icon: SpeedometerIcon },
+          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon },
+          { id: "ai-gateway",   label: "AI gateway",  icon: SparkleDoubleIcon },
         ],
       },
       {
-        label: "Preferences",
-        icon: GearIcon,
+        label: "Cloud infrastructure",
         items: [
-          { id: "appearance",    label: "Appearance",    icon: SunIcon },
-          { id: "notifications", label: "Notifications", icon: MailIcon },
+          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
+          { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
+          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
+          { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
+        ],
+      },
+      {
+        label: "Identity and access",
+        items: [
+          { id: "identities",        label: "Identities",        icon: UserGroupIcon },
+          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon },
+        ],
+      },
+      {
+        label: "AI",
+        items: [
+          { id: "glean-mcp", label: "Glean/MCP", icon: McpIcon },
+          { id: "genie",     label: "Genie",     icon: AssistantIcon },
+        ],
+      },
+      {
+        label: "Account",
+        items: [
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
+          { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
+          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
+          { id: "preferences",     label: "Preferences",            icon: GearIcon },
         ],
       },
     ],
@@ -215,7 +204,8 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         items: [
           { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
           { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
-          { id: "security-cloud",  label: "Security",        icon: ShieldIcon },
+          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
+          { id: "security-cloud",  label: "Security",        icon: ShieldCheckIcon },
           { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
         ],
       },
@@ -276,7 +266,8 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         items: [
           { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
           { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
-          { id: "security-cloud",  label: "Security",        icon: ShieldIcon },
+          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
+          { id: "security-cloud",  label: "Security",        icon: ShieldCheckIcon },
           { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
         ],
       },
