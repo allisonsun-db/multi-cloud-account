@@ -34,6 +34,7 @@ export function Sidebar({
   const [activeSection, setActiveSection] = React.useState(0)
   const [drillSection, setDrillSection] = React.useState<number | null>(null)
   const [pinnedIds, setPinnedIds] = React.useState<Set<string>>(new Set())
+  const [findQuery, setFindQuery] = React.useState("")
 
   const { layout = "sections", sections, maxItemsPerSection } = NAV_VERSIONS[navVersion]
 
@@ -43,6 +44,7 @@ export function Sidebar({
     setDrillSection(null)
     setPinnedIds(new Set())
     setExpanded({})
+    setFindQuery("")
     onLayoutChange?.(layout === "rail" ? "rail" : "sections")
   }, [navVersion]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -73,14 +75,52 @@ export function Sidebar({
           <div className="flex flex-1 flex-col overflow-hidden">
             {/* Search box */}
             <div className="shrink-0 px-3 pt-3 pb-2">
-              <div className="flex h-8 items-center gap-2 rounded border border-border bg-background px-2.5 text-muted-foreground">
+              <div className="flex h-8 items-center gap-2 rounded border border-border bg-background px-2.5 text-muted-foreground focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                 <Search className="h-3.5 w-3.5 shrink-0" />
-                <span className="text-sm">Find...</span>
+                <input
+                  value={findQuery}
+                  onChange={(e) => { setFindQuery(e.target.value); setDrillSection(null) }}
+                  placeholder="Find..."
+                  className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+                />
+                {findQuery && (
+                  <button onClick={() => setFindQuery("")} className="shrink-0 text-muted-foreground hover:text-foreground">
+                    <ChevronDown className="h-3 w-3 rotate-90" />
+                  </button>
+                )}
               </div>
             </div>
 
+            {/* Search results */}
+            {findQuery.trim() && (
+              <div className="flex flex-1 flex-col overflow-y-auto px-2 pb-2">
+                {sections.flatMap((section, sectionIndex) =>
+                  section.items.filter((item) =>
+                    item.label.toLowerCase().includes(findQuery.toLowerCase())
+                  ).map((item) => (
+                    <NavItemButton
+                      key={item.id}
+                      item={item}
+                      active={activeItem === item.id}
+                      sidebarCollapsed={false}
+                      onClick={() => {
+                        onNavigate?.(item.id)
+                        setDrillSection(sectionIndex)
+                        setFindQuery("")
+                      }}
+                    />
+                  ))
+                )}
+                {sections.flatMap((s) => s.items).filter((item) =>
+                  item.label.toLowerCase().includes(findQuery.toLowerCase())
+                ).length === 0 && (
+                  <p className="px-2 py-4 text-center text-xs text-muted-foreground">No results</p>
+                )}
+              </div>
+            )}
+
             {/* Sliding panels — both rendered, translated in/out */}
-            <div className="relative flex flex-1 overflow-hidden">
+            <div className={cn("relative flex flex-1 overflow-hidden", findQuery.trim() && "hidden")}>
               {/* Level 1 — pinned items + section list */}
               <div
                 className={cn(
