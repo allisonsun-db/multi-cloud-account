@@ -27,6 +27,7 @@ export function AppShell({
 }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true)   // desktop inline
   const [mobileOpen, setMobileOpen]   = React.useState(false)  // mobile sheet
+  const [isRail, setIsRail]           = React.useState(false)
 
   return (
     <div className={cn("flex h-dvh flex-col overflow-hidden bg-secondary", className)}>
@@ -60,11 +61,15 @@ export function AppShell({
             open={sidebarOpen}
             activeItem={activeItem}
             onNavigate={onNavigate}
+            onLayoutChange={(layout) => setIsRail(layout === "rail")}
           />
         </div>
 
         <main className={cn(
-          "flex-1 overflow-y-auto rounded-md bg-background border border-border mb-2 mr-2",
+          "flex-1 overflow-y-auto bg-background border border-border mb-2 mr-2",
+          isRail && sidebarOpen
+            ? "rounded-tr-md rounded-br-md border-l-0"
+            : "rounded-md",
           !sidebarOpen && "ml-2",
           mainClassName,
         )}>

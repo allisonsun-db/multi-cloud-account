@@ -316,24 +316,22 @@ export default function WorkspacesPage() {
         <h1 className="text-xl font-semibold text-foreground">Workspaces</h1>
 
         <Tabs defaultValue="workspaces" onValueChange={setActiveTab}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <TabsList>
-                <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
-                <TabsTrigger value="replication-plans">Failover groups</TabsTrigger>
-              </TabsList>
-              <div className="relative w-56">
-                <Input
-                  placeholder="Filter workspaces"
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                  className="pr-8"
-                />
-                <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              </div>
-              <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
+          <div className="flex flex-wrap items-center gap-2">
+            <TabsList>
+              <TabsTrigger value="workspaces">Workspaces</TabsTrigger>
+              <TabsTrigger value="replication-plans">Failover groups</TabsTrigger>
+            </TabsList>
+            <div className="relative w-[240px]">
+              <Input
+                placeholder="Filter workspaces"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="pr-8"
+              />
+              <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             </div>
-            <div className="pb-1">
+            <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
+            <div className="ml-auto pb-1">
               {activeTab === "workspaces"
                 ? <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
                 : <Button size="sm" onClick={() => router.push(`/workspaces/1/replication-plan/new`)}>Create failover group</Button>

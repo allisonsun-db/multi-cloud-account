@@ -90,7 +90,7 @@
   --shadow-db-xl: 0px 8px 40px 0px rgba(0, 0, 0, 0.13);
 
   /* DuBois Font Size Scale (base = 13px) */
-  --text-xs: 0.6875rem;   /* 11px */
+  --text-xs: 0.75rem;     /* 12px */
   --text-sm: 0.8125rem;   /* 13px */
   --text-base: 0.8125rem; /* 13px — DuBois base */
   --text-lg: 1.125rem;    /* 18px */

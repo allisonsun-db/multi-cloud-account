@@ -1,13 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { Menu } from "lucide-react"
+import { Menu, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { DbIcon } from "@/components/ui/db-icon"
 import {
   SidebarCollapseIcon,
   SidebarExpandIcon,
   SparkleIcon,
+  GearIcon,
 } from "@/components/icons"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
@@ -78,12 +86,27 @@ export function TopBar({
         <AppSwitcher />
 
         {/* User avatar */}
-        <button
-          className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
-          aria-label="User menu"
-        >
-          {userInitial}
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
+              aria-label="User menu"
+            >
+              {userInitial}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem>
+              <GearIcon className="h-4 w-4 text-muted-foreground" />
+              Preferences
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <LogOut className="h-4 w-4 text-muted-foreground" />
+              Sign out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
