@@ -71,10 +71,11 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
       {
         label: "Admin",
         items: [
+          { id: "accounts",         label: "Accounts",         icon: OfficeIcon,      href: "/accounts" },
           { id: "workspaces",       label: "Workspaces",       icon: WorkspacesIcon,  href: "/workspaces" },
           { id: "catalog",          label: "Catalog",          icon: CatalogIcon,     href: "/catalog" },
           { id: "user-management",  label: "User management",  icon: UserGroupIcon,   href: "https://db-ui-mockups.vercel.app/user-management" },
-          { id: "security",         label: "Security",         icon: ShieldCheckIcon, href: "https://db-ui-mockups.vercel.app/security" },
+          { id: "security",         label: "Security",         icon: ShieldCheckIcon },
           { id: "resilience",       label: "Resilience",       icon: ShieldIcon,      href: "/resilience" },
           { id: "cloud-resources",  label: "Cloud resources",  icon: CloudIcon,       href: "/cloud-resources" },
           { id: "previews",         label: "Previews",         icon: GiftIcon,        href: "/previews" },
@@ -124,8 +125,9 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
       {
         label: "Account",
         items: [
-          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
+          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
           { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
           { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
           { id: "preferences",     label: "Preferences",            icon: GearIcon },
         ],
@@ -174,8 +176,9 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
       {
         label: "Account",
         items: [
-          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
+          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
           { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
           { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
           { id: "preferences",     label: "Preferences",            icon: GearIcon },
         ],
@@ -229,8 +232,9 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         label: "Account",
         icon: OfficeIcon,
         items: [
-          { id: "feature-preview", label: "Features & previews",       icon: ChecklistIcon },
+          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
           { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
           { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
         ],
       },
@@ -291,8 +295,9 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         label: "Account",
         icon: OfficeIcon,
         items: [
-          { id: "feature-preview", label: "Features & previews",       icon: ChecklistIcon },
+          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
           { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
           { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
         ],
       },
