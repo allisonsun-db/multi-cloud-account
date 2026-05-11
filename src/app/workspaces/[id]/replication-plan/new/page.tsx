@@ -236,6 +236,10 @@ export default function CreateReplicationPlanPage() {
               {sameWorkspaceError && (
                 <p className="text-sm text-destructive">Primary and secondary workspaces cannot be the same.</p>
               )}
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="stable-url">Stable URL <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                <Input id="stable-url" placeholder="https://omnimart.databricks.com/?c=…" />
+              </div>
             </div>
           </div>
 

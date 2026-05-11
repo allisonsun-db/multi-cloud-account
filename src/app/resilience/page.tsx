@@ -6,7 +6,7 @@ import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CheckCircleIcon, XCircleIcon } from "@/components/icons"
+import { CheckCircleIcon, XCircleIcon, LoadingIcon, CopyIcon } from "@/components/icons"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -44,6 +44,7 @@ const REPLICATION_PLANS: ReplicationPlan[] = [
 
 type StableUrl = {
   id: string
+  name: string
   url: string
   failoverGroup: string
   primaryWorkspace: string
@@ -52,90 +53,155 @@ type StableUrl = {
 }
 
 const INITIAL_STABLE_URLS: StableUrl[] = [
-  { id: "url-1", url: "prod-analytics.cloud.databricks.com",  failoverGroup: "my-replication-plan",  primaryWorkspace: "ws-prod-east",    primaryCloud: "AWS",   created: "Apr 1, 2026" },
-  { id: "url-2", url: "ml-platform.cloud.databricks.com",     failoverGroup: "ml-platform-dr",       primaryWorkspace: "ml-platform-prod", primaryCloud: "GCP",   created: "Mar 15, 2026" },
-  { id: "url-3", url: "data-eng-prod.cloud.databricks.com",   failoverGroup: "analytics-backup-plan",primaryWorkspace: "analytics-prod",   primaryCloud: "AWS",   created: "Mar 10, 2026" },
+  { id: "url-1", name: "Prod Analytics",  url: "https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126",  failoverGroup: "my-replication-plan",  primaryWorkspace: "ws-prod-east",    primaryCloud: "AWS",   created: "Apr 1, 2026" },
+  { id: "url-2", name: "ML Platform",     url: "https://omnimart.databricks.com/?c=a1b2c3d4-e5f6-4789-abcd-ef0123456789",  failoverGroup: "ml-platform-dr",       primaryWorkspace: "ml-platform-prod", primaryCloud: "GCP",   created: "Mar 15, 2026" },
+  { id: "url-3", name: "Data Eng Prod",   url: "https://omnimart.databricks.com/?c=f7e6d5c4-b3a2-4190-8765-43210fedcba9",  failoverGroup: "analytics-backup-plan",primaryWorkspace: "analytics-prod",   primaryCloud: "AWS",   created: "Mar 10, 2026" },
 ]
 
-const FAILOVER_GROUP_NAMES = REPLICATION_PLANS.map((p) => p.name)
+const WORKSPACE_OPTIONS: { name: string; cloud: "AWS" | "Azure" | "GCP" }[] = [
+  { name: "prod-us-west",           cloud: "AWS"   },
+  { name: "prod-us-east",           cloud: "AWS"   },
+  { name: "staging-us-west",        cloud: "AWS"   },
+  { name: "staging-us-east",        cloud: "Azure" },
+  { name: "data-eng-prod",          cloud: "Azure" },
+  { name: "ml-platform-prod",       cloud: "GCP"   },
+  { name: "analytics-prod",         cloud: "AWS"   },
+  { name: "analytics-staging",      cloud: "Azure" },
+  { name: "finance-reporting",      cloud: "GCP"   },
+  { name: "risk-modeling",          cloud: "AWS"   },
+  { name: "marketing-analytics",    cloud: "Azure" },
+  { name: "customer-data-platform", cloud: "AWS"   },
+  { name: "security-audit",         cloud: "GCP"   },
+  { name: "data-science-sandbox",   cloud: "AWS"   },
+  { name: "platform-dev",           cloud: "Azure" },
+  { name: "etl-orchestration",      cloud: "GCP"   },
+  { name: "realtime-streaming",     cloud: "AWS"   },
+  { name: "supply-chain-analytics", cloud: "Azure" },
+  { name: "feature-store-prod",     cloud: "GCP"   },
+  { name: "model-serving-prod",     cloud: "AWS"   },
+]
 
 // ─── Create Stable URL dialog ──────────────────────────────────────────────────
 
+function uuid() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16)
+  })
+}
+
 function CreateStableUrlDialog({ onCreated }: { onCreated: (url: StableUrl) => void }) {
   const [open, setOpen] = React.useState(false)
-  const [subdomain, setSubdomain] = React.useState("")
-  const [failoverGroup, setFailoverGroup] = React.useState("")
+  const [step, setStep] = React.useState<"form" | "loading" | "success">("form")
+  const [name, setName] = React.useState("")
+  const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
+  const [generatedUrl, setGeneratedUrl] = React.useState("")
 
-  const selectedPlan = REPLICATION_PLANS.find((p) => p.name === failoverGroup)
-  const primaryWorkspace = selectedPlan?.primaryWorkspace ?? ""
-  const primaryCloud = selectedPlan?.primaryCloud
+  const selectedWs = WORKSPACE_OPTIONS.find((w) => w.name === primaryWorkspace)
 
-  function reset() { setSubdomain(""); setFailoverGroup("") }
+  function reset() { setName(""); setPrimaryWorkspace(""); setGeneratedUrl(""); setStep("form") }
 
   function handleCreate() {
-    onCreated({
-      id: `url-${Date.now()}`,
-      url: `${subdomain}.cloud.databricks.com`,
-      failoverGroup,
-      primaryWorkspace,
-      primaryCloud: primaryCloud ?? "AWS",
-      created: "just now",
-    })
-    setOpen(false)
-    reset()
+    const newUrl = `https://omnimart.databricks.com/?c=${uuid()}`
+    setGeneratedUrl(newUrl)
+    setStep("loading")
+    setTimeout(() => {
+      onCreated({
+        id: `url-${Date.now()}`,
+        name,
+        url: newUrl,
+        failoverGroup: "—",
+        primaryWorkspace,
+        primaryCloud: selectedWs?.cloud ?? "AWS",
+        created: "just now",
+      })
+      setStep("success")
+    }, 1200)
   }
 
   return (
     <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset() }}>
       <Button size="sm" onClick={() => setOpen(true)}>Create stable URL</Button>
       <DialogContent className="sm:max-w-[480px]">
-        <DialogHeader className="px-6 pt-4 pb-0">
-          <DialogTitle className="text-[22px] font-semibold leading-7">Create stable URL</DialogTitle>
-        </DialogHeader>
-        <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="subdomain">Subdomain</Label>
-            <div className="flex items-center">
+
+        {step === "form" && (<>
+          <DialogHeader className="px-6 pt-4 pb-0">
+            <DialogTitle className="text-[22px] font-semibold leading-7">Create stable URL</DialogTitle>
+          </DialogHeader>
+          <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="stable-url-name">Name</Label>
               <Input
-                id="subdomain"
-                value={subdomain}
-                onChange={(e) => setSubdomain(e.target.value)}
-                placeholder="my-workspace"
-                className="rounded-r-none border-r-0 flex-1"
+                id="stable-url-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Prod Analytics"
               />
-              <span className="flex h-8 items-center rounded-r border border-border bg-muted px-3 text-sm text-accent-foreground whitespace-nowrap">
-                .cloud.databricks.com
-              </span>
             </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="failover-group">Failover group</Label>
-            <Select value={failoverGroup} onValueChange={setFailoverGroup}>
-              <SelectTrigger id="failover-group" className="w-full">
-                <SelectValue placeholder="Select failover group" />
-              </SelectTrigger>
-              <SelectContent>
-                {FAILOVER_GROUP_NAMES.map((name) => (
-                  <SelectItem key={name} value={name}>{name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          {primaryWorkspace && (
-            <div className="flex flex-col gap-1">
-              <span className="text-xs text-muted-foreground">Primary workspace</span>
-              <span className="text-sm text-foreground">{primaryWorkspace}</span>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="primary-workspace">Primary workspace</Label>
+              <Select value={primaryWorkspace} onValueChange={setPrimaryWorkspace}>
+                <SelectTrigger id="primary-workspace" className="w-full">
+                  <SelectValue placeholder="Select primary workspace" />
+                </SelectTrigger>
+                <SelectContent>
+                  {WORKSPACE_OPTIONS.map((ws) => (
+                    <SelectItem key={ws.name} value={ws.name}>
+                      <span className="flex items-center gap-2">
+                        {CLOUD_ICONS[ws.cloud]}
+                        {ws.name}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
-        </DialogBody>
-        <DialogFooter className="px-6 pt-4 pb-6">
-          <DialogClose asChild>
-            <Button variant="outline" size="sm">Cancel</Button>
-          </DialogClose>
-          <Button size="sm" onClick={handleCreate} disabled={!subdomain.trim() || !failoverGroup}>
-            Create
-          </Button>
-        </DialogFooter>
+          </DialogBody>
+          <DialogFooter className="px-6 pt-4 pb-6">
+            <DialogClose asChild>
+              <Button variant="outline" size="sm">Cancel</Button>
+            </DialogClose>
+            <Button size="sm" onClick={handleCreate} disabled={!name.trim() || !primaryWorkspace}>
+              Create
+            </Button>
+          </DialogFooter>
+        </>)}
+
+        {step === "loading" && (
+          <DialogBody className="px-6 py-16 flex flex-col items-center justify-center gap-3">
+            <LoadingIcon size={24} className="animate-spin text-primary" />
+            <span className="text-sm text-muted-foreground">Generating stable URL…</span>
+          </DialogBody>
+        )}
+
+        {step === "success" && (<>
+          <DialogHeader className="px-6 pt-4 pb-0">
+            <DialogTitle className="flex items-center gap-2 text-[22px] font-semibold leading-7">
+              <CheckCircleIcon size={22} className="text-[var(--success)] shrink-0" />
+              Stable URL created
+            </DialogTitle>
+          </DialogHeader>
+          <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-3 min-w-0 overflow-hidden">
+            <p className="text-sm text-muted-foreground">Your stable URL for <span className="font-semibold text-foreground">{name}</span> is ready.</p>
+            <div className="flex items-center gap-2 rounded border border-border bg-muted px-3 py-2 overflow-hidden">
+              <span className="flex-1 truncate text-sm text-foreground min-w-0">{generatedUrl}</span>
+              <button
+                type="button"
+                onClick={() => navigator.clipboard.writeText(generatedUrl)}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+                aria-label="Copy URL"
+              >
+                <CopyIcon size={14} />
+              </button>
+            </div>
+          </DialogBody>
+          <DialogFooter className="px-6 pt-4 pb-6">
+            <DialogClose asChild>
+              <Button size="sm">Done</Button>
+            </DialogClose>
+          </DialogFooter>
+        </>)}
+
       </DialogContent>
     </Dialog>
   )
@@ -222,8 +288,8 @@ export default function ResiliencePage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>URL</TableHead>
-                  <TableHead>Failover group</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead className="w-[400px]">URL</TableHead>
                   <TableHead>Primary workspace</TableHead>
                   <TableHead>Created</TableHead>
                 </TableRow>
@@ -231,10 +297,10 @@ export default function ResiliencePage() {
               <TableBody>
                 {stableUrls.map((entry) => (
                   <TableRow key={entry.id}>
-                    <TableCell>
-                      <span className="font-mono text-xs">{entry.url}</span>
+                    <TableCell>{entry.name}</TableCell>
+                    <TableCell className="w-[400px] max-w-[400px]">
+                      <span className="block truncate">{entry.url}</span>
                     </TableCell>
-                    <TableCell>{entry.failoverGroup}</TableCell>
                     <TableCell>
                       <span className="flex items-center gap-2">
                         {CLOUD_ICONS[entry.primaryCloud]}
