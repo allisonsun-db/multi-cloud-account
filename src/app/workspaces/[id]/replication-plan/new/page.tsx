@@ -15,7 +15,7 @@ import { Plus, ArrowRight } from "lucide-react"
 import { TrashIcon, CatalogIcon } from "@/components/icons"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import {
-  Select, SelectContent, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { Select as SelectPrimitive } from "radix-ui"
 import { CheckIcon } from "lucide-react"
@@ -23,6 +23,28 @@ import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem,
   BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+
+const STORAGE_LOCATIONS = [
+  "s3://omnimart-prod-primary/data",
+  "s3://omnimart-prod-primary/logs",
+  "s3://omnimart-analytics/warehouse",
+  "s3://omnimart-ml-platform/artifacts",
+  "abfss://prod@omnimartstorage.dfs.core.windows.net/data",
+  "abfss://staging@omnimartstorage.dfs.core.windows.net/data",
+  "gs://omnimart-gcp-prod/data",
+  "gs://omnimart-gcp-dr/data",
+]
+
+const DR_STORAGE_LOCATIONS = [
+  "s3://omnimart-prod-dr-west/data",
+  "s3://omnimart-prod-dr-west/logs",
+  "s3://omnimart-analytics-dr/warehouse",
+  "s3://omnimart-ml-platform-dr/artifacts",
+  "abfss://dr@omnimartstorage-dr.dfs.core.windows.net/data",
+  "abfss://dr-staging@omnimartstorage-dr.dfs.core.windows.net/data",
+  "gs://omnimart-gcp-dr-east/data",
+  "gs://omnimart-gcp-dr-eu/data",
+]
 
 const PREREQS = [
   {
@@ -53,7 +75,7 @@ export default function CreateReplicationPlanPage() {
   const [replicateWorkspaceAssets, setReplicateWorkspaceAssets] = React.useState(false)
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [drWorkspace, setDrWorkspace] = React.useState("")
-  const [locationMappings, setLocationMappings] = React.useState([{ source: "", destination: "" }])
+  const [locationMappings, setLocationMappings] = React.useState([{ source: "", destination: "", sourceCustom: false, destCustom: false }])
 
   const CATALOGS = ["main", "prod_catalog", "analytics", "ml_catalog"]
 
@@ -77,7 +99,7 @@ export default function CreateReplicationPlanPage() {
   const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
 
   function addMapping() {
-    setLocationMappings((prev) => [...prev, { source: "", destination: "" }])
+    setLocationMappings((prev) => [...prev, { source: "", destination: "", sourceCustom: false, destCustom: false }])
   }
 
   function removeMapping(index: number) {
@@ -86,6 +108,10 @@ export default function CreateReplicationPlanPage() {
 
   function updateMapping(index: number, field: "source" | "destination", value: string) {
     setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, [field]: value } : m))
+  }
+
+  function setCustomMode(index: number, field: "sourceCustom" | "destCustom", value: boolean) {
+    setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, [field]: value, [field === "sourceCustom" ? "source" : "destination"]: "" } : m))
   }
 
   return (
@@ -314,6 +340,11 @@ export default function CreateReplicationPlanPage() {
             <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
               <p className="text-sm font-semibold">Storage mappings</p>
             </div>
+            {Object.values(selectedCatalogs).some(Boolean) && (
+              <div className="px-4 pt-4">
+                <p className="text-sm text-accent-foreground">Map each primary storage location to its corresponding secondary location. Databricks will replicate data to the secondary location during failover.</p>
+              </div>
+            )}
             {!Object.values(selectedCatalogs).some(Boolean) ? (
               <div className="px-4 py-4">
                 <p className="text-sm text-muted-foreground">Select catalogs to replicate first.</p>
@@ -325,20 +356,66 @@ export default function CreateReplicationPlanPage() {
                   <div key={i} className="flex items-end gap-2">
                     <div className="flex flex-col gap-2 flex-1">
                       {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
-                      <Input
-                        placeholder="s3://primary-bucket/path"
-                        value={mapping.source}
-                        onChange={(e) => updateMapping(i, "source", e.target.value)}
-                      />
+                      {mapping.sourceCustom ? (
+                        <div className="flex gap-1">
+                          <Input
+                            autoFocus
+                            placeholder="s3://my-bucket/path"
+                            value={mapping.source}
+                            onChange={(e) => updateMapping(i, "source", e.target.value)}
+                          />
+                          <Button variant="ghost" size="sm" className="shrink-0 text-muted-foreground" onClick={() => setCustomMode(i, "sourceCustom", false)}>
+                            ← Back
+                          </Button>
+                        </div>
+                      ) : (
+                        <Select value={mapping.source} onValueChange={(v) => {
+                          if (v === "__custom__") { setCustomMode(i, "sourceCustom", true) } else { updateMapping(i, "source", v) }
+                        }}>
+                          <SelectTrigger className="w-full">
+                            <span className="sr-only"><SelectValue /></span>
+                            {mapping.source ? <span className="truncate">{mapping.source}</span> : <span className="text-muted-foreground">Select location</span>}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__custom__" className="text-primary">Enter custom location…</SelectItem>
+                            {STORAGE_LOCATIONS.map((loc) => (
+                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                     <ArrowRight className="h-4 w-4 text-muted-foreground mb-2" />
                     <div className="flex flex-col gap-2 flex-1">
                       {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
-                      <Input
-                        placeholder="s3://dr-bucket/path"
-                        value={mapping.destination}
-                        onChange={(e) => updateMapping(i, "destination", e.target.value)}
-                      />
+                      {mapping.destCustom ? (
+                        <div className="flex gap-1">
+                          <Input
+                            autoFocus
+                            placeholder="s3://my-dr-bucket/path"
+                            value={mapping.destination}
+                            onChange={(e) => updateMapping(i, "destination", e.target.value)}
+                          />
+                          <Button variant="ghost" size="sm" className="shrink-0 text-muted-foreground" onClick={() => setCustomMode(i, "destCustom", false)}>
+                            ← Back
+                          </Button>
+                        </div>
+                      ) : (
+                        <Select value={mapping.destination} onValueChange={(v) => {
+                          if (v === "__custom__") { setCustomMode(i, "destCustom", true) } else { updateMapping(i, "destination", v) }
+                        }}>
+                          <SelectTrigger className="w-full">
+                            <span className="sr-only"><SelectValue /></span>
+                            {mapping.destination ? <span className="truncate">{mapping.destination}</span> : <span className="text-muted-foreground">Select location</span>}
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__custom__" className="text-primary">Enter custom location…</SelectItem>
+                            {DR_STORAGE_LOCATIONS.map((loc) => (
+                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                     <Button
                       variant="ghost"
@@ -355,7 +432,7 @@ export default function CreateReplicationPlanPage() {
               <div>
                 <Button variant="outline" size="sm" onClick={addMapping}>
                   <Plus className="h-4 w-4" />
-                  Add location
+                  Add mapping
                 </Button>
               </div>
             </div>
