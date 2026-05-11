@@ -115,7 +115,7 @@ export default function CreateReplicationPlanPage() {
   }
 
   return (
-    <AppShell activeItem="workspaces">
+    <AppShell activeItem="resilience">
       <div className="flex flex-col gap-4 p-6 max-w-[800px] w-full mx-auto">
 
         <PageHeader
@@ -123,7 +123,7 @@ export default function CreateReplicationPlanPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/workspaces">Workspaces</BreadcrumbLink>
+                  <BreadcrumbLink href="/resilience">Resilience</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>

@@ -6,7 +6,7 @@ import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CheckCircleIcon, XCircleIcon, LoadingIcon, CopyIcon } from "@/components/icons"
+import { CheckCircleIcon, XCircleIcon, LoadingIcon, CopyIcon, OverflowIcon } from "@/components/icons"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -18,7 +18,11 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
+import { toast } from "sonner"
 
 // ─── Failover groups data ──────────────────────────────────────────────────────
 
@@ -81,7 +85,7 @@ const WORKSPACE_OPTIONS: { name: string; cloud: "AWS" | "Azure" | "GCP" }[] = [
   { name: "model-serving-prod",     cloud: "AWS"   },
 ]
 
-// ─── Create Stable URL dialog ──────────────────────────────────────────────────
+// ─── Stable URL dialog (create + edit) ─────────────────────────────────────────
 
 function uuid() {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -90,43 +94,107 @@ function uuid() {
   })
 }
 
-function CreateStableUrlDialog({ onCreated }: { onCreated: (url: StableUrl) => void }) {
-  const [open, setOpen] = React.useState(false)
+function workspaceOptionsIncluding(entry: StableUrl | null): { name: string; cloud: "AWS" | "Azure" | "GCP" }[] {
+  if (!entry || WORKSPACE_OPTIONS.some((w) => w.name === entry.primaryWorkspace)) return WORKSPACE_OPTIONS
+  return [{ name: entry.primaryWorkspace, cloud: entry.primaryCloud }, ...WORKSPACE_OPTIONS]
+}
+
+function StableUrlDialog({
+  open,
+  onOpenChange,
+  mode,
+  editEntry,
+  onCreated,
+  onUpdated,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  mode: "create" | "edit"
+  editEntry: StableUrl | null
+  onCreated: (url: StableUrl) => void
+  onUpdated: (url: StableUrl) => void
+}) {
   const [step, setStep] = React.useState<"form" | "loading" | "success">("form")
   const [name, setName] = React.useState("")
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [generatedUrl, setGeneratedUrl] = React.useState("")
 
-  const selectedWs = WORKSPACE_OPTIONS.find((w) => w.name === primaryWorkspace)
+  const selectOptions = React.useMemo(
+    () => workspaceOptionsIncluding(mode === "edit" ? editEntry : null),
+    [mode, editEntry],
+  )
 
-  function reset() { setName(""); setPrimaryWorkspace(""); setGeneratedUrl(""); setStep("form") }
+  const selectedWs = selectOptions.find((w) => w.name === primaryWorkspace)
 
-  function handleCreate() {
-    const newUrl = `https://omnimart.databricks.com/?c=${uuid()}`
-    setGeneratedUrl(newUrl)
-    setStep("loading")
-    setTimeout(() => {
-      onCreated({
-        id: `url-${Date.now()}`,
-        name,
-        url: newUrl,
-        failoverGroup: "—",
-        primaryWorkspace,
-        primaryCloud: selectedWs?.cloud ?? "AWS",
-        created: "just now",
-      })
-      setStep("success")
-    }, 1200)
+  function resetFields() {
+    setName("")
+    setPrimaryWorkspace("")
+    setGeneratedUrl("")
+    setStep("form")
   }
 
+  React.useEffect(() => {
+    if (!open) return
+    if (mode === "edit" && editEntry) {
+      setName(editEntry.name)
+      setPrimaryWorkspace(editEntry.primaryWorkspace)
+      setGeneratedUrl(editEntry.url)
+    } else {
+      setName("")
+      setPrimaryWorkspace("")
+      setGeneratedUrl("")
+    }
+    setStep("form")
+  }, [open, mode, editEntry])
+
+  function handleClose(next: boolean) {
+    onOpenChange(next)
+    if (!next) resetFields()
+  }
+
+  function handleSubmit() {
+    if (mode === "create") {
+      const newUrl = `https://omnimart.databricks.com/?c=${uuid()}`
+      setGeneratedUrl(newUrl)
+      setStep("loading")
+      window.setTimeout(() => {
+        onCreated({
+          id: `url-${Date.now()}`,
+          name,
+          url: newUrl,
+          failoverGroup: "—",
+          primaryWorkspace,
+          primaryCloud: selectedWs?.cloud ?? "AWS",
+          created: "just now",
+        })
+        setStep("success")
+      }, 1200)
+      return
+    }
+
+    if (!editEntry) return
+    onUpdated({
+      ...editEntry,
+      name,
+      primaryWorkspace,
+      primaryCloud: selectedWs?.cloud ?? editEntry.primaryCloud,
+    })
+    toast.success("Stable URL saved")
+    handleClose(false)
+    return
+  }
+
+  const isCreate = mode === "create"
+  const title = isCreate ? "Create stable URL" : "Edit stable URL"
+  const submitLabel = isCreate ? "Create" : "Save"
+
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset() }}>
-      <Button size="sm" onClick={() => setOpen(true)}>Create stable URL</Button>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[480px]">
 
         {step === "form" && (<>
           <DialogHeader className="px-6 pt-4 pb-0">
-            <DialogTitle className="text-[22px] font-semibold leading-7">Create stable URL</DialogTitle>
+            <DialogTitle className="text-[22px] font-semibold leading-7">{title}</DialogTitle>
           </DialogHeader>
           <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-4">
             <div className="flex flex-col gap-2">
@@ -145,7 +213,7 @@ function CreateStableUrlDialog({ onCreated }: { onCreated: (url: StableUrl) => v
                   <SelectValue placeholder="Select primary workspace" />
                 </SelectTrigger>
                 <SelectContent>
-                  {WORKSPACE_OPTIONS.map((ws) => (
+                  {selectOptions.map((ws) => (
                     <SelectItem key={ws.name} value={ws.name}>
                       <span className="flex items-center gap-2">
                         {CLOUD_ICONS[ws.cloud]}
@@ -161,8 +229,13 @@ function CreateStableUrlDialog({ onCreated }: { onCreated: (url: StableUrl) => v
             <DialogClose asChild>
               <Button variant="outline" size="sm">Cancel</Button>
             </DialogClose>
-            <Button size="sm" onClick={handleCreate} disabled={!name.trim() || !primaryWorkspace}>
-              Create
+            <Button
+              size="sm"
+              className="h-8 shrink-0 whitespace-nowrap"
+              onClick={handleSubmit}
+              disabled={!name.trim() || !primaryWorkspace}
+            >
+              {submitLabel}
             </Button>
           </DialogFooter>
         </>)}
@@ -182,7 +255,9 @@ function CreateStableUrlDialog({ onCreated }: { onCreated: (url: StableUrl) => v
             </DialogTitle>
           </DialogHeader>
           <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-3 min-w-0 overflow-hidden">
-            <p className="text-sm text-muted-foreground">Your stable URL for <span className="font-semibold text-foreground">{name}</span> is ready.</p>
+            <p className="text-sm text-muted-foreground">
+              Your stable URL for <span className="font-semibold text-foreground">{name}</span> is ready.
+            </p>
             <div className="flex items-center gap-2 rounded border border-border bg-muted px-3 py-2 overflow-hidden">
               <span className="flex-1 truncate text-sm text-foreground min-w-0">{generatedUrl}</span>
               <button
@@ -213,10 +288,33 @@ export default function ResiliencePage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = React.useState("failover-groups")
   const [stableUrls, setStableUrls] = React.useState<StableUrl[]>(INITIAL_STABLE_URLS)
+  const [stableUrlDialogOpen, setStableUrlDialogOpen] = React.useState(false)
+  const [stableUrlDialogMode, setStableUrlDialogMode] = React.useState<"create" | "edit">("create")
+  const [stableUrlDialogEditEntry, setStableUrlDialogEditEntry] = React.useState<StableUrl | null>(null)
+
+  function openStableUrlCreate() {
+    setStableUrlDialogMode("create")
+    setStableUrlDialogEditEntry(null)
+    setStableUrlDialogOpen(true)
+  }
+
+  function openStableUrlEdit(entry: StableUrl) {
+    setStableUrlDialogMode("edit")
+    setStableUrlDialogEditEntry(entry)
+    setStableUrlDialogOpen(true)
+  }
 
   return (
     <AppShell activeItem="resilience">
       <div className="flex flex-col gap-4 p-6">
+        <StableUrlDialog
+          open={stableUrlDialogOpen}
+          onOpenChange={setStableUrlDialogOpen}
+          mode={stableUrlDialogMode}
+          editEntry={stableUrlDialogEditEntry}
+          onCreated={(url) => setStableUrls((prev) => [url, ...prev])}
+          onUpdated={(url) => setStableUrls((prev) => prev.map((u) => (u.id === url.id ? url : u)))}
+        />
         <h1 className="text-xl font-semibold text-foreground">Resilience</h1>
 
         <Tabs defaultValue="failover-groups" onValueChange={setActiveTab}>
@@ -232,7 +330,7 @@ export default function ResiliencePage() {
                 </Button>
               )}
               {activeTab === "stable-urls" && (
-                <CreateStableUrlDialog onCreated={(url) => setStableUrls((prev) => [url, ...prev])} />
+                <Button size="sm" onClick={openStableUrlCreate}>Create stable URL</Button>
               )}
             </div>
           </div>
@@ -292,6 +390,9 @@ export default function ResiliencePage() {
                   <TableHead className="w-[400px]">URL</TableHead>
                   <TableHead>Primary workspace</TableHead>
                   <TableHead>Created</TableHead>
+                  <TableHead className="w-10 max-w-10 px-3 py-0 text-right align-middle">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -308,6 +409,37 @@ export default function ResiliencePage() {
                       </span>
                     </TableCell>
                     <TableCell>{entry.created}</TableCell>
+                    <TableCell className="w-10 max-w-10 p-0 align-middle text-right">
+                      <div className="flex h-9 max-h-9 items-center justify-end px-3">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className="h-8 w-8 shrink-0 text-muted-foreground"
+                              aria-label={`Actions for ${entry.name}`}
+                            >
+                              <OverflowIcon className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                window.setTimeout(() => openStableUrlEdit(entry), 0)
+                              }}
+                            >
+                              Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onSelect={() => setStableUrls((prev) => prev.filter((u) => u.id !== entry.id))}
+                            >
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

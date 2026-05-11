@@ -133,7 +133,7 @@ export default function ReplicationPlanPage() {
   const currentRpo = RUNS.find((r) => r.status === "succeeded" && r.activity === "Replication")?.rpo ?? "—"
 
   return (
-    <AppShell activeItem="workspaces">
+    <AppShell activeItem="resilience">
       <div className="flex flex-col gap-6 p-6">
 
         <PageHeader
@@ -141,7 +141,7 @@ export default function ReplicationPlanPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem>
-                  <BreadcrumbLink href="/workspaces">Workspaces</BreadcrumbLink>
+                  <BreadcrumbLink href="/resilience">Resilience</BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
