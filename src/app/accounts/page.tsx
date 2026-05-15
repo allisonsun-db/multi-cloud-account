@@ -2,8 +2,11 @@
 
 import * as React from "react"
 import { AppShell } from "@/components/shell"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
@@ -37,9 +40,165 @@ const INITIAL_ACCOUNTS: Account[] = [
 ]
 
 const STATUS_META: Record<AccountStatus, { icon: React.ComponentType<{ size?: number; className?: string }>; className: string; tooltip: string }> = {
-  Active:     { icon: CheckCircleIcon, className: "text-[var(--success)]", tooltip: "Active" },
-  Unverified: { icon: XCircleIcon,     className: "text-[var(--warning)]", tooltip: "Unverified" },
-  Pending:    { icon: DotsCircleIcon,  className: "text-muted-foreground", tooltip: "Pending — must be verified via SSO before approval" },
+  Active:     { icon: CheckCircleIcon, className: "text-[var(--success)]", tooltip: "Active — in organization" },
+  Unverified: { icon: XCircleIcon,     className: "text-[var(--warning)]", tooltip: "Unverified — needs attention" },
+  Pending:    { icon: DotsCircleIcon,  className: "text-muted-foreground", tooltip: "Pending approval before joining the organization" },
+}
+
+type SettingDiffResult = "override" | "retained" | "attention"
+
+type SettingDiff = {
+  category: string
+  setting: string
+  currentValue: string
+  mainValue: string
+  result: SettingDiffResult
+  action: string
+}
+
+const SETTING_CHECKLIST_TEMPLATE: SettingDiff[] = [
+  {
+    category: "Accounts",
+    setting: "Account creation",
+    currentValue: "Available in the account",
+    mainValue: "Managed from the organization",
+    result: "override",
+    action: "No action needed. New account creation moves to the organization.",
+  },
+  {
+    category: "Identity and Access Management",
+    setting: "User identity",
+    currentValue: "Managed in the account",
+    mainValue: "Managed uniformly at the organization",
+    result: "override",
+    action: "No action needed. Users defer to organization-level identity settings.",
+  },
+  {
+    category: "Identity and Access Management",
+    setting: "Groups",
+    currentValue: "Account-scoped groups",
+    mainValue: "Organization groups apply across member accounts",
+    result: "retained",
+    action: "No action needed. Account groups remain scoped to this account.",
+  },
+  {
+    category: "Security",
+    setting: "SCIM, authentication, and user provisioning",
+    currentValue: "Configured in the account",
+    mainValue: "Inherited from the organization",
+    result: "override",
+    action: "No action needed. Replaced by main account settings on approval.",
+  },
+  {
+    category: "Security",
+    setting: "Token management and reports",
+    currentValue: "Available in the account",
+    mainValue: "Available in the account",
+    result: "retained",
+    action: "No action needed. Token management and reports remain available at account level.",
+  },
+  {
+    category: "Settings",
+    setting: "Billing",
+    currentValue: "Managed in the account",
+    mainValue: "Universal commit managed at the organization",
+    result: "override",
+    action: "No action needed. Billing moves under organization-level management.",
+  },
+  {
+    category: "Settings",
+    setting: "Custom URLs and non-billing settings",
+    currentValue: "Account-level settings",
+    mainValue: "Account-level settings",
+    result: "retained",
+    action: "No action needed. Non-billing settings remain available at account level.",
+  },
+  {
+    category: "Cost Governance Hub",
+    setting: "Budgets",
+    currentValue: "Per-account budgets",
+    mainValue: "Organization budgets inherited across accounts",
+    result: "override",
+    action: "No action needed. Organization budgets are inherited on approval.",
+  },
+  {
+    category: "Cost Governance Hub",
+    setting: "Cost and usage view",
+    currentValue: "Per-account view",
+    mainValue: "Organization aggregate plus per-account view",
+    result: "retained",
+    action: "No action needed. The account can still view its own cost and usage.",
+  },
+  {
+    category: "Data and Security Governance Hub",
+    setting: "Governance view",
+    currentValue: "Per-account view",
+    mainValue: "Organization aggregate plus per-account view",
+    result: "retained",
+    action: "No action needed. Per-account governance views remain available.",
+  },
+  {
+    category: "Network Securities and Policies",
+    setting: "Org-enforced network policies",
+    currentValue: "Managed in the account unless enforced",
+    mainValue: "Organization can enforce policies top-down",
+    result: "override",
+    action: "No action needed when organization enforcement is enabled.",
+  },
+  {
+    category: "Network Securities and Policies",
+    setting: "Account network configuration",
+    currentValue: "Account-managed network config",
+    mainValue: "Account-managed if not organization-enforced",
+    result: "retained",
+    action: "No action needed unless the organization enforces a conflicting policy.",
+  },
+  {
+    category: "Previews",
+    setting: "Org-enforced feature previews",
+    currentValue: "Managed in the account unless enforced",
+    mainValue: "Organization can enable or disable previews across accounts",
+    result: "override",
+    action: "No action needed when organization enforcement is enabled.",
+  },
+  {
+    category: "Previews",
+    setting: "Account-managed feature previews",
+    currentValue: "May differ from organization defaults",
+    mainValue: "Retained if not organization-enforced",
+    result: "attention",
+    action: "If this differs from policy, change in source account: Account settings > Previews.",
+  },
+]
+
+function buildSettingChecklist(account: Account): SettingDiff[] {
+  return SETTING_CHECKLIST_TEMPLATE.map((diff) => {
+    if (diff.setting === "Custom URLs and non-billing settings") {
+      return {
+        ...diff,
+        currentValue: account.url,
+        mainValue: account.url,
+      }
+    }
+
+    return diff
+  })
+}
+
+const DIFF_RESULT_META: Record<SettingDiffResult, { label: string; variant: React.ComponentProps<typeof Badge>["variant"] }> = {
+  override: { label: "Org behavior", variant: "secondary" },
+  retained: { label: "Retained", variant: "outline" },
+  attention: { label: "Needs attention", variant: "lemon" },
+}
+
+/** Main account first, then pending (triage), then alphabetical by name. */
+function sortAccountsForAdmin(rows: Account[]) {
+  return [...rows].sort((a, b) => {
+    if (a.isMain !== b.isMain) return a.isMain ? -1 : 1
+    const pri = (s: AccountStatus) => (s === "Pending" ? 0 : 1)
+    if (pri(a.status) !== pri(b.status)) return pri(a.status) - pri(b.status)
+    return a.name.localeCompare(b.name)
+  })
 }
 
 // ─── Create Account Dialog ─────────────────────────────────────────────────────
@@ -154,25 +313,243 @@ function CreateAccountDialog({ onCreated }: { onCreated: (a: Account) => void })
   )
 }
 
+// ─── Review account ────────────────────────────────────────────────────────────
+
+function ReviewAccountDialog({
+  account,
+  open,
+  onOpenChange,
+  onApprove,
+}: {
+  account: Account | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onApprove: () => void
+}) {
+  const [step, setStep] = React.useState<"verify" | "compare">("verify")
+  const [manualChangesConfirmed, setManualChangesConfirmed] = React.useState(false)
+
+  React.useEffect(() => {
+    if (!open) {
+      setStep("verify")
+      setManualChangesConfirmed(false)
+    }
+  }, [open])
+
+  const settingChecklist = React.useMemo(
+    () => (account ? buildSettingChecklist(account) : []),
+    [account],
+  )
+  const overrides = settingChecklist.filter((diff) => diff.result === "override").length
+  const retained = settingChecklist.filter((diff) => diff.result === "retained").length
+  const needsAttention = settingChecklist.filter((diff) => diff.result === "attention").length
+  const manualChanges = settingChecklist.filter((diff) => diff.result === "attention")
+  const canApprove = manualChanges.length === 0 || manualChangesConfirmed
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={step === "compare" ? "sm:max-w-[760px]" : "sm:max-w-[480px]"}>
+        <DialogHeader className="px-6 pt-4 pb-0">
+          <DialogTitle className="text-[22px] font-semibold leading-7">
+            {step === "compare" ? "Review settings checklist" : "Review account"}
+          </DialogTitle>
+        </DialogHeader>
+        {account && step === "verify" && (
+          <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-4">
+            <p className="text-sm text-accent-foreground">
+              Verify ownership with your identity provider before approving this account for unified billing and governance.
+            </p>
+            <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 px-3 py-3">
+              <div className="flex justify-between gap-4 text-sm">
+                <span className="text-accent-foreground shrink-0">Name</span>
+                <span className="font-semibold text-accent-foreground text-right">{account.name}</span>
+              </div>
+              <div className="flex justify-between gap-4 text-sm">
+                <span className="text-accent-foreground shrink-0">Custom URL</span>
+                <span className="text-accent-foreground text-right break-all">{account.url}</span>
+              </div>
+              {account.contact ? (
+                <div className="flex justify-between gap-4 text-sm">
+                  <span className="text-accent-foreground shrink-0">Contact</span>
+                  <span className="text-accent-foreground text-right break-all">{account.contact}</span>
+                </div>
+              ) : null}
+              <div className="flex justify-between gap-4 text-sm">
+                <span className="text-accent-foreground shrink-0">Requested</span>
+                <span className="text-accent-foreground">{account.created}</span>
+              </div>
+            </div>
+          </DialogBody>
+        )}
+        {account && step === "compare" && (
+          <DialogBody className="px-6 pt-4 pb-4 flex max-h-[64vh] flex-col gap-4 overflow-y-auto">
+            <p className="text-sm text-accent-foreground">
+              {account.name} is verified. This checklist reflects the latest differences between this account and {MAIN_ACCOUNT.name}.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/30 px-3 py-2.5">
+              {needsAttention > 0 && (
+                <Badge variant="lemon">{needsAttention} need{needsAttention === 1 ? "s" : ""} review</Badge>
+              )}
+              <Badge variant="secondary">{overrides} will use org behavior</Badge>
+              <Badge variant="outline">{retained} retained at account level</Badge>
+            </div>
+
+            {manualChanges.length > 0 ? (
+              <div className="flex flex-col gap-2 rounded-md border border-border bg-muted/30 px-3 py-3">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-sm font-semibold text-accent-foreground">Review before approval</h3>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {manualChanges.map((diff) => (
+                    <div key={`${diff.category}-${diff.setting}`} className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-accent-foreground">{diff.setting}</span>
+                        <Badge variant={DIFF_RESULT_META[diff.result].variant}>
+                          {DIFF_RESULT_META[diff.result].label}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-accent-foreground">
+                        Current behavior: {diff.currentValue}. {diff.action}{" "}
+                        {diff.action.includes("Account settings") && (
+                          <a href="#" className="text-primary hover:underline">Open account settings →</a>
+                        )}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-start gap-2 pt-1">
+                  <Checkbox
+                    id="manual-confirm"
+                    checked={manualChangesConfirmed}
+                    onCheckedChange={(v) => setManualChangesConfirmed(!!v)}
+                    className="mt-0.5"
+                  />
+                  <Label htmlFor="manual-confirm" className="font-normal text-sm text-accent-foreground leading-snug cursor-pointer">
+                    I’ve reviewed these items and made any required changes in the source account.
+                  </Label>
+                </div>
+              </div>
+            ) : null}
+
+            <Accordion type="single" collapsible className="rounded-md border border-border">
+              <AccordionItem value="automatic-changes">
+                <AccordionTrigger className="px-3 py-3 text-accent-foreground hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    <span>View full settings checklist</span>
+                    <span className="text-xs font-normal text-accent-foreground">
+                      {settingChecklist.length} setting{settingChecklist.length !== 1 ? "s" : ""}
+                    </span>
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 pb-3">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-accent-foreground">Domain</TableHead>
+                        <TableHead className="text-accent-foreground">Setting</TableHead>
+                        <TableHead className="text-accent-foreground">Current behavior</TableHead>
+                        <TableHead className="text-accent-foreground">Organization behavior</TableHead>
+                        <TableHead className="text-accent-foreground">Result</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {settingChecklist.map((diff) => {
+                        const meta = DIFF_RESULT_META[diff.result]
+                        const currentValue = diff.setting === "Custom URL" ? account.url : diff.currentValue
+                        const mainValue = diff.setting === "Custom URL" ? account.url : diff.mainValue
+
+                        return (
+                          <TableRow
+                            key={`${diff.category}-${diff.setting}`}
+                            className={diff.result === "attention" ? "bg-[var(--background-warning)]" : undefined}
+                          >
+                            <TableCell className="text-accent-foreground">{diff.category}</TableCell>
+                            <TableCell className="text-accent-foreground">{diff.setting}</TableCell>
+                            <TableCell className="text-accent-foreground">{currentValue}</TableCell>
+                            <TableCell className="text-accent-foreground">{mainValue}</TableCell>
+                            <TableCell>
+                              <Badge variant={meta.variant}>{meta.label}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        )
+                      })}
+                    </TableBody>
+                  </Table>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </DialogBody>
+        )}
+        <DialogFooter className="px-6 pt-2 pb-6">
+          {step === "verify" ? (
+            <>
+              <DialogClose asChild>
+                <Button variant="outline" size="sm">Cancel</Button>
+              </DialogClose>
+              <Button
+                size="sm"
+                disabled={!account}
+                onClick={() => setStep("compare")}
+              >
+                Sign in with Okta
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" size="sm" onClick={() => setStep("verify")}>
+                Back
+              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span tabIndex={!canApprove ? 0 : undefined}>
+                    <Button
+                      size="sm"
+                      disabled={!account || !canApprove}
+                      onClick={() => {
+                        onApprove()
+                      }}
+                    >
+                      Approve and apply main settings
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {!canApprove && (
+                  <TooltipContent>Check the box above to confirm you have reviewed manual changes</TooltipContent>
+                )}
+              </Tooltip>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Accounts Table ────────────────────────────────────────────────────────────
 
-function AccountsTable({ accounts }: { accounts: Account[] }) {
+function AccountsTable({
+  accounts,
+  emptyMessage,
+}: {
+  accounts: Account[]
+  emptyMessage: string
+}) {
   return (
-    <Table className="border-b border-border">
+    <Table>
       <TableHeader>
         <TableRow>
           <TableHead className="w-8" />
           <TableHead>Account name</TableHead>
           <TableHead>Custom URL</TableHead>
           <TableHead>Created</TableHead>
-          <TableHead />
         </TableRow>
       </TableHeader>
       <TableBody>
         {accounts.length === 0 && (
           <TableRow>
-            <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-              No accounts found.
+            <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+              {emptyMessage}
             </TableCell>
           </TableRow>
         )}
@@ -182,8 +559,14 @@ function AccountsTable({ accounts }: { accounts: Account[] }) {
             <TableRow key={account.id}>
               <TableCell className="w-8">
                 <Tooltip>
-                  <TooltipTrigger className="flex items-center">
-                    <Icon size={14} className={iconClass} />
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="flex items-center rounded p-0.5 hover:bg-muted/60"
+                      aria-label={tooltip}
+                    >
+                      <Icon size={14} className={iconClass} />
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent>{tooltip}</TooltipContent>
                 </Tooltip>
@@ -191,7 +574,9 @@ function AccountsTable({ accounts }: { accounts: Account[] }) {
               <TableCell>
                 <span className="flex items-center gap-2">
                   <span className="text-foreground">{account.name}</span>
-                  {account.isMain && <span className="text-xs text-muted-foreground">Main</span>}
+                  {account.isMain ? (
+                    <span className="text-xs text-muted-foreground">Main</span>
+                  ) : null}
                 </span>
               </TableCell>
               <TableCell>
@@ -209,11 +594,6 @@ function AccountsTable({ accounts }: { accounts: Account[] }) {
                 )}
               </TableCell>
               <TableCell className="text-accent-foreground">{account.created}</TableCell>
-              <TableCell>
-                {account.status === "Pending" && (
-                  <Button variant="outline" size="xs">Review</Button>
-                )}
-              </TableCell>
             </TableRow>
           )
         })}
@@ -227,15 +607,37 @@ function AccountsTable({ accounts }: { accounts: Account[] }) {
 export default function AccountsPage() {
   const [accounts, setAccounts] = React.useState<Account[]>(INITIAL_ACCOUNTS)
   const [filter, setFilter] = React.useState("")
+  const [reviewAccount, setReviewAccount] = React.useState<Account | null>(null)
 
-  const filtered = accounts.filter((a) =>
-    a.name.toLowerCase().includes(filter.toLowerCase()) ||
-    a.url.toLowerCase().includes(filter.toLowerCase())
-  )
+  const filtered = React.useMemo(() => {
+    const q = filter.trim().toLowerCase()
+    if (!q) return accounts
+    return accounts.filter(
+      (a) =>
+        a.name.toLowerCase().includes(q) ||
+        a.url.toLowerCase().includes(q) ||
+        (a.contact && a.contact.toLowerCase().includes(q)),
+    )
+  }, [accounts, filter])
+
+  const displayRows = React.useMemo(() => sortAccountsForAdmin(filtered), [filtered])
+
+  const emptyMessage =
+    accounts.length === 0
+      ? "No accounts yet. Create one to get started."
+      : "No accounts match your filters."
+
+  function handleApproveReviewed() {
+    if (!reviewAccount) return
+    setAccounts((prev) =>
+      prev.map((a) => (a.id === reviewAccount.id ? { ...a, status: "Active" as const } : a)),
+    )
+    setReviewAccount(null)
+  }
 
   return (
     <AppShell activeItem="accounts">
-      <div className="flex flex-col gap-6 p-6">
+      <div className="flex flex-col gap-6 p-6 max-w-[800px] w-full mx-auto">
 
         {/* Header */}
         <div className="flex flex-col gap-1">
@@ -246,22 +648,36 @@ export default function AccountsPage() {
         </div>
 
         {/* Filter + action */}
-        <div className="flex items-center gap-2">
-          <div className="relative w-[280px]">
-            <Input
-              placeholder="Filter accounts"
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className="pr-8"
-            />
-            <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-          </div>
-          <div className="ml-auto">
-            <CreateAccountDialog onCreated={(a) => setAccounts((prev) => [...prev, a])} />
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="relative w-[280px]">
+              <Input
+                placeholder="Filter accounts"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                className="pr-8"
+              />
+              <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            </div>
+            <div className="ml-auto">
+              <CreateAccountDialog onCreated={(a) => setAccounts((prev) => [...prev, a])} />
+            </div>
           </div>
         </div>
 
-        <AccountsTable accounts={filtered} />
+        <AccountsTable
+          accounts={displayRows}
+          emptyMessage={emptyMessage}
+        />
+
+        <ReviewAccountDialog
+          account={reviewAccount}
+          open={!!reviewAccount}
+          onOpenChange={(o) => {
+            if (!o) setReviewAccount(null)
+          }}
+          onApprove={handleApproveReviewed}
+        />
 
       </div>
     </AppShell>

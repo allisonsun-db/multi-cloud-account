@@ -6,9 +6,6 @@ import { useParams, useRouter } from "next/navigation"
 import { AppShell, PageHeader } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -24,6 +21,7 @@ import {
   Breadcrumb, BreadcrumbList, BreadcrumbItem,
   BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { toast } from "sonner"
 
 const STORAGE_LOCATIONS = [
   "s3://omnimart-prod-primary/data",
@@ -47,36 +45,71 @@ const DR_STORAGE_LOCATIONS = [
   "gs://omnimart-gcp-dr-eu/data",
 ]
 
-const PREREQS = [
-  {
-    label: "Secondary metastore set up",
-    description: "A metastore in the secondary region.",
-  },
-  {
-    label: "Secondary workspace set up",
-    description: "A workspace in the secondary region with the secondary metastore assigned.",
-  },
-  {
-    label: "Users provisioned",
-    description: "Users and service principals have been provisioned in the secondary workspace.",
-  },
-  {
-    label: "Storage locations in secondary region",
-    description: "Storage buckets for the metastore and any external locations for the secondary region.",
-  },
-]
+type MappingRow = { source: string; destination: string; sourceCustom: boolean; destCustom: boolean }
 
-export default function CreateReplicationPlanPage() {
+function getMockFailoverGroup(planId: string): {
+  planName: string
+  stableUrl: string
+  primaryWorkspace: string
+  drWorkspace: string
+  selectedCatalogs: Record<string, boolean>
+  replicateWorkspaceAssets: boolean
+  locationMappings: MappingRow[]
+} {
+  const allCatalogs = ["main", "prod_catalog", "analytics", "ml_catalog"] as const
+  const allSelected = Object.fromEntries(allCatalogs.map((c) => [c, true])) as Record<string, boolean>
+  const defaultMappings: MappingRow[] = [
+    { source: "s3://primary-bucket/metastore", destination: "s3://dr-bucket/metastore", sourceCustom: false, destCustom: false },
+    { source: "s3://primary-bucket/external", destination: "s3://dr-bucket/external", sourceCustom: false, destCustom: false },
+  ]
+  if (planId === "plan-2") {
+    return {
+      planName: "staging-dr-plan",
+      stableUrl: "",
+      primaryWorkspace: "ws-staging-primary",
+      drWorkspace: "ws-staging-dr",
+      selectedCatalogs: { main: true, prod_catalog: true, analytics: false, ml_catalog: false },
+      replicateWorkspaceAssets: false,
+      locationMappings: defaultMappings,
+    }
+  }
+  return {
+    planName: "my-replication-plan",
+    stableUrl: "https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126",
+    primaryWorkspace: "ws-prod-east",
+    drWorkspace: "ws-prod-dr-west",
+    selectedCatalogs: allSelected,
+    replicateWorkspaceAssets: false,
+    locationMappings: defaultMappings,
+  }
+}
+
+export default function EditReplicationPlanPage() {
   const params = useParams()
   const router = useRouter()
   const workspaceId = params.id as string
+  const planId = params.planId as string
 
-  const [prereqOpen, setPrereqOpen] = React.useState(true)
+  const [planName, setPlanName] = React.useState("")
+  const [stableUrl, setStableUrl] = React.useState("")
   const [selectedCatalogs, setSelectedCatalogs] = React.useState<Record<string, boolean>>({})
   const [replicateWorkspaceAssets, setReplicateWorkspaceAssets] = React.useState(false)
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [drWorkspace, setDrWorkspace] = React.useState("")
-  const [locationMappings, setLocationMappings] = React.useState([{ source: "", destination: "", sourceCustom: false, destCustom: false }])
+  const [locationMappings, setLocationMappings] = React.useState<MappingRow[]>([
+    { source: "", destination: "", sourceCustom: false, destCustom: false },
+  ])
+
+  React.useEffect(() => {
+    const m = getMockFailoverGroup(planId)
+    setPlanName(m.planName)
+    setStableUrl(m.stableUrl)
+    setSelectedCatalogs(m.selectedCatalogs)
+    setReplicateWorkspaceAssets(m.replicateWorkspaceAssets)
+    setPrimaryWorkspace(m.primaryWorkspace)
+    setDrWorkspace(m.drWorkspace)
+    setLocationMappings(m.locationMappings)
+  }, [planId])
 
   const CATALOGS = ["main", "prod_catalog", "analytics", "ml_catalog"]
 
@@ -128,46 +161,19 @@ export default function CreateReplicationPlanPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Create failover group</BreadcrumbPage>
+                  <BreadcrumbLink href={`/workspaces/${workspaceId}/replication-plan/${planId}`}>
+                    {planName.trim() ? planName : getMockFailoverGroup(planId).planName}
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Edit</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           }
-          title="Create failover group"
+          title="Edit failover group"
         />
-
-        {/* Prerequisites modal */}
-        <Dialog open={prereqOpen} onOpenChange={setPrereqOpen}>
-          <DialogContent className="max-w-[520px]">
-            <DialogHeader>
-              <DialogTitle>Before you begin</DialogTitle>
-            </DialogHeader>
-            <DialogBody>
-              <p className="text-sm text-accent-foreground mb-4">Make sure the following are in place before creating a failover group.</p>
-              <div className="flex flex-col gap-0">
-                {PREREQS.map((prereq, i) => (
-                  <div key={prereq.label} className="flex items-start gap-3 py-2">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-grey-100 text-muted-foreground mt-0.5 text-xs font-semibold">
-                      {i + 1}
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-sm font-semibold">{prereq.label}</span>
-                      <span className="text-sm text-muted-foreground">{prereq.description}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </DialogBody>
-            <DialogFooter>
-              <Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>
-                Cancel
-              </Button>
-              <Button size="sm" onClick={() => setPrereqOpen(false)}>
-                Continue
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
 
         {/* Form */}
         <div className="flex flex-col gap-6">
@@ -179,7 +185,12 @@ export default function CreateReplicationPlanPage() {
             <div className="flex flex-col gap-4 px-4 py-4">
               <div className="flex flex-col gap-2">
                 <Label htmlFor="plan-name">Failover group name</Label>
-                <Input id="plan-name" placeholder="my-failover-group" />
+                <Input
+                  id="plan-name"
+                  value={planName}
+                  onChange={(e) => setPlanName(e.target.value)}
+                  placeholder="my-failover-group"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -265,7 +276,12 @@ export default function CreateReplicationPlanPage() {
               )}
               <div className="flex flex-col gap-2">
                 <Label htmlFor="stable-url">Stable URL <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                <Input id="stable-url" placeholder="https://omnimart.databricks.com/?c=…" />
+                <Input
+                  id="stable-url"
+                  value={stableUrl}
+                  onChange={(e) => setStableUrl(e.target.value)}
+                  placeholder="https://omnimart.databricks.com/?c=…"
+                />
               </div>
             </div>
           </div>
@@ -447,11 +463,22 @@ export default function CreateReplicationPlanPage() {
         </div>
 
         <div className="sticky bottom-0 bg-background flex items-center justify-end gap-2 px-4 py-4">
-          <Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/workspaces/${workspaceId}/replication-plan/${planId}`)}
+          >
             Cancel
           </Button>
-          <Button size="sm" onClick={() => router.push(`/workspaces/${workspaceId}/replication-plan/plan-1`)}>
-            Create failover group
+          <Button
+            size="sm"
+            disabled={!planName.trim() || !primaryWorkspace || !drWorkspace || primaryWorkspace === drWorkspace}
+            onClick={() => {
+              toast.success("Failover group saved")
+              router.push(`/workspaces/${workspaceId}/replication-plan/${planId}`)
+            }}
+          >
+            Save
           </Button>
         </div>
       </div>

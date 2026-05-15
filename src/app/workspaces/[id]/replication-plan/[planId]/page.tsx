@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useParams } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { AppShell, PageHeader } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import {
@@ -91,6 +91,7 @@ function StatusIcon({ status }: { status: ReplicationStatus }) {
 
 export default function ReplicationPlanPage() {
   const params = useParams()
+  const router = useRouter()
   const workspaceId = params.id as string
   const planId = params.planId as string
 
@@ -160,7 +161,13 @@ export default function ReplicationPlanPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Edit failover group</DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={() => {
+                      router.push(`/workspaces/${workspaceId}/replication-plan/${planId}/edit`)
+                    }}
+                  >
+                    Edit failover group
+                  </DropdownMenuItem>
                   <DropdownMenuItem className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

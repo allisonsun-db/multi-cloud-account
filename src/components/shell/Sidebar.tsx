@@ -35,8 +35,22 @@ export function Sidebar({
   const [drillSection, setDrillSection] = React.useState<number | null>(null)
   const [pinnedIds, setPinnedIds] = React.useState<Set<string>>(new Set())
   const [findQuery, setFindQuery] = React.useState("")
+  const [selectedItem, setSelectedItem] = React.useState(activeItem)
 
   const { layout = "sections", sections, maxItemsPerSection } = NAV_VERSIONS[navVersion]
+  const currentActiveItem = selectedItem || activeItem
+  const activeSectionIndex = sections.findIndex((section) =>
+    section.items.some((item) => item.id === currentActiveItem)
+  )
+
+  React.useEffect(() => {
+    setSelectedItem(activeItem)
+  }, [activeItem])
+
+  const handleNavigate = (id: string) => {
+    setSelectedItem(id)
+    onNavigate?.(id)
+  }
 
   // Reset state and notify parent when version/layout changes
   React.useEffect(() => {
@@ -51,7 +65,11 @@ export function Sidebar({
   const togglePin = (id: string) =>
     setPinnedIds((prev) => {
       const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
+      if (next.has(id)) {
+        next.delete(id)
+      } else {
+        next.add(id)
+      }
       return next
     })
 
@@ -101,10 +119,10 @@ export function Sidebar({
                     <NavItemButton
                       key={item.id}
                       item={item}
-                      active={activeItem === item.id}
+                      active={currentActiveItem === item.id}
                       sidebarCollapsed={false}
                       onClick={() => {
-                        onNavigate?.(item.id)
+                        handleNavigate(item.id)
                         setDrillSection(sectionIndex)
                         setFindQuery("")
                       }}
@@ -129,19 +147,33 @@ export function Sidebar({
                 )}
               >
                 {/* Section list */}
-                {sections.map((section, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setDrillSection(i)}
-                    className="group flex h-8 w-full items-center gap-2.5 rounded px-2 text-left text-sm text-foreground transition-colors hover:bg-muted-foreground/10"
-                  >
-                    {section.icon && (
-                      <DbIcon icon={section.icon} size={16} color="muted" />
-                    )}
-                    <span className="flex-1">{section.label}</span>
-                    <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-                  </button>
-                ))}
+                {sections.map((section, i) => {
+                  const active = i === activeSectionIndex
+
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => setDrillSection(i)}
+                      className={cn(
+                        "group flex h-8 w-full items-center gap-2.5 rounded px-2 text-left text-sm transition-colors hover:bg-muted-foreground/10",
+                        active
+                          ? "bg-primary/10 text-primary font-semibold"
+                          : "text-foreground"
+                      )}
+                    >
+                      {section.icon && (
+                        <DbIcon icon={section.icon} size={16} color={active ? "primary" : "muted"} />
+                      )}
+                      <span className="flex-1">{section.label}</span>
+                      <ChevronRight
+                        className={cn(
+                          "h-3.5 w-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100",
+                          active ? "text-primary opacity-100" : "text-muted-foreground"
+                        )}
+                      />
+                    </button>
+                  )
+                })}
 
                 {/* Pinned items */}
                 {pinnedItems.length > 0 && (
@@ -153,10 +185,10 @@ export function Sidebar({
                       <NavItemButton
                         key={item.id}
                         item={item}
-                        active={activeItem === item.id}
+                        active={currentActiveItem === item.id}
                         sidebarCollapsed={false}
                         compact
-                        onClick={() => onNavigate?.(item.id)}
+                        onClick={() => handleNavigate(item.id)}
                       />
                     ))}
                   </div>
@@ -187,10 +219,10 @@ export function Sidebar({
                       <div key={item.id} className="group relative flex w-full items-center">
                         <NavItemButton
                           item={item}
-                          active={activeItem === item.id}
+                          active={currentActiveItem === item.id}
                           sidebarCollapsed={false}
                           compact
-                          onClick={() => onNavigate?.(item.id)}
+                          onClick={() => handleNavigate(item.id)}
                         />
                         <button
                           onClick={(e) => { e.stopPropagation(); togglePin(item.id) }}
@@ -303,9 +335,9 @@ export function Sidebar({
               <NavItemButton
                 key={item.id}
                 item={item}
-                active={activeItem === item.id}
+                active={currentActiveItem === item.id}
                 sidebarCollapsed={false}
-                onClick={() => onNavigate?.(item.id)}
+                onClick={() => handleNavigate(item.id)}
               />
             ))}
           </div>
@@ -355,10 +387,10 @@ export function Sidebar({
                     <NavItemButton
                       key={item.id}
                       item={item}
-                      active={activeItem === item.id}
+                      active={currentActiveItem === item.id}
                       sidebarCollapsed={!open}
                       compact
-                      onClick={() => onNavigate?.(item.id)}
+                      onClick={() => handleNavigate(item.id)}
                     />
                   ))}
 

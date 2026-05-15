@@ -118,7 +118,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
       {
         label: "AI",
         items: [
-          { id: "glean-mcp", label: "Glean/MCP", icon: McpIcon },
+          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
           { id: "genie",     label: "Genie",     icon: AssistantIcon },
         ],
       },
@@ -169,7 +169,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
       {
         label: "AI",
         items: [
-          { id: "glean-mcp", label: "Glean/MCP", icon: McpIcon },
+          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
           { id: "genie",     label: "Genie",     icon: AssistantIcon },
         ],
       },
@@ -224,7 +224,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         label: "AI",
         icon: SparkleDoubleIcon,
         items: [
-          { id: "glean-mcp", label: "Glean/MCP", icon: McpIcon },
+          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
           { id: "genie",     label: "Genie",     icon: AssistantIcon },
         ],
       },
@@ -287,7 +287,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         label: "AI",
         icon: SparkleDoubleIcon,
         items: [
-          { id: "glean-mcp", label: "Glean/MCP", icon: McpIcon },
+          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
           { id: "genie",     label: "Genie",     icon: AssistantIcon },
         ],
       },
