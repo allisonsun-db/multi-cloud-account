@@ -92,8 +92,8 @@ export function Sidebar({
         <>
           <div className="flex flex-1 flex-col overflow-hidden">
             {/* Search box */}
-            <div className="shrink-0 px-3 pt-3 pb-2">
-              <div className="flex h-8 items-center gap-2 rounded border border-border bg-background px-2.5 text-muted-foreground focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+            <div className="shrink-0 px-2 pb-2">
+              <div className="flex h-7 items-center gap-2 rounded-md border border-border bg-background px-2.5 text-muted-foreground focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <input
                   value={findQuery}
@@ -111,7 +111,7 @@ export function Sidebar({
 
             {/* Search results */}
             {findQuery.trim() && (
-              <div className="flex flex-1 flex-col overflow-y-auto px-2 pb-2">
+              <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
                 {sections.flatMap((section, sectionIndex) =>
                   section.items.filter((item) =>
                     item.label.toLowerCase().includes(findQuery.toLowerCase())
@@ -142,7 +142,7 @@ export function Sidebar({
               {/* Level 1 — pinned items + section list */}
               <div
                 className={cn(
-                  "absolute inset-0 flex flex-col overflow-y-auto px-2 pb-2 transition-transform duration-200 ease-in-out",
+                  "absolute inset-0 flex flex-col gap-0.5 overflow-y-auto px-2 pb-2 transition-transform duration-200 ease-in-out",
                   drillSection !== null ? "-translate-x-full" : "translate-x-0"
                 )}
               >
@@ -155,7 +155,7 @@ export function Sidebar({
                       key={i}
                       onClick={() => setDrillSection(i)}
                       className={cn(
-                        "group flex h-8 w-full items-center gap-2.5 rounded px-2 text-left text-sm transition-colors hover:bg-muted-foreground/10",
+                        "group flex h-7 w-full items-center gap-2.5 rounded px-2 text-left text-sm transition-colors hover:bg-muted-foreground/10",
                         active
                           ? "bg-primary/10 text-primary font-semibold"
                           : "text-foreground"
@@ -212,7 +212,7 @@ export function Sidebar({
                 </button>
 
                 {/* Section items with pin buttons */}
-                <div className="flex flex-1 flex-col overflow-y-auto px-2 pb-2">
+                <div className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-2 pb-2">
                   {sections[drillSection ?? 0]?.items.map((item) => {
                     const pinned = pinnedIds.has(item.id)
                     return (
