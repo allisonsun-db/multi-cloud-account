@@ -76,7 +76,7 @@ export default function CreateReplicationPlanPage() {
   const [replicateWorkspaceAssets, setReplicateWorkspaceAssets] = React.useState(false)
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [drWorkspace, setDrWorkspace] = React.useState("")
-  const [locationMappings, setLocationMappings] = React.useState([{ source: "", destination: "", sourceCustom: false, destCustom: false }])
+  const [locationMappings, setLocationMappings] = React.useState([{ source: "", destination: "" }])
 
   const CATALOGS = ["main", "prod_catalog", "analytics", "ml_catalog"]
 
@@ -100,7 +100,7 @@ export default function CreateReplicationPlanPage() {
   const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
 
   function addMapping() {
-    setLocationMappings((prev) => [...prev, { source: "", destination: "", sourceCustom: false, destCustom: false }])
+    setLocationMappings((prev) => [...prev, { source: "", destination: "" }])
   }
 
   function removeMapping(index: number) {
@@ -109,10 +109,6 @@ export default function CreateReplicationPlanPage() {
 
   function updateMapping(index: number, field: "source" | "destination", value: string) {
     setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, [field]: value } : m))
-  }
-
-  function setCustomMode(index: number, field: "sourceCustom" | "destCustom", value: boolean) {
-    setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, [field]: value, [field === "sourceCustom" ? "source" : "destination"]: "" } : m))
   }
 
   return (
@@ -358,82 +354,55 @@ export default function CreateReplicationPlanPage() {
               <div className="flex flex-col gap-2">
                 {locationMappings.map((mapping, i) => (
                   <div key={i} className="flex items-end gap-2">
+                    <div className="flex w-6 shrink-0 flex-col gap-2">
+                      {i === 0 && <span className="invisible text-sm font-semibold" aria-hidden="true">#</span>}
+                      <span className="flex h-8 items-center justify-center text-sm font-semibold text-muted-foreground" aria-label={`Mapping ${i + 1}`}>
+                        {i + 1}
+                      </span>
+                    </div>
                     <div className="flex flex-col gap-2 flex-1">
                       {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
-                      {mapping.sourceCustom ? (
-                        <div className="flex gap-1">
-                          <Input
-                            autoFocus
-                            placeholder="s3://my-bucket/path"
-                            value={mapping.source}
-                            onChange={(e) => updateMapping(i, "source", e.target.value)}
-                          />
-                          <Button variant="ghost" size="sm" className="shrink-0 text-muted-foreground" onClick={() => setCustomMode(i, "sourceCustom", false)}>
-                            ← Back
-                          </Button>
-                        </div>
-                      ) : (
-                        <Select value={mapping.source} onValueChange={(v) => {
-                          if (v === "__custom__") { setCustomMode(i, "sourceCustom", true) } else { updateMapping(i, "source", v) }
-                        }}>
-                          <SelectTrigger className="w-full">
-                            <span className="sr-only"><SelectValue /></span>
-                            {mapping.source ? <span className="truncate">{mapping.source}</span> : <span className="text-muted-foreground">Select location</span>}
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__custom__" className="text-primary">Enter custom location…</SelectItem>
-                            {STORAGE_LOCATIONS.map((loc) => (
-                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                      <Select value={mapping.source} onValueChange={(v) => updateMapping(i, "source", v)}>
+                        <SelectTrigger className="w-full">
+                          <span className="sr-only"><SelectValue /></span>
+                          {mapping.source ? <span className="truncate">{mapping.source}</span> : <span className="text-muted-foreground">Select location</span>}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STORAGE_LOCATIONS.map((loc) => (
+                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground mb-2" />
+                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground mb-2" />
                     <div className="flex flex-col gap-2 flex-1">
                       {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
-                      {mapping.destCustom ? (
-                        <div className="flex gap-1">
-                          <Input
-                            autoFocus
-                            placeholder="s3://my-dr-bucket/path"
-                            value={mapping.destination}
-                            onChange={(e) => updateMapping(i, "destination", e.target.value)}
-                          />
-                          <Button variant="ghost" size="sm" className="shrink-0 text-muted-foreground" onClick={() => setCustomMode(i, "destCustom", false)}>
-                            ← Back
-                          </Button>
-                        </div>
-                      ) : (
-                        <Select value={mapping.destination} onValueChange={(v) => {
-                          if (v === "__custom__") { setCustomMode(i, "destCustom", true) } else { updateMapping(i, "destination", v) }
-                        }}>
-                          <SelectTrigger className="w-full">
-                            <span className="sr-only"><SelectValue /></span>
-                            {mapping.destination ? <span className="truncate">{mapping.destination}</span> : <span className="text-muted-foreground">Select location</span>}
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__custom__" className="text-primary">Enter custom location…</SelectItem>
-                            {DR_STORAGE_LOCATIONS.map((loc) => (
-                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                      <Select value={mapping.destination} onValueChange={(v) => updateMapping(i, "destination", v)}>
+                        <SelectTrigger className="w-full">
+                          <span className="sr-only"><SelectValue /></span>
+                          {mapping.destination ? <span className="truncate">{mapping.destination}</span> : <span className="text-muted-foreground">Select location</span>}
+                        </SelectTrigger>
+                        <SelectContent>
+                          {DR_STORAGE_LOCATIONS.map((loc) => (
+                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="mb-0.5"
-                      onClick={() => removeMapping(i)}
-                      disabled={locationMappings.length === 1}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
+                    {locationMappings.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="mb-0.5"
+                        onClick={() => removeMapping(i)}
+                      >
+                        <TrashIcon className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>
-              <div>
+              <div className="ml-8">
                 <Button variant="outline" size="sm" onClick={addMapping}>
                   <Plus className="h-4 w-4" />
                   Add mapping

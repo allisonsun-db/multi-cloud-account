@@ -60,14 +60,16 @@ function computeWorkspaces(runs: ActivityRun[], initialPrimary: string, initialR
 }
 
 function ReplicationFlowIndicator({ reversed = false, loading = false }: { reversed?: boolean; loading?: boolean }) {
+  const className = loading ? "text-border" : "text-muted-foreground"
+
   return (
-    <div className="mt-[38px] shrink-0" style={{ width: 84, height: 19 }}>
+    <div className="flex shrink-0 justify-center md:mt-[38px]">
       <svg
         width="84"
         height="19"
         viewBox="0 0 84 19"
         fill="none"
-        className={loading ? "text-border" : "text-muted-foreground"}
+        className={`hidden md:block ${className}`}
         style={reversed ? { transform: "scaleX(-1)" } : undefined}
       >
         <line
@@ -78,6 +80,23 @@ function ReplicationFlowIndicator({ reversed = false, loading = false }: { rever
           style={{ animation: "dash-flow 0.6s linear infinite" }}
         />
         <polygon points="76,6 84,10 76,14" fill="currentColor" />
+      </svg>
+      <svg
+        width="19"
+        height="48"
+        viewBox="0 0 19 48"
+        fill="none"
+        className={`md:hidden ${className}`}
+        style={reversed ? { transform: "scaleY(-1)" } : undefined}
+      >
+        <line
+          x1="10" y1="0" x2="10" y2="40"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeDasharray="6 4"
+          style={{ animation: "dash-flow 0.6s linear infinite" }}
+        />
+        <polygon points="6,40 10,48 14,40" fill="currentColor" />
       </svg>
     </div>
   )
@@ -176,46 +195,50 @@ export default function ReplicationPlanPage() {
           }
         />
 
-        {/* Stable URL */}
-        <div className="flex flex-col gap-1.5">
-          <span className="text-sm font-semibold text-foreground">Stable URL</span>
-        <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] overflow-hidden flex items-stretch">
-          <div className={`flex flex-col justify-center px-3 py-2 shrink-0 ${failoverLoading ? "bg-muted" : "bg-green-100 dark:bg-green-950"}`}>
-            <div className="flex items-center gap-1.5">
-              {failoverLoading
-                ? <RunningIcon className="h-4 w-4 text-muted-foreground animate-spin [animation-duration:2s]" />
-                : <CheckCircleIcon className="h-4 w-4 text-[var(--success)]" />
-              }
-              <span className={`text-sm font-semibold whitespace-nowrap ${failoverLoading ? "text-muted-foreground" : "text-[var(--success)]"}`}>
-                {failoverLoading ? "Pending" : "Active"}
-              </span>
-            </div>
-          </div>
-          <div className="flex flex-1 items-center justify-between px-4 py-2 min-w-0">
-            <div className="flex flex-col gap-0.5 min-w-0">
-              <a href="https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126" target="_blank" rel="noopener noreferrer" className="text-sm text-primary truncate hover:underline">https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126</a>
-            </div>
-            <div className="flex items-center gap-1 shrink-0 ml-2">
-              <Button variant="ghost" size="icon-sm" aria-label="Copy URL">
-                <CopyIcon className="h-4 w-4 text-muted-foreground" />
-              </Button>
-              <Button variant="ghost" size="icon-sm" aria-label="Open">
-                <NewWindowIcon className="h-4 w-4 text-muted-foreground" />
-              </Button>
-            </div>
-          </div>
-        </div>
-        </div>
+        <div className="-mt-3 border-b border-border" />
 
-        {/* Workspaces */}
-        <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
-          <div ref={cardsRef} className="relative flex items-start justify-center gap-0.5 px-4 py-6 shadow-xs">
+        <div className="flex flex-col gap-6 lg:flex-row">
+          <div className="flex min-w-0 flex-1 flex-col gap-6">
+            {/* Stable URL */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm font-semibold text-foreground">Stable URL</span>
+              <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] overflow-hidden flex items-stretch">
+                <div className={`flex flex-col justify-center px-3 py-2 shrink-0 ${failoverLoading ? "bg-muted" : "bg-green-100 dark:bg-green-950"}`}>
+                  <div className="flex items-center gap-1.5">
+                    {failoverLoading
+                      ? <RunningIcon className="h-4 w-4 text-muted-foreground animate-spin [animation-duration:2s]" />
+                      : <CheckCircleIcon className="h-4 w-4 text-[var(--success)]" />
+                    }
+                    <span className={`text-sm font-semibold whitespace-nowrap ${failoverLoading ? "text-muted-foreground" : "text-[var(--success)]"}`}>
+                      {failoverLoading ? "Pending" : "Active"}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-1 items-center justify-between px-4 py-2 min-w-0">
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <a href="https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126" target="_blank" rel="noopener noreferrer" className="text-sm text-primary truncate hover:underline">https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126</a>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    <Button variant="ghost" size="icon-sm" aria-label="Copy URL">
+                      <CopyIcon className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" aria-label="Open">
+                      <NewWindowIcon className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Workspaces */}
+            <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
+              <div ref={cardsRef} className="relative flex flex-col items-stretch gap-4 px-4 py-4 shadow-xs md:flex-row md:items-start md:justify-center md:gap-0.5 md:py-6">
             {arrowY !== null && (
               <div
-                className="absolute pointer-events-none z-10"
+                className="absolute pointer-events-none z-10 hidden md:block"
                 style={{ top: arrowY - 6, left: "50%", transform: "translateX(-42px)" }}
               >
-                <svg width="84" height="12" viewBox="0 0 84 12" fill="none" className="text-primary" style={failedOver ? { transform: "scaleX(-1)" } : undefined}>
+                <svg width="84" height="12" viewBox="0 0 84 12" fill="none" className="text-muted-foreground" style={failedOver ? { transform: "scaleX(-1)" } : undefined}>
                   <line x1="0" y1="6" x2="76" y2="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 4"
                     style={{ animation: "dash-flow 0.6s linear infinite" }} />
                   <polygon points="76,2 84,6 76,10" fill="currentColor" />
@@ -223,22 +246,27 @@ export default function ReplicationPlanPage() {
               </div>
             )}
             {/* Primary workspace */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex min-w-0 flex-col gap-1.5 md:w-[300px]">
               <p className="text-sm font-semibold">{failedOver ? "Secondary workspace" : "Primary workspace"}</p>
-              <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] w-[300px]">
+              <div className="w-full rounded-md border border-border shadow-[var(--shadow-db-sm)]">
                 <div
                   className="flex items-center gap-2 text-sm px-3 py-2.5 cursor-pointer select-none"
                   onClick={() => setExpanded((v) => !v)}
                 >
                   {CLOUD_ICONS[primaryWs.cloud]}
-                  <a
-                    href={`/workspaces/${workspaceId}`}
-                    className="flex items-center gap-2 flex-1 hover:underline"
-                    onClick={(e) => e.stopPropagation()}
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="truncate">{primaryWs.label}</span>
+                    <span className="whitespace-nowrap text-muted-foreground">({primaryWs.region})</span>
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="shrink-0"
+                    aria-label="Open workspace"
+                    onClick={(e) => { e.stopPropagation(); window.open(`/workspaces/${workspaceId}`, "_blank") }}
                   >
-                    <span>{primaryWs.label}</span>
-                    <span className="text-muted-foreground">({primaryWs.region})</span>
-                  </a>
+                    <NewWindowIcon className="h-4 w-4" />
+                  </Button>
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
                 </div>
                 {expanded && (
@@ -282,22 +310,27 @@ export default function ReplicationPlanPage() {
             <ReplicationFlowIndicator reversed={failedOver} loading={failoverLoading} />
 
             {/* Secondary workspace */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex min-w-0 flex-col gap-1.5 md:w-[300px]">
               <p className="text-sm font-semibold">{failedOver ? "Primary workspace" : "Secondary workspace"}</p>
-              <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] w-[300px]">
+              <div className="w-full rounded-md border border-border shadow-[var(--shadow-db-sm)]">
                 <div
                   className="flex items-center gap-2 text-sm px-3 py-2.5 cursor-pointer select-none"
                   onClick={() => setExpanded((v) => !v)}
                 >
                   {CLOUD_ICONS[replicaWs.cloud]}
-                  <a
-                    href="/workspaces/ws-prod-dr-west"
-                    className="flex items-center gap-2 flex-1 hover:underline"
-                    onClick={(e) => e.stopPropagation()}
+                  <span className="flex min-w-0 flex-1 items-center gap-2">
+                    <span className="truncate">{replicaWs.label}</span>
+                    <span className="whitespace-nowrap text-muted-foreground">({replicaWs.region})</span>
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    className="shrink-0"
+                    aria-label="Open workspace"
+                    onClick={(e) => { e.stopPropagation(); window.open("/workspaces/ws-prod-dr-west", "_blank") }}
                   >
-                    <span>{replicaWs.label}</span>
-                    <span className="text-muted-foreground">({replicaWs.region})</span>
-                  </a>
+                    <NewWindowIcon className="h-4 w-4" />
+                  </Button>
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`} />
                 </div>
                 {expanded && (
@@ -337,47 +370,74 @@ export default function ReplicationPlanPage() {
                 )}
               </div>
             </div>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Replication runs */}
-        <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
-          <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
-            <p className="text-sm font-semibold">Activity</p>
+            {/* Replication runs */}
+            <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
+              <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
+                <p className="text-sm font-semibold">Activity</p>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="pl-4 w-8"></TableHead>
+                    <TableHead>Activity</TableHead>
+                    <TableHead>Workspaces</TableHead>
+                    <TableHead>Started</TableHead>
+                    <TableHead>
+                      <span className="flex items-center gap-1">
+                        Recovery point objective (RPO)
+                        <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      </span>
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {runs.map((run) => (
+                    <TableRow key={run.id}>
+                      <TableCell className="pl-4"><StatusIcon status={run.status} /></TableCell>
+                      <TableCell>{run.activity}</TableCell>
+                      <TableCell>
+                        <span className="flex items-center gap-1.5 text-sm">
+                          <span>{workspaceMap[run.id].from}</span>
+                          <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                          <span>{workspaceMap[run.id].to}</span>
+                        </span>
+                      </TableCell>
+                      <TableCell>{run.startedAt}</TableCell>
+                      <TableCell>{run.status === "failed" ? <span className="text-muted-foreground">—</span> : run.rpo}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-4 w-8"></TableHead>
-                <TableHead>Activity</TableHead>
-                <TableHead>Workspaces</TableHead>
-                <TableHead>Started</TableHead>
-                <TableHead>
-                  <span className="flex items-center gap-1">
-                    Recovery point objective (RPO)
-                    <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                  </span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {runs.map((run) => (
-                <TableRow key={run.id}>
-                  <TableCell className="pl-4"><StatusIcon status={run.status} /></TableCell>
-                  <TableCell>{run.activity}</TableCell>
-                  <TableCell>
-                    <span className="flex items-center gap-1.5 text-sm">
-                      <span>{workspaceMap[run.id].from}</span>
-                      <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                      <span>{workspaceMap[run.id].to}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell>{run.startedAt}</TableCell>
-                  <TableCell>{run.status === "failed" ? <span className="text-muted-foreground">—</span> : run.rpo}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+
+          <div className="w-full shrink-0 lg:w-[280px]">
+            <div className="flex flex-col gap-2">
+              <p className="text-sm font-semibold text-foreground">About this failover group</p>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground w-[150px] shrink-0">Created</span>
+                <span className="text-sm text-foreground">Apr 1, 2026</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground w-[150px] shrink-0">Created by</span>
+                <span className="text-sm text-foreground">Allison Sun</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground w-[150px] shrink-0">Last replicated</span>
+                <span className="text-sm text-foreground">Apr 9, 2026 at 9:45 AM</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="flex w-[150px] shrink-0 items-center gap-1 text-sm text-muted-foreground">
+                  RPO
+                  <Info className="h-3.5 w-3.5 shrink-0" />
+                </span>
+                <span className="text-sm text-foreground">{currentRpo}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
       </div>

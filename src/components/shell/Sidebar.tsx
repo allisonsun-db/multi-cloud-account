@@ -93,7 +93,7 @@ export function Sidebar({
           <div className="flex flex-1 flex-col overflow-hidden">
             {/* Search box */}
             <div className="shrink-0 px-2 pb-2">
-              <div className="flex h-7 items-center gap-2 rounded-md border border-border bg-background px-2.5 text-muted-foreground focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
+              <div className="flex h-8 items-center gap-2 rounded-md border border-border bg-background px-2.5 text-muted-foreground focus-within:border-primary focus-within:ring-1 focus-within:ring-primary">
                 <Search className="h-3.5 w-3.5 shrink-0" />
                 <input
                   value={findQuery}
