@@ -284,7 +284,7 @@ function StableUrlDialog({
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function ResiliencePage() {
+export function ResilienceContent() {
   const router = useRouter()
   const [activeTab, setActiveTab] = React.useState("failover-groups")
   const [stableUrls, setStableUrls] = React.useState<StableUrl[]>(INITIAL_STABLE_URLS)
@@ -305,8 +305,7 @@ export default function ResiliencePage() {
   }
 
   return (
-    <AppShell activeItem="resilience">
-      <div className="flex flex-col gap-4 p-6">
+    <div className="flex flex-col gap-4 p-6">
         <StableUrlDialog
           open={stableUrlDialogOpen}
           onOpenChange={setStableUrlDialogOpen}
@@ -447,6 +446,13 @@ export default function ResiliencePage() {
           </TabsContent>
         </Tabs>
       </div>
+  )
+}
+
+export default function ResiliencePage() {
+  return (
+    <AppShell activeItem="resilience">
+      <ResilienceContent />
     </AppShell>
   )
 }

@@ -42,7 +42,7 @@ const METASTORES: Metastore[] = [
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function CatalogPage() {
+export function CatalogContent() {
   const router = useRouter()
   const [filter, setFilter] = React.useState("")
   const [locations, setLocations] = React.useState<string[]>([])
@@ -62,8 +62,7 @@ export default function CatalogPage() {
   })
 
   return (
-    <AppShell activeItem="catalog">
-      <div className="flex flex-col gap-4 p-6">
+    <div className="flex flex-col gap-4 p-6">
         <h1 className="text-xl font-semibold text-foreground">Metastore</h1>
 
         {/* Filter + action */}
@@ -123,6 +122,13 @@ export default function CatalogPage() {
           </Table>
 
       </div>
+  )
+}
+
+export default function CatalogPage() {
+  return (
+    <AppShell activeItem="catalog">
+      <CatalogContent />
     </AppShell>
   )
 }

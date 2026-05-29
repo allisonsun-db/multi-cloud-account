@@ -267,7 +267,7 @@ function CreateWorkspaceModal({ onCreated }: { onCreated: (ws: Workspace) => voi
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function WorkspacesPage() {
+export function WorkspacesContent() {
   const router = useRouter()
   const [filter, setFilter] = React.useState("")
   const [locations, setLocations] = React.useState<string[]>([])
@@ -288,8 +288,7 @@ export default function WorkspacesPage() {
   })
 
   return (
-    <AppShell activeItem="workspaces">
-      <div className="flex flex-col gap-4 p-6">
+    <div className="flex flex-col gap-4 p-6">
 
         <h1 className="text-xl font-semibold text-foreground">Workspaces</h1>
 
@@ -380,6 +379,13 @@ export default function WorkspacesPage() {
         </Table>
 
       </div>
+  )
+}
+
+export default function WorkspacesPage() {
+  return (
+    <AppShell activeItem="workspaces">
+      <WorkspacesContent />
     </AppShell>
   )
 }

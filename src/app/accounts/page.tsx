@@ -17,6 +17,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Search } from "lucide-react"
 import { CheckCircleIcon, XCircleIcon, DotsCircleIcon, UserGroupIcon, ShieldCheckIcon, CreditCardIcon, GiftIcon } from "@/components/icons"
+import { cn } from "@/lib/utils"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -33,10 +34,10 @@ type Account = {
 }
 
 const INITIAL_ACCOUNTS: Account[] = [
-  { id: "1", name: "Nike",              isMain: true,  url: "nike.databricks.com",         contact: "admin@nike.com",      created: "2024-06-15", status: "Active" },
-  { id: "3", name: "Nike EMEA",         isMain: false, url: "nike-emea.databricks.com",    contact: "emea-admin@nike.com", created: "2025-03-01", status: "Active" },
-  { id: "4", name: "Nike Data Science", isMain: false, url: "nike-ds.databricks.com",      contact: "ds-team@nike.com",    created: "2025-08-12", status: "Active" },
-  { id: "5", name: "Nike Sandbox",      isMain: false, url: "nike-sandbox.databricks.com", contact: "sandbox@nike.com",    created: "2026-04-30", status: "Pending" },
+  { id: "main",    name: "Nike",             isMain: true,  url: "nike.databricks.com",         contact: "admin@nike.com",      created: "2024-06-15", status: "Active" },
+  { id: "emea",    name: "Nike EMEA",        isMain: false, url: "nike-emea.databricks.com",    contact: "emea-admin@nike.com", created: "2025-03-01", status: "Active" },
+  { id: "ds",      name: "Nike Data Science",isMain: false, url: "nike-ds.databricks.com",      contact: "ds-team@nike.com",    created: "2025-08-12", status: "Active" },
+  { id: "sandbox", name: "Nike Sandbox",     isMain: false, url: "nike-sandbox.databricks.com", contact: "sandbox@nike.com",    created: "2026-04-30", status: "Pending" },
 ]
 
 const STATUS_META: Record<AccountStatus, { icon: React.ComponentType<{ size?: number; className?: string }>; className: string; tooltip: string }> = {
@@ -252,7 +253,7 @@ function CreateAccountDialog({ onCreated }: { onCreated: (a: Account) => void })
           <div className="flex flex-col gap-2">
             <Label htmlFor="account-url">Account URL</Label>
             <p className="text-xs text-muted-foreground -mt-1">
-              Choose a custom URL for this account. Only letters, numbers, and hyphens.
+              Choose a custom URL for this account.
             </p>
             <div className="flex items-center">
               <Input
@@ -271,14 +272,20 @@ function CreateAccountDialog({ onCreated }: { onCreated: (a: Account) => void })
           {/* Account settings */}
           <div className="flex flex-col gap-2">
             <Label>Account settings</Label>
-            <div className="rounded-md border border-border divide-y divide-border">
+            <div className="rounded-md border border-border">
               {[
                 { label: "Identity", detail: "Groups, SCIM, and user provisioning", icon: UserGroupIcon },
                 { label: "Security", detail: "Network policies, token reports, authentication", icon: ShieldCheckIcon },
                 { label: "Billing",   detail: "Subscription, usage, and payment",        icon: CreditCardIcon },
                 { label: "Previews",  detail: "Enablement for feature previews",  icon: GiftIcon },
-              ].map(({ label, detail, icon: Icon }) => (
-                <div key={label} className="flex items-center justify-between px-3 py-3">
+              ].map(({ label, detail, icon: Icon }, index) => (
+                <div
+                  key={label}
+                  className={cn(
+                    "relative flex items-center justify-between px-3 py-3",
+                    index > 0 && "before:absolute before:left-3 before:right-3 before:top-0 before:h-px before:bg-border"
+                  )}
+                >
                   <div className="flex min-w-0 flex-1 items-center gap-3 pr-6">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-muted">
                       <Icon size={16} className="text-muted-foreground" />
@@ -531,9 +538,11 @@ function ReviewAccountDialog({
 function AccountsTable({
   accounts,
   emptyMessage,
+  onDrillIn,
 }: {
   accounts: Account[]
   emptyMessage: string
+  onDrillIn?: (id: string) => void
 }) {
   return (
     <Table>
@@ -573,7 +582,16 @@ function AccountsTable({
               </TableCell>
               <TableCell>
                 <span className="flex items-center gap-2">
-                  <span className="text-foreground">{account.name}</span>
+                  {onDrillIn ? (
+                    <button
+                      onClick={() => onDrillIn(account.id)}
+                      className="text-primary hover:underline text-left"
+                    >
+                      {account.name}
+                    </button>
+                  ) : (
+                    <span className="text-foreground">{account.name}</span>
+                  )}
                   {account.isMain ? (
                     <span className="text-xs text-muted-foreground">Main</span>
                   ) : null}
@@ -604,7 +622,7 @@ function AccountsTable({
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function AccountsPage() {
+export function AccountsContent({ onDrillIn }: { onDrillIn?: (id: string) => void } = {}) {
   const [accounts, setAccounts] = React.useState<Account[]>(INITIAL_ACCOUNTS)
   const [filter, setFilter] = React.useState("")
   const [reviewAccount, setReviewAccount] = React.useState<Account | null>(null)
@@ -636,50 +654,57 @@ export default function AccountsPage() {
   }
 
   return (
-    <AppShell activeItem="accounts">
-      <div className="flex flex-col gap-6 p-6 max-w-[800px] w-full mx-auto">
+    <div className="flex flex-col gap-6 p-6 max-w-[1000px] w-full mx-auto">
 
-        {/* Header */}
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-semibold text-foreground">Accounts</h1>
-          <p className="text-sm text-muted-foreground max-w-[600px]">
-            Accounts linked to your organization share unified billing, identity, and governance policies.
-          </p>
-        </div>
+      {/* Header */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-xl font-semibold text-foreground">Accounts</h1>
+        <p className="text-sm text-muted-foreground max-w-[600px]">
+          Accounts linked to your organization share unified billing, identity, and governance policies.
+        </p>
+      </div>
 
-        {/* Filter + action */}
-        <div className="flex flex-col gap-3">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="relative w-[280px]">
-              <Input
-                placeholder="Filter accounts"
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className="pr-8"
-              />
-              <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-            </div>
-            <div className="ml-auto">
-              <CreateAccountDialog onCreated={(a) => setAccounts((prev) => [...prev, a])} />
-            </div>
+      {/* Filter + action */}
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative w-[280px]">
+            <Input
+              placeholder="Filter accounts"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              className="pr-8"
+            />
+            <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          </div>
+          <div className="ml-auto">
+            <CreateAccountDialog onCreated={(a) => setAccounts((prev) => [...prev, a])} />
           </div>
         </div>
-
-        <AccountsTable
-          accounts={displayRows}
-          emptyMessage={emptyMessage}
-        />
-
-        <ReviewAccountDialog
-          account={reviewAccount}
-          open={!!reviewAccount}
-          onOpenChange={(o) => {
-            if (!o) setReviewAccount(null)
-          }}
-          onApprove={handleApproveReviewed}
-        />
-
       </div>
+
+      <AccountsTable
+        accounts={displayRows}
+        emptyMessage={emptyMessage}
+        onDrillIn={onDrillIn}
+      />
+
+      <ReviewAccountDialog
+        account={reviewAccount}
+        open={!!reviewAccount}
+        onOpenChange={(o) => {
+          if (!o) setReviewAccount(null)
+        }}
+        onApprove={handleApproveReviewed}
+      />
+
+    </div>
+  )
+}
+
+export default function AccountsPage() {
+  return (
+    <AppShell activeItem="accounts">
+      <AccountsContent />
     </AppShell>
   )
 }

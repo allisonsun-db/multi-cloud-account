@@ -426,15 +426,11 @@ export default function ReplicationPlanPage() {
                 <span className="text-sm text-foreground">Allison Sun</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground w-[150px] shrink-0">Last replicated</span>
-                <span className="text-sm text-foreground">Apr 9, 2026 at 9:45 AM</span>
-              </div>
-              <div className="flex items-center gap-2">
                 <span className="flex w-[150px] shrink-0 items-center gap-1 text-sm text-muted-foreground">
                   RPO
                   <Info className="h-3.5 w-3.5 shrink-0" />
                 </span>
-                <span className="text-sm text-foreground">{currentRpo}</span>
+                <span className="text-sm text-foreground">Apr 9, 2026 at 9:45 AM ({currentRpo} ago)</span>
               </div>
             </div>
           </div>

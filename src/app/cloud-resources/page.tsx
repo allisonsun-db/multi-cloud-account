@@ -227,10 +227,9 @@ function StorageConfigTab() {
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function CloudResourcesPage() {
+export function CloudResourcesContent() {
   return (
-    <AppShell activeItem="cloud-resources">
-      <div className="flex flex-col p-6 w-full">
+    <div className="flex flex-col p-6 w-full">
         <div className="flex items-center gap-2 mb-4">
           <h1 className="text-xl font-semibold text-foreground">Cloud resources</h1>
           <span className="text-sm text-muted-foreground flex items-center gap-1">
@@ -252,6 +251,13 @@ export default function CloudResourcesPage() {
           </TabsContent>
         </Tabs>
       </div>
+  )
+}
+
+export default function CloudResourcesPage() {
+  return (
+    <AppShell activeItem="cloud-resources">
+      <CloudResourcesContent />
     </AppShell>
   )
 }
