@@ -47,14 +47,46 @@ const DR_STORAGE_LOCATIONS = [
 
 type MappingRow = {
   source: string
+  sourceCustom: boolean
   destination: string
+  destinationCustom: boolean
   wildcard: boolean
 }
 
-function formatStorageLocation(location: string, includeWildcard: boolean) {
+function normalizeStorageLocation(location: string) {
   if (!location) return ""
-  const baseLocation = location.replace(/\/\*$/, "")
-  return includeWildcard ? `${baseLocation}/*` : baseLocation
+  return location.replace(/\/\*$/, "")
+}
+
+function formatStorageLocation(location: string, includeWildcard: boolean) {
+  const baseLocation = normalizeStorageLocation(location)
+  return includeWildcard && baseLocation ? `${baseLocation}/*` : baseLocation
+}
+
+function CustomStorageLocationInput({
+  value,
+  includeWildcard,
+  onChange,
+}: {
+  value: string
+  includeWildcard: boolean
+  onChange: (value: string) => void
+}) {
+  return (
+    <div className="flex min-w-0">
+      <Input
+        value={normalizeStorageLocation(value)}
+        onChange={(e) => onChange(normalizeStorageLocation(e.target.value))}
+        placeholder="s3://bucket/path"
+        className={includeWildcard ? "rounded-r-none border-r-0" : undefined}
+      />
+      {includeWildcard && (
+        <span className="flex h-8 shrink-0 select-none items-center rounded-r border border-border bg-muted px-3 text-sm text-muted-foreground">
+          {"/*"}
+        </span>
+      )}
+    </div>
+  )
 }
 
 function getMockFailoverGroup(planId: string): {
@@ -69,8 +101,8 @@ function getMockFailoverGroup(planId: string): {
   const allCatalogs = ["main", "prod_catalog", "analytics", "ml_catalog"] as const
   const allSelected = Object.fromEntries(allCatalogs.map((c) => [c, true])) as Record<string, boolean>
   const defaultMappings: MappingRow[] = [
-    { source: "s3://primary-bucket/metastore", destination: "s3://dr-bucket/metastore", wildcard: false },
-    { source: "s3://primary-bucket/external", destination: "s3://dr-bucket/external", wildcard: false },
+    { source: "s3://primary-bucket/metastore", sourceCustom: false, destination: "s3://dr-bucket/metastore", destinationCustom: false, wildcard: false },
+    { source: "s3://primary-bucket/external", sourceCustom: false, destination: "s3://dr-bucket/external", destinationCustom: false, wildcard: false },
   ]
   if (planId === "plan-2") {
     return {
@@ -107,7 +139,7 @@ export default function EditReplicationPlanPage() {
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [drWorkspace, setDrWorkspace] = React.useState("")
   const [locationMappings, setLocationMappings] = React.useState<MappingRow[]>([
-    { source: "", destination: "", wildcard: false },
+    { source: "", sourceCustom: false, destination: "", destinationCustom: false, wildcard: false },
   ])
 
   React.useEffect(() => {
@@ -143,7 +175,7 @@ export default function EditReplicationPlanPage() {
   const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
 
   function addMapping() {
-    setLocationMappings((prev) => [...prev, { source: "", destination: "", wildcard: false }])
+    setLocationMappings((prev) => [...prev, { source: "", sourceCustom: false, destination: "", destinationCustom: false, wildcard: false }])
   }
 
   function removeMapping(index: number) {
@@ -156,6 +188,14 @@ export default function EditReplicationPlanPage() {
 
   function toggleMappingWildcard(index: number) {
     setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, wildcard: !m.wildcard } : m))
+  }
+
+  function setCustomMode(index: number, field: "sourceCustom" | "destinationCustom", value: boolean) {
+    setLocationMappings((prev) => prev.map((m, i) => (
+      i === index
+        ? { ...m, [field]: value, [field === "sourceCustom" ? "source" : "destination"]: "" }
+        : m
+    )))
   }
 
   return (
@@ -387,40 +427,64 @@ export default function EditReplicationPlanPage() {
                     <div className="flex min-w-0 items-end gap-2">
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
                         {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
-                        <Select value={mapping.source} onValueChange={(v) => updateMapping(i, "source", v)}>
-                          <SelectTrigger className="w-full min-w-0">
-                            <span className="sr-only"><SelectValue /></span>
-                            {mapping.source ? (
-                              <span className="truncate">{formatStorageLocation(mapping.source, mapping.wildcard)}</span>
-                            ) : (
-                              <span className="text-muted-foreground">Select location</span>
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            {STORAGE_LOCATIONS.map((loc) => (
-                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {mapping.sourceCustom ? (
+                          <div className="flex gap-1">
+                            <CustomStorageLocationInput
+                              value={mapping.source}
+                              includeWildcard={mapping.wildcard}
+                              onChange={(value) => updateMapping(i, "source", value)}
+                            />
+                            <Button variant="ghost" size="sm" className="shrink-0 text-muted-foreground" onClick={() => setCustomMode(i, "sourceCustom", false)}>
+                              Use list
+                            </Button>
+                          </div>
+                        ) : (
+                          <Select value={mapping.source} onValueChange={(v) => {
+                            if (v === "__custom__") { setCustomMode(i, "sourceCustom", true) } else { updateMapping(i, "source", v) }
+                          }}>
+                            <SelectTrigger className="w-full min-w-0">
+                              <span className="sr-only"><SelectValue /></span>
+                              {mapping.source ? <span className="truncate">{formatStorageLocation(mapping.source, mapping.wildcard)}</span> : <span className="text-muted-foreground">Select location</span>}
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__custom__" className="text-primary">Enter custom location…</SelectItem>
+                              {STORAGE_LOCATIONS.map((loc) => (
+                                <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                       <ArrowRight className="h-4 w-4 text-muted-foreground mb-2 shrink-0" />
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
                         {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
-                        <Select value={mapping.destination} onValueChange={(v) => updateMapping(i, "destination", v)}>
-                          <SelectTrigger className="w-full min-w-0">
-                            <span className="sr-only"><SelectValue /></span>
-                            {mapping.destination ? (
-                              <span className="truncate">{formatStorageLocation(mapping.destination, mapping.wildcard)}</span>
-                            ) : (
-                              <span className="text-muted-foreground">Select location</span>
-                            )}
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DR_STORAGE_LOCATIONS.map((loc) => (
-                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        {mapping.destinationCustom ? (
+                          <div className="flex gap-1">
+                            <CustomStorageLocationInput
+                              value={mapping.destination}
+                              includeWildcard={mapping.wildcard}
+                              onChange={(value) => updateMapping(i, "destination", value)}
+                            />
+                            <Button variant="ghost" size="sm" className="shrink-0 text-muted-foreground" onClick={() => setCustomMode(i, "destinationCustom", false)}>
+                              Use list
+                            </Button>
+                          </div>
+                        ) : (
+                          <Select value={mapping.destination} onValueChange={(v) => {
+                            if (v === "__custom__") { setCustomMode(i, "destinationCustom", true) } else { updateMapping(i, "destination", v) }
+                          }}>
+                            <SelectTrigger className="w-full min-w-0">
+                              <span className="sr-only"><SelectValue /></span>
+                              {mapping.destination ? <span className="truncate">{formatStorageLocation(mapping.destination, mapping.wildcard)}</span> : <span className="text-muted-foreground">Select location</span>}
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="__custom__" className="text-primary">Enter custom location…</SelectItem>
+                              {DR_STORAGE_LOCATIONS.map((loc) => (
+                                <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </div>
                       <Button
                         variant="ghost"
