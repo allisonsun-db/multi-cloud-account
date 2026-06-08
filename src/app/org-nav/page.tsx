@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Image from "next/image"
 import { Lock, Plus, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -64,18 +65,32 @@ type NavKey = "accounts" | "identity" | "settings" | "governance" | "data" | "co
 // ─── Shared nav button ────────────────────────────────────────────────────────
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function NavButton({ item, active, onClick }: { item: { id: string; label: string; icon: React.ComponentType<any> }; active: boolean; onClick: () => void }) {
+function NavButton({ item, active, collapsed, onClick }: { item: { id: string; label: string; icon: React.ComponentType<any> }; active: boolean; collapsed: boolean; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
+      title={collapsed ? item.label : undefined}
       className={cn(
-        "flex h-7 w-full items-center gap-2 rounded px-3 text-left text-sm transition-colors",
+        "flex h-7 w-full items-center gap-2 rounded text-left text-sm transition-colors",
+        collapsed ? "justify-center px-0" : "px-3",
         active ? "bg-primary/10 font-semibold text-primary" : "text-foreground hover:bg-muted-foreground/10",
       )}
     >
       <DbIcon icon={item.icon} size={16} color={active ? "primary" : "muted"} />
-      {item.label}
+      {!collapsed && item.label}
     </button>
+  )
+}
+
+function NikeScopeLogo() {
+  return (
+    <Image
+      src="/nike-logo.png"
+      alt=""
+      width={24}
+      height={24}
+      className="h-6 w-6 shrink-0 rounded object-cover"
+    />
   )
 }
 
@@ -395,6 +410,7 @@ export default function OrgNavPage() {
 
   const isOrg = scope === "org"
   const account = ACCOUNTS.find((a) => a.id === scope)
+  const collapsed = !sidebarOpen
 
   const orgNavKeys: NavKey[]     = ["data", "cost", "accounts", "identity", "previews", "settings"]
   const accountNavKeys: NavKey[] = ["data", "cost", "workspaces", "catalog", "cloud-resources", "resilience", "identity", "previews", "settings"]
@@ -495,28 +511,43 @@ export default function OrgNavPage() {
 
       {/* ── TopBar ── */}
       <header className="flex h-12 shrink-0 items-center gap-2 bg-secondary px-3">
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => setSidebarOpen((v) => !v)}
-          aria-label="Toggle sidebar"
+        <div
+          className={cn(
+            "flex shrink-0 items-center gap-2 transition-all duration-200",
+            sidebarOpen ? "w-[200px]" : "w-[30px]",
+          )}
         >
-          {sidebarOpen
-            ? <SidebarCollapseIcon className="h-4 w-4 text-muted-foreground" />
-            : <SidebarExpandIcon className="h-4 w-4 text-muted-foreground" />
-          }
-        </Button>
+          {sidebarOpen && <DatabricksLogo height={18} className="ml-1" />}
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="ml-auto"
+            onClick={() => setSidebarOpen((v) => !v)}
+            aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+          >
+            {sidebarOpen
+              ? <SidebarCollapseIcon className="h-4 w-4 text-muted-foreground" />
+              : <SidebarExpandIcon className="h-4 w-4 text-muted-foreground" />
+            }
+          </Button>
+        </div>
 
-        <DatabricksLogo height={18} workspaceName={isOrg ? ORG_NAME : account?.name} />
+        <div className="flex flex-1 items-center justify-center">
+          <button
+            className="flex h-8 w-full max-w-[360px] items-center gap-2 rounded border border-border bg-background px-2 text-left text-sm font-normal text-muted-foreground transition-colors hover:bg-muted"
+            aria-label="Search"
+          >
+            <Search className="h-4 w-4 shrink-0" />
+            <span className="flex-1 truncate">Search</span>
+          </button>
+        </div>
 
-        <div className="flex-1" aria-hidden />
-
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon-sm" aria-label="AI Assistant">
             <DbIcon icon={SparkleIcon} color="ai" size={16} />
           </Button>
           <button
-            className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
             aria-label="User menu"
           >
             N
@@ -526,26 +557,27 @@ export default function OrgNavPage() {
 
       <div className="flex flex-1 overflow-hidden">
 
-        {/* ── Sidebar ── */}
-        <aside
-          className={cn(
-            "flex h-full shrink-0 flex-col bg-secondary transition-all duration-200 overflow-hidden",
-            sidebarOpen ? "w-[220px]" : "w-0",
-          )}
-        >
-          {/* ── Scope breadcrumb ── */}
-          <div className="shrink-0 px-2 pb-2">
-            {isOrg ? (
+      {/* ── Sidebar ── */}
+      <aside
+        className={cn(
+          "flex h-full shrink-0 flex-col bg-secondary transition-all duration-200",
+          sidebarOpen ? "w-[220px]" : "w-[52px]",
+        )}
+      >
+        {/* ── Scope picker ── */}
+        <div className="shrink-0 px-2 pb-2">
+          {sidebarOpen ? (
+            isOrg ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex h-10 w-full items-center gap-1.5 rounded-md border border-border px-3 text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10">
-                    <DbIcon icon={OfficeIcon} size={16} color="muted" />
+                  <button className="flex h-10 w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10">
+                    <NikeScopeLogo />
                     <span className="flex-1 truncate">{ORG_NAME}</span>
                     <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-[220px]">
-                  <DropdownMenuItem className="font-semibold text-primary pointer-events-none">
+                  <DropdownMenuItem className="pointer-events-none font-semibold text-primary">
                     <DbIcon icon={OfficeIcon} size={16} color="primary" />
                     {ORG_NAME}
                     <CheckIcon className="ml-auto h-3.5 w-3.5 text-primary" />
@@ -561,27 +593,61 @@ export default function OrgNavPage() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <div className="flex h-10 w-full items-center gap-0.5 rounded-md border border-border px-1">
-                <button
-                  onClick={goToOrg}
-                  className="group flex h-8 shrink-0 items-center gap-1.5 rounded px-2 text-muted-foreground transition-all hover:bg-muted-foreground/10 hover:text-foreground"
-                  aria-label={ORG_NAME}
-                >
-                  <DbIcon icon={OfficeIcon} size={16} color="muted" />
-                  <span className="max-w-0 overflow-hidden whitespace-nowrap text-sm transition-all duration-200 group-hover:max-w-[160px]">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex h-10 w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10">
+                    <NikeScopeLogo />
+                    <span className="flex-1 truncate">{account?.name}</span>
+                    <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[220px]">
+                  <DropdownMenuItem onClick={goToOrg}>
+                    <DbIcon icon={OfficeIcon} size={16} color="muted" />
                     {ORG_NAME}
-                  </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">Accounts</DropdownMenuLabel>
+                  {ACCOUNTS.map((a) => (
+                    <DropdownMenuItem key={a.id} onClick={() => handleScopeChange(a.id)}>
+                      {a.name}
+                      {a.id === scope && <CheckIcon className="ml-auto h-3.5 w-3.5 text-primary" />}
+                      {a.isMain && a.id !== scope && <span className="ml-auto text-xs text-muted-foreground">Main</span>}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className="flex h-10 w-full items-center justify-center rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted-foreground/10"
+                  title={isOrg ? ORG_NAME : account?.name}
+                  aria-label={isOrg ? `Switch scope, current scope ${ORG_NAME}` : `Switch scope, current scope ${account?.name}`}
+                >
+                  <NikeScopeLogo />
                 </button>
-                <span className="shrink-0 text-muted-foreground text-sm select-none">/</span>
-                <div className="flex-1 min-w-0">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex h-8 w-full min-w-0 items-center gap-1.5 rounded px-2 text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10">
-                      <span className="truncate">{account?.name}</span>
-                      <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-[220px]">
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[220px]">
+                {isOrg ? (
+                  <>
+                    <DropdownMenuItem className="pointer-events-none font-semibold text-primary">
+                      <DbIcon icon={OfficeIcon} size={16} color="primary" />
+                      {ORG_NAME}
+                      <CheckIcon className="ml-auto h-3.5 w-3.5 text-primary" />
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">Accounts</DropdownMenuLabel>
+                    {ACCOUNTS.map((a) => (
+                      <DropdownMenuItem key={a.id} onClick={() => handleScopeChange(a.id)}>
+                        {a.name}
+                        {a.isMain && <span className="ml-auto text-xs text-muted-foreground">Main</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </>
+                ) : (
+                  <>
                     <DropdownMenuItem onClick={goToOrg}>
                       <DbIcon icon={OfficeIcon} size={16} color="muted" />
                       {ORG_NAME}
@@ -592,44 +658,44 @@ export default function OrgNavPage() {
                       <DropdownMenuItem key={a.id} onClick={() => handleScopeChange(a.id)}>
                         {a.name}
                         {a.id === scope && <CheckIcon className="ml-auto h-3.5 w-3.5 text-primary" />}
-                        {a.isMain && a.id !== scope && (
-                          <span className="ml-auto text-xs text-muted-foreground">Main</span>
-                        )}
+                        {a.isMain && a.id !== scope && <span className="ml-auto text-xs text-muted-foreground">Main</span>}
                       </DropdownMenuItem>
                     ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <nav className="flex flex-1 flex-col gap-3 overflow-y-auto px-2 py-2">
-            {(isOrg ? orgNavSections : accountNavSections).map((section, i) => (
-                  <div key={i} className="flex flex-col gap-0.5">
-                    {section.label && (
-                      <div className="flex items-center px-3 py-1">
-                        <span className="text-xs font-normal text-muted-foreground">{section.label}</span>
-                      </div>
-                    )}
-                    {section.items.map((item) => (
-                      <NavButton key={item.id} item={item} active={activeNav === item.id} onClick={() => setActiveNav(item.id)} />
-                    ))}
-                  </div>
-                ))
-            }
-          </nav>
-        </aside>
-
-        {/* ── Main content ── */}
-        <main
-          className={cn(
-            "flex-1 overflow-y-auto rounded-md border border-border bg-background mb-2 mr-2",
-            !sidebarOpen && "ml-2",
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
-        >
-          {renderContent()}
-        </main>
+        </div>
+
+        {/* ── Nav ── */}
+        <nav className="flex flex-1 flex-col gap-3 overflow-y-auto px-2 py-2">
+          {(isOrg ? orgNavSections : accountNavSections).map((section, i) => (
+            <div key={i} className="flex flex-col gap-0.5">
+              {section.label && sidebarOpen && (
+                <div className="flex items-center px-3 py-1">
+                  <span className="text-xs font-normal text-muted-foreground">{section.label}</span>
+                </div>
+              )}
+              {section.items.map((item) => (
+                <NavButton
+                  key={item.id}
+                  item={item}
+                  active={activeNav === item.id}
+                  collapsed={collapsed}
+                  onClick={() => setActiveNav(item.id)}
+                />
+              ))}
+            </div>
+          ))}
+        </nav>
+
+      </aside>
+
+      {/* ── Main content ── */}
+      <main className="mb-2 mr-2 flex-1 overflow-y-auto rounded-md border border-border bg-white/70">
+        {renderContent()}
+      </main>
 
       </div>
     </div>

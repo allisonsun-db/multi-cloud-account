@@ -45,7 +45,17 @@ const DR_STORAGE_LOCATIONS = [
   "gs://omnimart-gcp-dr-eu/data",
 ]
 
-type MappingRow = { source: string; destination: string }
+type MappingRow = {
+  source: string
+  destination: string
+  wildcard: boolean
+}
+
+function formatStorageLocation(location: string, includeWildcard: boolean) {
+  if (!location) return ""
+  const baseLocation = location.replace(/\/\*$/, "")
+  return includeWildcard ? `${baseLocation}/*` : baseLocation
+}
 
 function getMockFailoverGroup(planId: string): {
   planName: string
@@ -59,8 +69,8 @@ function getMockFailoverGroup(planId: string): {
   const allCatalogs = ["main", "prod_catalog", "analytics", "ml_catalog"] as const
   const allSelected = Object.fromEntries(allCatalogs.map((c) => [c, true])) as Record<string, boolean>
   const defaultMappings: MappingRow[] = [
-    { source: "s3://primary-bucket/metastore", destination: "s3://dr-bucket/metastore" },
-    { source: "s3://primary-bucket/external", destination: "s3://dr-bucket/external" },
+    { source: "s3://primary-bucket/metastore", destination: "s3://dr-bucket/metastore", wildcard: false },
+    { source: "s3://primary-bucket/external", destination: "s3://dr-bucket/external", wildcard: false },
   ]
   if (planId === "plan-2") {
     return {
@@ -97,7 +107,7 @@ export default function EditReplicationPlanPage() {
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [drWorkspace, setDrWorkspace] = React.useState("")
   const [locationMappings, setLocationMappings] = React.useState<MappingRow[]>([
-    { source: "", destination: "" },
+    { source: "", destination: "", wildcard: false },
   ])
 
   React.useEffect(() => {
@@ -133,7 +143,7 @@ export default function EditReplicationPlanPage() {
   const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
 
   function addMapping() {
-    setLocationMappings((prev) => [...prev, { source: "", destination: "" }])
+    setLocationMappings((prev) => [...prev, { source: "", destination: "", wildcard: false }])
   }
 
   function removeMapping(index: number) {
@@ -142,6 +152,10 @@ export default function EditReplicationPlanPage() {
 
   function updateMapping(index: number, field: "source" | "destination", value: string) {
     setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, [field]: value } : m))
+  }
+
+  function toggleMappingWildcard(index: number) {
+    setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, wildcard: !m.wildcard } : m))
   }
 
   return (
@@ -179,7 +193,7 @@ export default function EditReplicationPlanPage() {
               <p className="text-sm font-semibold">Details</p>
             </div>
             <div className="flex flex-col gap-4 px-4 py-4">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-4">
                 <Label htmlFor="plan-name">Failover group name</Label>
                 <Input
                   id="plan-name"
@@ -270,7 +284,7 @@ export default function EditReplicationPlanPage() {
               {sameWorkspaceError && (
                 <p className="text-sm text-destructive">Primary and secondary workspaces cannot be the same.</p>
               )}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-4">
                 <Label htmlFor="stable-url">Stable URL <span className="font-normal text-muted-foreground">(optional)</span></Label>
                 <Input
                   id="stable-url"
@@ -367,47 +381,67 @@ export default function EditReplicationPlanPage() {
               </div>
             ) : (
             <div className="flex flex-col gap-3 px-4 py-4">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-6">
                 {locationMappings.map((mapping, i) => (
-                  <div key={i} className="flex items-end gap-2">
-                    <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
-                      <Select value={mapping.source} onValueChange={(v) => updateMapping(i, "source", v)}>
-                        <SelectTrigger className="w-full">
-                          <span className="sr-only"><SelectValue /></span>
-                          {mapping.source ? <span className="truncate">{mapping.source}</span> : <span className="text-muted-foreground">Select location</span>}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STORAGE_LOCATIONS.map((loc) => (
-                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                  <div key={i} className="flex min-w-0 flex-col gap-2">
+                    <div className="flex min-w-0 items-end gap-2">
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
+                        <Select value={mapping.source} onValueChange={(v) => updateMapping(i, "source", v)}>
+                          <SelectTrigger className="w-full min-w-0">
+                            <span className="sr-only"><SelectValue /></span>
+                            {mapping.source ? (
+                              <span className="truncate">{formatStorageLocation(mapping.source, mapping.wildcard)}</span>
+                            ) : (
+                              <span className="text-muted-foreground">Select location</span>
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STORAGE_LOCATIONS.map((loc) => (
+                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <ArrowRight className="h-4 w-4 text-muted-foreground mb-2 shrink-0" />
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
+                        <Select value={mapping.destination} onValueChange={(v) => updateMapping(i, "destination", v)}>
+                          <SelectTrigger className="w-full min-w-0">
+                            <span className="sr-only"><SelectValue /></span>
+                            {mapping.destination ? (
+                              <span className="truncate">{formatStorageLocation(mapping.destination, mapping.wildcard)}</span>
+                            ) : (
+                              <span className="text-muted-foreground">Select location</span>
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DR_STORAGE_LOCATIONS.map((loc) => (
+                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="mb-0.5 shrink-0"
+                        onClick={() => removeMapping(i)}
+                        disabled={locationMappings.length === 1}
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                      </Button>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground mb-2" />
-                    <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
-                      <Select value={mapping.destination} onValueChange={(v) => updateMapping(i, "destination", v)}>
-                        <SelectTrigger className="w-full">
-                          <span className="sr-only"><SelectValue /></span>
-                          {mapping.destination ? <span className="truncate">{mapping.destination}</span> : <span className="text-muted-foreground">Select location</span>}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DR_STORAGE_LOCATIONS.map((loc) => (
-                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id={`mapping-${i}-wildcard`}
+                        checked={mapping.wildcard}
+                        onCheckedChange={() => toggleMappingWildcard(i)}
+                      />
+                      <Label htmlFor={`mapping-${i}-wildcard`} className="font-normal">
+                        Include subdirectories
+                      </Label>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      className="mb-0.5"
-                      onClick={() => removeMapping(i)}
-                      disabled={locationMappings.length === 1}
-                    >
-                      <TrashIcon className="h-4 w-4" />
-                    </Button>
                   </div>
                 ))}
               </div>

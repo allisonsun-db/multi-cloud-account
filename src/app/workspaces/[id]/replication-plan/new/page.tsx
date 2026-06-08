@@ -7,16 +7,16 @@ import { AppShell, PageHeader } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
+  Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Plus, ArrowRight } from "lucide-react"
-import { TrashIcon, CatalogIcon } from "@/components/icons"
+import { CheckCircleIcon, CopyIcon, LoadingIcon, TrashIcon, CatalogIcon } from "@/components/icons"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
 import { Select as SelectPrimitive } from "radix-ui"
 import { CheckIcon } from "lucide-react"
@@ -47,6 +47,27 @@ const DR_STORAGE_LOCATIONS = [
   "gs://omnimart-gcp-dr-eu/data",
 ]
 
+const STABLE_URLS = [
+  { name: "Prod Analytics", url: "https://omnimart.databricks.com/?c=204bd90f-ebe0-49e6-ad49-994df412c126" },
+  { name: "ML Platform", url: "https://omnimart.databricks.com/?c=a1b2c3d4-e5f6-4789-abcd-ef0123456789" },
+  { name: "Data Eng Prod", url: "https://omnimart.databricks.com/?c=f7e6d5c4-b3a2-4190-8765-43210fedcba9" },
+]
+
+type StableUrl = (typeof STABLE_URLS)[number]
+
+function uuid() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0
+    return (c === "x" ? r : (r & 0x3) | 0x8).toString(16)
+  })
+}
+
+function formatStorageLocation(location: string, includeWildcard: boolean) {
+  if (!location) return ""
+  const baseLocation = location.replace(/\/\*$/, "")
+  return includeWildcard ? `${baseLocation}/*` : baseLocation
+}
+
 const PREREQS = [
   {
     label: "Secondary metastore set up",
@@ -76,7 +97,18 @@ export default function CreateReplicationPlanPage() {
   const [replicateWorkspaceAssets, setReplicateWorkspaceAssets] = React.useState(false)
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [drWorkspace, setDrWorkspace] = React.useState("")
-  const [locationMappings, setLocationMappings] = React.useState([{ source: "", destination: "" }])
+  const [stableUrls, setStableUrls] = React.useState<StableUrl[]>(STABLE_URLS)
+  const [stableUrl, setStableUrl] = React.useState("")
+  const [stableUrlDialogOpen, setStableUrlDialogOpen] = React.useState(false)
+  const [stableUrlStep, setStableUrlStep] = React.useState<"form" | "loading" | "success">("form")
+  const [stableUrlName, setStableUrlName] = React.useState("")
+  const [stableUrlPrimaryWorkspace, setStableUrlPrimaryWorkspace] = React.useState("")
+  const [generatedStableUrl, setGeneratedStableUrl] = React.useState("")
+  const [locationMappings, setLocationMappings] = React.useState([{
+    source: "",
+    destination: "",
+    wildcard: false,
+  }])
 
   const CATALOGS = ["main", "prod_catalog", "analytics", "ml_catalog"]
 
@@ -97,10 +129,15 @@ export default function CreateReplicationPlanPage() {
 
   const selectedPrimary = WORKSPACES.find((w) => w.value === primaryWorkspace)
   const selectedDR = WORKSPACES.find((w) => w.value === drWorkspace)
+  const selectedStableUrl = stableUrls.find((u) => u.url === stableUrl)
   const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
 
   function addMapping() {
-    setLocationMappings((prev) => [...prev, { source: "", destination: "" }])
+    setLocationMappings((prev) => [...prev, {
+      source: "",
+      destination: "",
+      wildcard: false,
+    }])
   }
 
   function removeMapping(index: number) {
@@ -109,6 +146,29 @@ export default function CreateReplicationPlanPage() {
 
   function updateMapping(index: number, field: "source" | "destination", value: string) {
     setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, [field]: value } : m))
+  }
+
+  function toggleMappingWildcard(index: number) {
+    setLocationMappings((prev) => prev.map((m, i) => i === index ? { ...m, wildcard: !m.wildcard } : m))
+  }
+
+  function resetStableUrlDialog() {
+    setStableUrlStep("form")
+    setStableUrlName("")
+    setStableUrlPrimaryWorkspace("")
+    setGeneratedStableUrl("")
+  }
+
+  function handleCreateStableUrl() {
+    const newUrl = `https://omnimart.databricks.com/?c=${uuid()}`
+    setGeneratedStableUrl(newUrl)
+    setStableUrlStep("loading")
+    window.setTimeout(() => {
+      const created = { name: stableUrlName, url: newUrl }
+      setStableUrls((prev) => [created, ...prev])
+      setStableUrl(newUrl)
+      setStableUrlStep("success")
+    }, 1200)
   }
 
   return (
@@ -173,7 +233,7 @@ export default function CreateReplicationPlanPage() {
               <p className="text-sm font-semibold">Details</p>
             </div>
             <div className="flex flex-col gap-4 px-4 py-4">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-4">
                 <Label htmlFor="plan-name">Failover group name</Label>
                 <Input id="plan-name" placeholder="my-failover-group" />
               </div>
@@ -259,9 +319,45 @@ export default function CreateReplicationPlanPage() {
               {sameWorkspaceError && (
                 <p className="text-sm text-destructive">Primary and secondary workspaces cannot be the same.</p>
               )}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-4">
                 <Label htmlFor="stable-url">Stable URL <span className="font-normal text-muted-foreground">(optional)</span></Label>
-                <Input id="stable-url" placeholder="https://omnimart.databricks.com/?c=…" />
+                <Select
+                  value={stableUrl}
+                  onValueChange={(value) => {
+                    if (value === "__create__") {
+                      setStableUrlPrimaryWorkspace(primaryWorkspace)
+                      setStableUrlDialogOpen(true)
+                      return
+                    }
+                    setStableUrl(value)
+                  }}
+                >
+                  <SelectTrigger id="stable-url" className="w-full">
+                    <span className="sr-only"><SelectValue /></span>
+                    {selectedStableUrl ? (
+                      <span className="flex min-w-0 items-center gap-2">
+                        <span className="shrink-0">{selectedStableUrl.name}</span>
+                        <span className="truncate text-muted-foreground">{selectedStableUrl.url}</span>
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">Select stable URL</span>
+                    )}
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__create__" className="text-primary">
+                      Create stable URL
+                    </SelectItem>
+                    <SelectSeparator />
+                    {stableUrls.map((entry) => (
+                      <SelectItem key={entry.url} value={entry.url}>
+                        <span className="flex min-w-0 flex-col">
+                          <span>{entry.name}</span>
+                          <span className="truncate text-xs text-muted-foreground">{entry.url}</span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
@@ -351,54 +447,74 @@ export default function CreateReplicationPlanPage() {
               </div>
             ) : (
             <div className="flex flex-col gap-3 px-4 py-4">
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-6">
                 {locationMappings.map((mapping, i) => (
-                  <div key={i} className="flex items-end gap-2">
-                    <div className="flex w-6 shrink-0 flex-col gap-2">
-                      {i === 0 && <span className="invisible text-sm font-semibold" aria-hidden="true">#</span>}
-                      <span className="flex h-8 items-center justify-center text-sm font-semibold text-muted-foreground" aria-label={`Mapping ${i + 1}`}>
-                        {i + 1}
-                      </span>
+                  <div key={i} className="flex min-w-0 flex-col gap-2">
+                    <div className="flex min-w-0 items-end gap-2">
+                      <div className="flex w-6 shrink-0 flex-col gap-2">
+                        {i === 0 && <span className="invisible text-sm font-semibold" aria-hidden="true">#</span>}
+                        <span className="flex h-8 items-center justify-center text-sm font-semibold text-muted-foreground" aria-label={`Mapping ${i + 1}`}>
+                          {i + 1}
+                        </span>
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
+                        <Select value={mapping.source} onValueChange={(v) => updateMapping(i, "source", v)}>
+                          <SelectTrigger className="w-full min-w-0">
+                            <span className="sr-only"><SelectValue /></span>
+                            {mapping.source ? (
+                              <span className="truncate">{formatStorageLocation(mapping.source, mapping.wildcard)}</span>
+                            ) : (
+                              <span className="text-muted-foreground">Select location</span>
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STORAGE_LOCATIONS.map((loc) => (
+                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground mb-2" />
+                      <div className="flex min-w-0 flex-1 flex-col gap-2">
+                        {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
+                        <Select value={mapping.destination} onValueChange={(v) => updateMapping(i, "destination", v)}>
+                          <SelectTrigger className="w-full min-w-0">
+                            <span className="sr-only"><SelectValue /></span>
+                            {mapping.destination ? (
+                              <span className="truncate">{formatStorageLocation(mapping.destination, mapping.wildcard)}</span>
+                            ) : (
+                              <span className="text-muted-foreground">Select location</span>
+                            )}
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DR_STORAGE_LOCATIONS.map((loc) => (
+                              <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      {locationMappings.length > 1 && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="mb-0.5 shrink-0"
+                          onClick={() => removeMapping(i)}
+                        >
+                          <TrashIcon className="h-4 w-4 text-muted-foreground" />
+                        </Button>
+                      )}
                     </div>
-                    <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Primary storage location</span>}
-                      <Select value={mapping.source} onValueChange={(v) => updateMapping(i, "source", v)}>
-                        <SelectTrigger className="w-full">
-                          <span className="sr-only"><SelectValue /></span>
-                          {mapping.source ? <span className="truncate">{mapping.source}</span> : <span className="text-muted-foreground">Select location</span>}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STORAGE_LOCATIONS.map((loc) => (
-                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                    <div className="ml-8 flex items-center gap-2">
+                      <Checkbox
+                        id={`mapping-${i}-wildcard`}
+                        checked={mapping.wildcard}
+                        onCheckedChange={() => toggleMappingWildcard(i)}
+                      />
+                      <Label htmlFor={`mapping-${i}-wildcard`} className="font-normal">
+                        Include subdirectories
+                      </Label>
                     </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground mb-2" />
-                    <div className="flex flex-col gap-2 flex-1">
-                      {i === 0 && <span className="text-sm font-semibold text-foreground">Secondary storage location</span>}
-                      <Select value={mapping.destination} onValueChange={(v) => updateMapping(i, "destination", v)}>
-                        <SelectTrigger className="w-full">
-                          <span className="sr-only"><SelectValue /></span>
-                          {mapping.destination ? <span className="truncate">{mapping.destination}</span> : <span className="text-muted-foreground">Select location</span>}
-                        </SelectTrigger>
-                        <SelectContent>
-                          {DR_STORAGE_LOCATIONS.map((loc) => (
-                            <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {locationMappings.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="mb-0.5"
-                        onClick={() => removeMapping(i)}
-                      >
-                        <TrashIcon className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    )}
                   </div>
                 ))}
               </div>
@@ -414,6 +530,97 @@ export default function CreateReplicationPlanPage() {
 
 
         </div>
+
+        <Dialog open={stableUrlDialogOpen} onOpenChange={(open) => {
+          setStableUrlDialogOpen(open)
+          if (!open) resetStableUrlDialog()
+        }}>
+          <DialogContent className="sm:max-w-[480px]">
+            {stableUrlStep === "form" && (<>
+              <DialogHeader className="px-6 pt-4 pb-0">
+                <DialogTitle className="text-[22px] font-semibold leading-7">Create stable URL</DialogTitle>
+              </DialogHeader>
+              <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-4">
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="stable-url-name">Name</Label>
+                  <Input
+                    id="stable-url-name"
+                    value={stableUrlName}
+                    onChange={(e) => setStableUrlName(e.target.value)}
+                    placeholder="e.g. Prod Analytics"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="stable-url-primary-workspace">Primary workspace</Label>
+                  <Select value={stableUrlPrimaryWorkspace} onValueChange={setStableUrlPrimaryWorkspace}>
+                    <SelectTrigger id="stable-url-primary-workspace" className="w-full">
+                      <SelectValue placeholder="Select primary workspace" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {WORKSPACES.map((ws) => (
+                        <SelectItem key={ws.value} value={ws.value}>
+                          <span className="flex items-center gap-2">
+                            {CLOUD_ICONS[ws.cloud]}
+                            {ws.label}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </DialogBody>
+              <DialogFooter className="px-6 pt-4 pb-6">
+                <DialogClose asChild>
+                  <Button variant="outline" size="sm">Cancel</Button>
+                </DialogClose>
+                <Button
+                  size="sm"
+                  onClick={handleCreateStableUrl}
+                  disabled={!stableUrlName.trim() || !stableUrlPrimaryWorkspace}
+                >
+                  Create
+                </Button>
+              </DialogFooter>
+            </>)}
+
+            {stableUrlStep === "loading" && (
+              <DialogBody className="px-6 py-16 flex flex-col items-center justify-center gap-3">
+                <LoadingIcon size={24} className="animate-spin text-primary" />
+                <span className="text-sm text-muted-foreground">Generating stable URL...</span>
+              </DialogBody>
+            )}
+
+            {stableUrlStep === "success" && (<>
+              <DialogHeader className="px-6 pt-4 pb-0">
+                <DialogTitle className="flex items-center gap-2 text-[22px] font-semibold leading-7">
+                  <CheckCircleIcon size={22} className="text-[var(--success)] shrink-0" />
+                  Stable URL created
+                </DialogTitle>
+              </DialogHeader>
+              <DialogBody className="px-6 pt-4 pb-4 flex flex-col gap-3 min-w-0 overflow-hidden">
+                <p className="text-sm text-muted-foreground">
+                  Your stable URL for <span className="font-semibold text-foreground">{stableUrlName}</span> is ready.
+                </p>
+                <div className="flex items-center gap-2 rounded border border-border bg-muted px-3 py-2 overflow-hidden">
+                  <span className="flex-1 truncate text-sm text-foreground min-w-0">{generatedStableUrl}</span>
+                  <button
+                    type="button"
+                    onClick={() => navigator.clipboard.writeText(generatedStableUrl)}
+                    className="shrink-0 text-muted-foreground hover:text-foreground"
+                    aria-label="Copy URL"
+                  >
+                    <CopyIcon size={14} />
+                  </button>
+                </div>
+              </DialogBody>
+              <DialogFooter className="px-6 pt-4 pb-6">
+                <DialogClose asChild>
+                  <Button size="sm">Done</Button>
+                </DialogClose>
+              </DialogFooter>
+            </>)}
+          </DialogContent>
+        </Dialog>
 
         <div className="sticky bottom-0 bg-background flex items-center justify-end gap-2 px-4 py-4">
           <Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>

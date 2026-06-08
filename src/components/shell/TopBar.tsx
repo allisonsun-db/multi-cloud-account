@@ -78,7 +78,7 @@ export function TopBar({
       <div className="flex-1" aria-hidden />
 
       {/* Right: icon buttons + avatar */}
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center gap-1">
         <Button variant="ghost" size="icon-sm" aria-label="AI Assistant">
           <DbIcon icon={SparkleIcon} color="ai" size={16} />
         </Button>
@@ -89,7 +89,7 @@ export function TopBar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="ml-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground"
               aria-label="User menu"
             >
               {userInitial}

@@ -347,7 +347,7 @@ export function Sidebar({
         <>
           <nav
             className={cn(
-              "flex flex-1 flex-col gap-3 overflow-y-auto px-2 pb-2",
+              "flex flex-1 flex-col gap-3 overflow-y-auto px-2 pt-2 pb-2",
               "[&::-webkit-scrollbar]:w-[5px]",
               "[&::-webkit-scrollbar-track]:bg-transparent",
               "[&::-webkit-scrollbar-thumb]:rounded-full",
