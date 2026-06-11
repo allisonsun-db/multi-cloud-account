@@ -117,12 +117,41 @@ const PREREQS = [
   },
 ]
 
+const VALIDATION_CHECKS = [
+  {
+    id: "workspaces",
+    label: "Workspace compatibility",
+    description: "Primary and secondary workspaces are in supported regions, use compatible clouds, and have the Mission Critical add-on enabled.",
+  },
+  {
+    id: "metastore",
+    label: "Secondary metastore",
+    description: "Secondary workspace has a compatible metastore assigned.",
+  },
+  {
+    id: "identity",
+    label: "Identity provisioning",
+    description: "Required users and service principals are available in the secondary workspace.",
+  },
+  {
+    id: "catalogs",
+    label: "Catalog replication",
+    description: "Selected catalogs are eligible for replication.",
+  },
+  {
+    id: "storage",
+    label: "Storage mappings",
+    description: "Primary and secondary storage locations are reachable and mapped correctly.",
+  },
+]
+
 export default function CreateReplicationPlanPage() {
   const params = useParams()
   const router = useRouter()
   const workspaceId = params.id as string
 
   const [prereqOpen, setPrereqOpen] = React.useState(true)
+  const [planName, setPlanName] = React.useState("")
   const [selectedCatalogs, setSelectedCatalogs] = React.useState<Record<string, boolean>>({})
   const [replicateWorkspaceAssets, setReplicateWorkspaceAssets] = React.useState(false)
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
@@ -141,6 +170,8 @@ export default function CreateReplicationPlanPage() {
     destinationCustom: false,
     wildcard: false,
   }])
+  const [validationOpen, setValidationOpen] = React.useState(false)
+  const [completedValidationIds, setCompletedValidationIds] = React.useState<string[]>([])
 
   const CATALOGS = ["main", "prod_catalog", "analytics", "ml_catalog"]
 
@@ -163,6 +194,28 @@ export default function CreateReplicationPlanPage() {
   const selectedDR = WORKSPACES.find((w) => w.value === drWorkspace)
   const selectedStableUrl = stableUrls.find((u) => u.url === stableUrl)
   const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
+  const hasSelectedCatalogs = Object.values(selectedCatalogs).some(Boolean)
+  const hasCompleteStorageMappings = locationMappings.every((mapping) => mapping.source && mapping.destination)
+  const canValidate = Boolean(
+    planName.trim() &&
+    primaryWorkspace &&
+    drWorkspace &&
+    !sameWorkspaceError &&
+    hasSelectedCatalogs &&
+    hasCompleteStorageMappings,
+  )
+  const validationComplete = completedValidationIds.length === VALIDATION_CHECKS.length
+
+  React.useEffect(() => {
+    if (!validationOpen) return
+
+    setCompletedValidationIds([])
+    const timers = VALIDATION_CHECKS.map((check, index) => window.setTimeout(() => {
+      setCompletedValidationIds((prev) => [...prev, check.id])
+    }, 600 + index * 450))
+
+    return () => timers.forEach(window.clearTimeout)
+  }, [validationOpen])
 
   function addMapping() {
     setLocationMappings((prev) => [...prev, {
@@ -275,9 +328,14 @@ export default function CreateReplicationPlanPage() {
               <p className="text-sm font-semibold">Details</p>
             </div>
             <div className="flex flex-col gap-4 px-4 py-4">
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
                 <Label htmlFor="plan-name">Failover group name</Label>
-                <Input id="plan-name" placeholder="my-failover-group" />
+                <Input
+                  id="plan-name"
+                  value={planName}
+                  onChange={(e) => setPlanName(e.target.value)}
+                  placeholder="my-failover-group"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -379,7 +437,7 @@ export default function CreateReplicationPlanPage() {
                     {selectedStableUrl ? (
                       <span className="flex min-w-0 items-center gap-2">
                         <span className="shrink-0">{selectedStableUrl.name}</span>
-                        <span className="truncate text-muted-foreground">{selectedStableUrl.url}</span>
+                        <span className="truncate text-muted-foreground">({selectedStableUrl.url})</span>
                       </span>
                     ) : (
                       <span className="text-muted-foreground">Select stable URL</span>
@@ -478,12 +536,12 @@ export default function CreateReplicationPlanPage() {
             <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
               <p className="text-sm font-semibold">Storage mappings</p>
             </div>
-            {Object.values(selectedCatalogs).some(Boolean) && (
+            {hasSelectedCatalogs && (
               <div className="px-4 pt-4">
                 <p className="text-sm text-accent-foreground">Map each primary storage location to its corresponding secondary location. Databricks will replicate data to the secondary location during failover.</p>
               </div>
             )}
-            {!Object.values(selectedCatalogs).some(Boolean) ? (
+            {!hasSelectedCatalogs ? (
               <div className="px-4 py-4">
                 <p className="text-sm text-muted-foreground">Select catalogs to replicate first.</p>
               </div>
@@ -688,12 +746,61 @@ export default function CreateReplicationPlanPage() {
           </DialogContent>
         </Dialog>
 
+        <Dialog open={validationOpen} onOpenChange={setValidationOpen}>
+          <DialogContent className="sm:max-w-[560px]">
+            <DialogHeader>
+              <DialogTitle>Review failover group</DialogTitle>
+            </DialogHeader>
+            <DialogBody className="flex flex-col gap-4">
+              <p className="text-sm text-accent-foreground">
+                Databricks will check that the selected workspaces, catalogs, storage mappings, and stable URL are ready before creating this failover group.
+              </p>
+              <div className="rounded-md border border-border">
+                {VALIDATION_CHECKS.map((check, index) => {
+                  const passed = completedValidationIds.includes(check.id)
+                  return (
+                    <div key={check.id} className="relative flex items-start gap-3 px-4 py-3">
+                      {index > 0 && <div className="absolute left-4 right-4 top-0 h-px bg-border" />}
+                      {passed ? (
+                        <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
+                      ) : (
+                        <LoadingIcon className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+                      )}
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-sm font-semibold text-foreground">{check.label}</span>
+                        <span className="text-sm text-muted-foreground">{check.description}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              {validationComplete && (
+                <div className="rounded border border-[var(--border-success)] bg-[var(--background-success)] px-3 py-2 text-sm text-foreground">
+                  All checks passed. This failover group is ready to create.
+                </div>
+              )}
+            </DialogBody>
+            <DialogFooter>
+              <Button variant="outline" size="sm" onClick={() => setValidationOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={!validationComplete}
+                onClick={() => router.push(`/workspaces/${workspaceId}/replication-plan/plan-1`)}
+              >
+                Create failover group
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         <div className="sticky bottom-0 bg-background flex items-center justify-end gap-2 px-4 py-4">
           <Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>
             Cancel
           </Button>
-          <Button size="sm" onClick={() => router.push(`/workspaces/${workspaceId}/replication-plan/plan-1`)}>
-            Create failover group
+          <Button size="sm" disabled={!canValidate} onClick={() => setValidationOpen(true)}>
+            Review
           </Button>
         </div>
       </div>
