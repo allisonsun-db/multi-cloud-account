@@ -514,14 +514,12 @@ export default function OrgNavPage() {
         <div
           className={cn(
             "flex shrink-0 items-center gap-2 transition-all duration-200",
-            sidebarOpen ? "w-[200px]" : "w-[30px]",
+            "w-[200px]",
           )}
         >
-          {sidebarOpen && <DatabricksLogo height={18} className="ml-1" />}
           <Button
             variant="ghost"
             size="icon-sm"
-            className="ml-auto"
             onClick={() => setSidebarOpen((v) => !v)}
             aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
           >
@@ -530,6 +528,7 @@ export default function OrgNavPage() {
               : <SidebarExpandIcon className="h-4 w-4 text-muted-foreground" />
             }
           </Button>
+          <DatabricksLogo height={18} />
         </div>
 
         <div className="flex flex-1 items-center justify-center">
