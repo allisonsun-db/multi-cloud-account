@@ -117,34 +117,6 @@ const PREREQS = [
   },
 ]
 
-const VALIDATION_CHECKS = [
-  {
-    id: "workspaces",
-    label: "Workspace compatibility",
-    description: "Primary and secondary workspaces are in supported regions, use compatible clouds, and have the Mission Critical add-on enabled.",
-  },
-  {
-    id: "metastore",
-    label: "Secondary metastore",
-    description: "Secondary workspace has a compatible metastore assigned.",
-  },
-  {
-    id: "identity",
-    label: "Identity provisioning",
-    description: "Required users and service principals are available in the secondary workspace.",
-  },
-  {
-    id: "catalogs",
-    label: "Catalog replication",
-    description: "Selected catalogs are eligible for replication.",
-  },
-  {
-    id: "storage",
-    label: "Storage mappings",
-    description: "Primary and secondary storage locations are reachable and mapped correctly.",
-  },
-]
-
 export default function CreateReplicationPlanPage() {
   const params = useParams()
   const router = useRouter()
@@ -171,7 +143,7 @@ export default function CreateReplicationPlanPage() {
     wildcard: false,
   }])
   const [validationOpen, setValidationOpen] = React.useState(false)
-  const [completedValidationIds, setCompletedValidationIds] = React.useState<string[]>([])
+  const [reviewLoading, setReviewLoading] = React.useState(false)
 
   const CATALOGS = ["main", "prod_catalog", "analytics", "ml_catalog"]
 
@@ -196,25 +168,21 @@ export default function CreateReplicationPlanPage() {
   const sameWorkspaceError = primaryWorkspace && drWorkspace && primaryWorkspace === drWorkspace
   const hasSelectedCatalogs = Object.values(selectedCatalogs).some(Boolean)
   const hasCompleteStorageMappings = locationMappings.every((mapping) => mapping.source && mapping.destination)
-  const canValidate = Boolean(
+  const canReview = Boolean(
     planName.trim() &&
     primaryWorkspace &&
     drWorkspace &&
-    !sameWorkspaceError &&
-    hasSelectedCatalogs &&
-    hasCompleteStorageMappings,
+    !sameWorkspaceError,
   )
-  const validationComplete = completedValidationIds.length === VALIDATION_CHECKS.length
+  const reviewPassed = hasSelectedCatalogs && hasCompleteStorageMappings
 
   React.useEffect(() => {
     if (!validationOpen) return
 
-    setCompletedValidationIds([])
-    const timers = VALIDATION_CHECKS.map((check, index) => window.setTimeout(() => {
-      setCompletedValidationIds((prev) => [...prev, check.id])
-    }, 600 + index * 450))
+    setReviewLoading(true)
+    const timer = window.setTimeout(() => setReviewLoading(false), 3000)
 
-    return () => timers.forEach(window.clearTimeout)
+    return () => window.clearTimeout(timer)
   }, [validationOpen])
 
   function addMapping() {
@@ -753,30 +721,32 @@ export default function CreateReplicationPlanPage() {
             </DialogHeader>
             <DialogBody className="flex flex-col gap-4">
               <p className="text-sm text-accent-foreground">
-                Databricks will check that the selected workspaces, catalogs, storage mappings, and stable URL are ready before creating this failover group.
+                Databricks will check that the selected workspaces are compatible before creating this failover group.
               </p>
-              <div className="rounded-md border border-border">
-                {VALIDATION_CHECKS.map((check, index) => {
-                  const passed = completedValidationIds.includes(check.id)
-                  return (
-                    <div key={check.id} className="relative flex items-start gap-3 px-4 py-3">
-                      {index > 0 && <div className="absolute left-4 right-4 top-0 h-px bg-border" />}
-                      {passed ? (
-                        <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
-                      ) : (
-                        <LoadingIcon className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
-                      )}
-                      <div className="flex min-w-0 flex-col gap-0.5">
-                        <span className="text-sm font-semibold text-foreground">{check.label}</span>
-                        <span className="text-sm text-muted-foreground">{check.description}</span>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-              {validationComplete && (
-                <div className="rounded border border-[var(--border-success)] bg-[var(--background-success)] px-3 py-2 text-sm text-foreground">
-                  All checks passed. This failover group is ready to create.
+              {reviewLoading ? (
+                <div className="flex items-start gap-3 rounded border border-border px-3 py-3">
+                  <LoadingIcon className="mt-0.5 h-4 w-4 shrink-0 animate-spin text-primary" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-semibold text-foreground">Reviewing failover group</span>
+                    <span className="text-sm text-accent-foreground">
+                      This usually takes a few seconds.
+                    </span>
+                  </div>
+                </div>
+              ) : reviewPassed ? (
+                <div className="flex items-start gap-3 rounded border border-[var(--border-success)] bg-[var(--background-success)] px-3 py-3">
+                  <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 text-[var(--success)]" />
+                  <span className="text-sm font-semibold text-accent-foreground">This failover group is ready to create.</span>
+                </div>
+              ) : (
+                <div className="flex items-start gap-3 rounded border border-[var(--border-danger)] bg-[var(--background-danger)] px-3 py-3">
+                  <CheckCircleIcon className="mt-0.5 h-4 w-4 shrink-0 rotate-45 text-destructive" />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-semibold text-foreground">This failover group is not ready to create</span>
+                    <span className="text-sm text-accent-foreground">
+                      Select at least one catalog and complete every storage mapping before creating the failover group.
+                    </span>
+                  </div>
                 </div>
               )}
             </DialogBody>
@@ -786,7 +756,7 @@ export default function CreateReplicationPlanPage() {
               </Button>
               <Button
                 size="sm"
-                disabled={!validationComplete}
+                disabled={reviewLoading || !reviewPassed}
                 onClick={() => router.push(`/workspaces/${workspaceId}/replication-plan/plan-1`)}
               >
                 Create failover group
@@ -799,7 +769,7 @@ export default function CreateReplicationPlanPage() {
           <Button variant="outline" size="sm" onClick={() => router.push(`/workspaces/${workspaceId}`)}>
             Cancel
           </Button>
-          <Button size="sm" disabled={!canValidate} onClick={() => setValidationOpen(true)}>
+          <Button size="sm" disabled={!canReview} onClick={() => setValidationOpen(true)}>
             Review
           </Button>
         </div>
