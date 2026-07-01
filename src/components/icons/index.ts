@@ -193,6 +193,7 @@ export { FunctionIcon } from "./FunctionIcon";
 export { GavelIcon } from "./GavelIcon";
 export { GearFillIcon } from "./GearFillIcon";
 export { GearIcon } from "./GearIcon";
+export { GenieCodeIcon } from "./GenieCodeIcon";
 export { GenieDeepResearchIcon } from "./GenieDeepResearchIcon";
 export { GiftIcon } from "./GiftIcon";
 export { GitCommitIcon } from "./GitCommitIcon";

@@ -14,7 +14,7 @@ import { DbIcon } from "@/components/ui/db-icon"
 import {
   SidebarCollapseIcon,
   SidebarExpandIcon,
-  SparkleIcon,
+  GenieCodeIcon,
   GearIcon,
 } from "@/components/icons"
 import Link from "next/link"
@@ -26,6 +26,8 @@ interface TopBarProps {
   sidebarOpen?: boolean
   onToggleSidebar?: () => void
   onMobileMenuToggle?: () => void
+  onToggleGenie?: () => void
+  genieOpen?: boolean
   userInitial?: string
   workspace?: string
   className?: string
@@ -35,6 +37,8 @@ export function TopBar({
   sidebarOpen = true,
   onToggleSidebar,
   onMobileMenuToggle,
+  onToggleGenie,
+  genieOpen = false,
   userInitial = "N",
   workspace,
   className,
@@ -79,8 +83,14 @@ export function TopBar({
 
       {/* Right: icon buttons + avatar */}
       <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon-sm" aria-label="AI Assistant">
-          <DbIcon icon={SparkleIcon} color="ai" size={16} />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label="Open Genie Code"
+          onClick={onToggleGenie}
+          className={cn(genieOpen && "bg-muted")}
+        >
+          <DbIcon icon={GenieCodeIcon} color="ai" size={16} />
         </Button>
 
         <AppSwitcher />

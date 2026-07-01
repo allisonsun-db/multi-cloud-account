@@ -1,5 +1,6 @@
-export { AppShell } from "./AppShell"
+export { AppShell, useGenieCodePanel } from "./AppShell"
 export { AppSwitcher } from "./AppSwitcher"
+export { GenieCodePanel } from "./GenieCodePanel"
 export { TopBar } from "./TopBar"
 export { Sidebar } from "./Sidebar"
 export { NewButton } from "./NewButton"
