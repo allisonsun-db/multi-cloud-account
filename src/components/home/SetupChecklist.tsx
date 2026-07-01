@@ -1,8 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
-import { CheckCircleIcon, ChevronRightIcon, MinusSquareIcon, PlusSquareIcon } from "@/components/icons"
+import { CheckCircleFillIcon, CheckCircleIcon, ChevronRightIcon, MinusSquareIcon, PlusSquareIcon } from "@/components/icons"
 
 type Step = {
   id: string
@@ -21,7 +20,6 @@ const STEPS: Step[] = [
 export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: string[] }) {
   const completed = React.useMemo(() => new Set(initialCompleted), [initialCompleted])
   const [showCompleted, setShowCompleted] = React.useState(false)
-  const router = useRouter()
 
   const completedSteps = STEPS.filter((step) => completed.has(step.id))
   const visibleSteps = STEPS.filter((step) => !completed.has(step.id))
@@ -62,9 +60,8 @@ export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: s
                   } ${
                     isLastCompleted && hasRemainingItems ? "border-b border-muted-foreground/30" : ""
                   }`}
-                  onClick={() => router.push(step.href)}
                 >
-                  <CheckCircleIcon width={16} height={16} className="shrink-0 text-[var(--success)]" />
+                  <CheckCircleFillIcon width={16} height={16} className="shrink-0 text-[var(--success)]" />
                   <span className="flex-1 text-sm text-accent-foreground">{step.label}</span>
                   <ChevronRightIcon width={18} height={18} className="shrink-0 text-muted-foreground" />
                 </div>
@@ -79,7 +76,6 @@ export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: s
               className={`flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-muted/50 ${
                 i < visibleSteps.length - 1 ? "border-b border-border" : ""
               }`}
-              onClick={() => router.push(step.href)}
             >
               <CheckCircleIcon width={16} height={16} className="shrink-0 text-muted-foreground/40" />
 
