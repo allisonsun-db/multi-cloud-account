@@ -10,8 +10,8 @@ import { DangerIcon, WarningIcon, DotsCircleIcon, ChevronRightIcon } from "@/com
 
 const OVERVIEW = [
   { label: "Workspaces", value: "20",     change: "+2",  changeTone: "success", href: "/workspaces" },
-  { label: "Users",      value: "1,247",  change: "+23", changeTone: "success", href: "/accounts"   },
-  { label: "Spend",      value: "$18.2K", change: "+34%", changeTone: "warning", href: "/settings" },
+  { label: "Users",      value: "1,247",  change: "+23", changeTone: "success" },
+  { label: "Spend",      value: "$18.2K", change: "+34%", changeTone: "warning" },
 ] as const
 
 const CHANGE_TONE_CLASS = {
@@ -89,7 +89,9 @@ function HomeContent() {
               <Card
                 key={m.label}
                 className="cursor-pointer py-3 transition-shadow hover:shadow-[var(--shadow-db-lg)]"
-                onClick={() => router.push(m.href)}
+                onClick={() => {
+                  if ("href" in m) router.push(m.href)
+                }}
               >
                 <CardContent className="flex flex-col gap-1 px-4">
                   <div className="text-sm font-semibold text-accent-foreground">{m.label}</div>
