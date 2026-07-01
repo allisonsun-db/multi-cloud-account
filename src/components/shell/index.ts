@@ -1,4 +1,5 @@
-export { AppShell, useGenieCodePanel } from "./AppShell"
+export { AppShell, useAccountScope, useGenieCodePanel } from "./AppShell"
+export { AccountOrgSwitcher } from "./AccountOrgSwitcher"
 export { AppSwitcher } from "./AppSwitcher"
 export { GenieCodePanel } from "./GenieCodePanel"
 export { TopBar } from "./TopBar"

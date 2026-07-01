@@ -18,7 +18,13 @@ type GenieCodeContextValue = {
   openGenieCode: (draft?: GenieCodeDraft) => void
 }
 
+type AccountScopeContextValue = {
+  scope: string
+  setScope: (scope: string) => void
+}
+
 const GenieCodeContext = React.createContext<GenieCodeContextValue | null>(null)
+const AccountScopeContext = React.createContext<AccountScopeContextValue | null>(null)
 
 export function useGenieCodePanel() {
   const context = React.useContext(GenieCodeContext)
@@ -28,6 +34,12 @@ export function useGenieCodePanel() {
   }
 
   return context
+}
+
+export function useAccountScope() {
+  const context = React.useContext(AccountScopeContext)
+
+  return context ?? { scope: "org", setScope: () => {} }
 }
 
 interface AppShellProps {
@@ -55,6 +67,7 @@ export function AppShell({
   const [genieOpen, setGenieOpen]     = React.useState(false)
   const [genieDraft, setGenieDraft]   = React.useState<GenieCodeDraft | null>(null)
   const [genieDraftKey, setGenieDraftKey] = React.useState(0)
+  const [scope, setScope] = React.useState("org")
 
   const openGenieCode = React.useCallback((draft?: GenieCodeDraft) => {
     if (draft) {
@@ -83,10 +96,15 @@ export function AppShell({
     () => ({ openGenieCode }),
     [openGenieCode],
   )
+  const accountScopeContextValue = React.useMemo(
+    () => ({ scope, setScope }),
+    [scope],
+  )
 
   return (
     <div className={cn("flex h-dvh flex-col overflow-hidden bg-secondary", className)}>
       <GenieCodeContext.Provider value={genieContextValue}>
+        <AccountScopeContext.Provider value={accountScopeContextValue}>
         <TopBar
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen((v) => !v)}
@@ -147,6 +165,7 @@ export function AppShell({
             />
           )}
         </div>
+        </AccountScopeContext.Provider>
       </GenieCodeContext.Provider>
     </div>
   )

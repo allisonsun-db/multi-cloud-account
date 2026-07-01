@@ -6,6 +6,7 @@ import { DbIcon } from "@/components/ui/db-icon"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { NAV_VERSIONS, NAV_VERSION_KEYS, type NavItem, type NavVersionKey } from "./navConfigs"
+import { AccountOrgSwitcher } from "./AccountOrgSwitcher"
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -83,10 +84,12 @@ export function Sidebar({
     <aside
       className={cn(
         "flex h-full shrink-0 flex-col bg-secondary transition-all duration-200 overflow-hidden",
-        open ? (layout === "rail" ? "w-[280px]" : "w-[220px]") : "w-0",
+        open ? (layout === "rail" ? "w-[276px]" : "w-[220px]") : "w-0",
         className
       )}
     >
+      {open && layout !== "rail" && <AccountOrgSwitcher />}
+
       {layout === "drill-down" ? (
         /* ── Drill-down layout (D) ──────────────────────────────────────── */
         <>
@@ -268,7 +271,8 @@ export function Sidebar({
         /* ── Rail layout ───────────────────────────────────────────────── */
         <div className="flex flex-1 overflow-hidden">
           {/* Rail column — 80px icon strip, with footer pinned at bottom */}
-          <div className="flex w-[80px] shrink-0 flex-col">
+          <div className="flex w-[72px] shrink-0 flex-col">
+            <AccountOrgSwitcher variant="compact" />
             <div className="flex flex-1 flex-col gap-1 overflow-y-auto px-2 py-2">
               {sections.map((section, i) => (
                 <button

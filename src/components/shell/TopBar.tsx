@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { DbIcon } from "@/components/ui/db-icon"
 import {
-  SidebarCollapseIcon,
-  SidebarExpandIcon,
+  SidebarClosedIcon,
+  SidebarOpenIcon,
   GenieCodeIcon,
   GearIcon,
 } from "@/components/icons"
@@ -40,7 +40,6 @@ export function TopBar({
   onToggleGenie,
   genieOpen = false,
   userInitial = "N",
-  workspace,
   className,
 }: TopBarProps) {
   return (
@@ -71,12 +70,16 @@ export function TopBar({
           aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
           {sidebarOpen ? (
-            <SidebarCollapseIcon className="h-4 w-4 text-muted-foreground" />
+            <SidebarOpenIcon className="h-4 w-4 text-muted-foreground" />
           ) : (
-            <SidebarExpandIcon className="h-4 w-4 text-muted-foreground" />
+            <SidebarClosedIcon className="h-4 w-4 text-muted-foreground" />
           )}
         </Button>
-        <Link href="/"><DatabricksLogo height={18} workspaceName={workspace ?? "OmniMart"} /></Link>
+        <Link href="/" className="flex items-center">
+          <DatabricksLogo height={16} />
+        </Link>
+        <span className="h-5 w-px bg-muted-foreground/40" aria-hidden />
+        <span className="text-sm font-semibold text-foreground">Admin</span>
       </div>
 
       <div className="flex-1" aria-hidden />

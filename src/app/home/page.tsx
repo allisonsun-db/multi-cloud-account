@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { AppShell, useGenieCodePanel } from "@/components/shell"
+import { AppShell, useAccountScope, useGenieCodePanel } from "@/components/shell"
 import { GenieCommandBar } from "@/components/home/GenieCommandBar"
 import { SetupChecklist } from "@/components/home/SetupChecklist"
 import { Card, CardContent } from "@/components/ui/card"
@@ -55,6 +55,7 @@ export default function HomePage() {
 function HomeContent() {
   const router = useRouter()
   const { openGenieCode } = useGenieCodePanel()
+  const { scope } = useAccountScope()
 
   function handleReviewClick(alert: (typeof ALERTS)[number]) {
     openGenieCode({
@@ -78,7 +79,9 @@ function HomeContent() {
 
         {/* ── Greeting ──────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4">
-          <h1 className="text-center text-xl font-semibold text-foreground">Manage your account</h1>
+          <h1 className="text-center text-xl font-semibold text-foreground">
+            {scope === "org" ? "Manage your organization" : "Manage your account"}
+          </h1>
 
           {/* Genie command bar */}
           <GenieCommandBar />
