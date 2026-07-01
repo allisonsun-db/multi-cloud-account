@@ -74,7 +74,7 @@ function HomeContent() {
   }
 
   return (
-      <div className="mx-auto flex w-full max-w-[800px] flex-col gap-8 p-6 pt-16">
+      <div className="mx-auto flex w-full max-w-[800px] flex-col gap-8 p-6 pt-20 md:pt-24 lg:pt-28">
 
         {/* ── Greeting ──────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4">
