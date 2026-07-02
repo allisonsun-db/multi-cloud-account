@@ -48,12 +48,12 @@ export function AccountOrgSwitcher({
   const compact = variant === "compact"
 
   return (
-    <div className={cn("shrink-0 px-2 pb-2", className)}>
+    <div className={cn("shrink-0 px-2 pb-1", className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             className={cn(
-              "flex items-center rounded-md border border-border bg-background text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10",
+              "flex items-center rounded-md bg-transparent text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10",
               compact ? "h-12 w-full justify-center px-1.5" : "h-11 w-full gap-2 pl-1.5 pr-2",
             )}
             title={label}
@@ -62,8 +62,8 @@ export function AccountOrgSwitcher({
             <NikeLogo />
             {!compact && (
               <>
-                <span className="flex-1 truncate">{label}</span>
-                <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="truncate">{label}</span>
+                <ChevronDownIcon className="-ml-1 h-4 w-4 shrink-0 text-muted-foreground" />
               </>
             )}
           </button>
