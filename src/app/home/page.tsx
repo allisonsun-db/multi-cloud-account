@@ -119,8 +119,8 @@ function HomeContent() {
                 <button
                   type="button"
                   key={alert.id}
-                  className={`flex w-full items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/50 ${
-                    i < ALERTS.length - 1 ? "border-b border-border" : ""
+                  className={`flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-muted/50 ${
+                    i < ALERTS.length - 1 ? "relative after:absolute after:bottom-0 after:left-4 after:right-4 after:h-px after:bg-border" : ""
                   }`}
                   onClick={() => handleReviewClick(alert)}
                 >

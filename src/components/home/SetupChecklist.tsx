@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { CheckCircleFillIcon, CheckCircleIcon, ChevronRightIcon, MinusSquareIcon, PlusSquareIcon } from "@/components/icons"
+import { CheckCircleFillIcon, CheckCircleIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "@/components/icons"
 
 type Step = {
   id: string
@@ -11,10 +11,10 @@ type Step = {
 
 const STEPS: Step[] = [
   { id: "sso",     label: "Connect identity provider",  href: "/settings" },
-  { id: "admins",  label: "Add account admins",         href: "/accounts" },
+  { id: "admins",  label: "Assign admin roles",         href: "/accounts" },
   { id: "audit",   label: "Enable audit log delivery",  href: "/settings" },
   { id: "network", label: "Configure network access",   href: "/settings" },
-  { id: "billing", label: "Add billing contacts",       href: "/settings" },
+  { id: "billing", label: "Add billing information",    href: "/settings" },
 ]
 
 export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: string[] }) {
@@ -41,11 +41,11 @@ export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: s
               aria-expanded={showCompleted}
               onClick={() => setShowCompleted((open) => !open)}
             >
-              <span className="flex-1 text-sm text-accent-foreground">{completedSteps.length} items completed</span>
+              <span className="flex-1 text-sm text-accent-foreground">{completedSteps.length} of {STEPS.length} completed</span>
               {showCompleted ? (
-                <MinusSquareIcon width={18} height={18} className="shrink-0 text-muted-foreground" />
+                <ChevronUpIcon width={18} height={18} className="shrink-0 text-muted-foreground" />
               ) : (
-                <PlusSquareIcon width={18} height={18} className="shrink-0 text-muted-foreground" />
+                <ChevronDownIcon width={18} height={18} className="shrink-0 text-muted-foreground" />
               )}
             </button>
             {showCompleted && completedSteps.map((step, i) => {
@@ -56,9 +56,9 @@ export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: s
                 <div
                   key={step.id}
                   className={`flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-muted/50 ${
-                    !isLastCompleted ? "border-b border-border" : ""
+                    !isLastCompleted ? "relative after:absolute after:bottom-0 after:left-3 after:right-3 after:h-px after:bg-border" : ""
                   } ${
-                    isLastCompleted && hasRemainingItems ? "border-b border-muted-foreground/30" : ""
+                    isLastCompleted && hasRemainingItems ? "relative after:absolute after:bottom-0 after:left-3 after:right-3 after:h-px after:bg-border" : ""
                   }`}
                 >
                   <CheckCircleFillIcon width={16} height={16} className="shrink-0 text-[var(--success)]" />
@@ -74,7 +74,7 @@ export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: s
             <div
               key={step.id}
               className={`flex cursor-pointer items-center gap-3 px-3 py-2.5 hover:bg-muted/50 ${
-                i < visibleSteps.length - 1 ? "border-b border-border" : ""
+                i < visibleSteps.length - 1 ? "relative after:absolute after:bottom-0 after:left-3 after:right-3 after:h-px after:bg-border" : ""
               }`}
             >
               <CheckCircleIcon width={16} height={16} className="shrink-0 text-muted-foreground/40" />
