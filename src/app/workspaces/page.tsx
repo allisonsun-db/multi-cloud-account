@@ -85,6 +85,7 @@ const OPTIONAL_WORKSPACE_COLUMNS = [
   { id: "compute", label: "Compute" },
   { id: "pricingTier", label: "Pricing tier" },
   { id: "metastore", label: "Metastore" },
+  { id: "created", label: "Created" },
 ] as const
 
 type OptionalWorkspaceColumn = typeof OPTIONAL_WORKSPACE_COLUMNS[number]["id"]
@@ -307,6 +308,7 @@ export function WorkspacesContent() {
     compute: true,
     pricingTier: false,
     metastore: true,
+    created: false,
   })
 
   const cloudRegions = React.useMemo(() => buildCloudRegions(workspaces), [workspaces])
@@ -398,7 +400,7 @@ export function WorkspacesContent() {
               <TableHead className="font-semibold text-foreground">Region</TableHead>
               {visibleColumns.storage && <TableHead className="font-semibold text-foreground">Storage</TableHead>}
               {visibleColumns.compute && <TableHead className="font-semibold text-foreground">Compute</TableHead>}
-              <TableHead className="font-semibold text-foreground">Created</TableHead>
+              {visibleColumns.created && <TableHead className="font-semibold text-foreground">Created</TableHead>}
               {visibleColumns.pricingTier && <TableHead className="font-semibold text-foreground">Pricing tier</TableHead>}
               {visibleColumns.metastore && <TableHead className="font-semibold text-foreground">Metastore</TableHead>}
               <TableHead>
@@ -462,7 +464,7 @@ export function WorkspacesContent() {
                   </TableCell>
                 )}
                 {visibleColumns.compute && <TableCell>{ws.credentialName}</TableCell>}
-                <TableCell>{ws.created}</TableCell>
+                {visibleColumns.created && <TableCell>{ws.created}</TableCell>}
                 {visibleColumns.pricingTier && <TableCell>{ws.pricingTier}</TableCell>}
                 {visibleColumns.metastore && (
                   <TableCell>

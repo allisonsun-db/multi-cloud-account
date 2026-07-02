@@ -7,7 +7,8 @@ import { Switch } from "@/components/ui/switch"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
-import { ExternalLink, Search, MessageCircle } from "lucide-react"
+import { Search } from "lucide-react"
+import { NewWindowIcon, SpeechBubbleIcon } from "@/components/icons"
 import { AwsBadge, AzureBadge, GcpBadge } from "@/components/ui/cloud-badge"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -38,7 +39,7 @@ const INITIAL_PREVIEWS: Preview[] = [
     id: "2",
     name: "Attribute Based Access Control",
     phase: "Public Preview",
-    description: "Attribute Based Access Control (ABAC) in Unity Catalog enables scalable, fine-grained data governance by dynamically enforcing access control policies based on tags and user principals. Administrators can define policies once at the catalog, schema, or table level, using tags to selectively apply row filters or column masks without manually configuring individual securables, streamlining governance across the Lakehouse.",
+    description: "Attribute Based Access Control (ABAC) in Unity Catalog lets admins define tag-based policies once and apply fine-grained access controls, row filters, and column masks across catalogs, schemas, and tables.",
     enabled: true,
     clouds: ["AWS", "Azure", "GCP"],
   },
@@ -146,7 +147,7 @@ export default function PreviewsPage() {
         <p className="text-sm text-muted-foreground mb-4">
         Try out previews as new capabilities are rolled out. Changes apply within a few minutes. {" "}
           <a href="#" className="text-primary inline-flex items-center gap-0.5 hover:underline">
-            Learn more <ExternalLink className="h-3 w-3" />
+            Learn more <NewWindowIcon className="size-3" />
           </a>
           .
         </p>
@@ -233,10 +234,10 @@ export default function PreviewsPage() {
                 {/* Links */}
                 <div className="flex items-center gap-4 mt-0.5">
                   <a href="#" className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
-                    Documentation <ExternalLink className="h-3 w-3" />
+                    Documentation <NewWindowIcon className="size-4" />
                   </a>
                   <a href="#" className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
-                    <MessageCircle className="h-3.5 w-3.5" /> Send feedback
+                    <SpeechBubbleIcon className="size-4" /> Send feedback
                   </a>
                 </div>
               </div>
