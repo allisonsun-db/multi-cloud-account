@@ -10,9 +10,9 @@ import { Label } from "@/components/ui/label"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
-import { CheckCircleIcon, NewWindowIcon } from "@/components/icons"
+import { CheckCircleIcon, ColumnsIcon, NewWindowIcon } from "@/components/icons"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
-import { ExternalLink, Search, ChevronRight } from "lucide-react"
+import { Search, ChevronRight } from "lucide-react"
 import { LocationPicker, buildCloudRegions, CLOUD_ICONS, CLOUD_LOGO } from "@/components/ui/location-picker"
 import { cn } from "@/lib/utils"
 import {
@@ -21,6 +21,13 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -72,6 +79,15 @@ const MOST_VISITED_WORKSPACES = [
   region: string
   users: string
 }>
+
+const OPTIONAL_WORKSPACE_COLUMNS = [
+  { id: "storage", label: "Storage" },
+  { id: "compute", label: "Compute" },
+  { id: "pricingTier", label: "Pricing tier" },
+  { id: "metastore", label: "Metastore" },
+] as const
+
+type OptionalWorkspaceColumn = typeof OPTIONAL_WORKSPACE_COLUMNS[number]["id"]
 
 // ─── Create Workspace Modal ────────────────────────────────────────────────────
 
@@ -286,6 +302,12 @@ export function WorkspacesContent() {
   const [filter, setFilter] = React.useState("")
   const [locations, setLocations] = React.useState<string[]>([])
   const [workspaces, setWorkspaces] = React.useState<Workspace[]>(WORKSPACES)
+  const [visibleColumns, setVisibleColumns] = React.useState<Record<OptionalWorkspaceColumn, boolean>>({
+    storage: true,
+    compute: true,
+    pricingTier: false,
+    metastore: true,
+  })
 
   const cloudRegions = React.useMemo(() => buildCloudRegions(workspaces), [workspaces])
 
@@ -301,62 +323,68 @@ export function WorkspacesContent() {
     })
   })
 
+  function setColumnVisibility(column: OptionalWorkspaceColumn, visible: boolean) {
+    setVisibleColumns((current) => ({ ...current, [column]: visible }))
+  }
+
   return (
     <div className="flex flex-col gap-4 p-6">
 
         <h1 className="text-xl font-semibold text-foreground">Workspaces</h1>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-[240px]">
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-[1_1_240px] max-w-[280px]">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Filter workspaces"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="pr-8"
+              className="pl-8"
             />
-            <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
-          <div className="ml-auto">
+          <LocationPicker className="min-w-0 flex-[1_1_200px] max-w-[240px]" value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
+          <div className="ml-auto shrink-0">
             <CreateWorkspaceModal onCreated={(ws) => setWorkspaces((prev) => [ws, ...prev])} />
           </div>
         </div>
 
-        <section className="mt-2 mb-2 flex flex-col gap-3">
-          <h2 className="text-[15px] font-semibold text-foreground">Most visited</h2>
-          <div className="grid grid-cols-4 gap-3 overflow-x-auto pb-1">
-            {MOST_VISITED_WORKSPACES.map((workspace) => (
-              <Card
-                key={workspace.id}
-                className="min-w-[220px] cursor-pointer overflow-hidden py-0 transition-shadow hover:shadow-[var(--shadow-db-lg)]"
-                onClick={() => router.push(`/workspaces/${workspace.id}`)}
-              >
-                <CardContent className="flex flex-col gap-0 px-0">
-                  <div className="flex flex-col gap-0.5 px-4 py-3">
-                    <div className="flex min-w-0 flex-col gap-0.5">
-                      <div className="truncate text-sm font-semibold text-foreground">{workspace.name}</div>
-                      <div className="flex items-center gap-1 truncate text-sm text-muted-foreground">
-                        <img
-                          src={CLOUD_LOGO[workspace.cloud]}
-                          alt=""
-                          width={12}
-                          height={12}
-                          className={cn("h-3 w-3 object-contain", workspace.cloud === "AWS" && "dark:[filter:brightness(0)_invert(1)]")}
-                        />
-                        <span className="truncate">{workspace.region} · {workspace.users}</span>
+        {locations.length === 0 && !filter.trim() && (
+          <section className="mt-2 mb-2 flex flex-col gap-3">
+            <h2 className="text-[15px] font-semibold text-foreground">Most visited</h2>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3 pb-1">
+              {MOST_VISITED_WORKSPACES.map((workspace) => (
+                <Card
+                  key={workspace.id}
+                  className="cursor-pointer overflow-hidden py-0 transition-shadow hover:shadow-[var(--shadow-db-lg)]"
+                  onClick={() => router.push(`/workspaces/${workspace.id}`)}
+                >
+                  <CardContent className="flex flex-col gap-0 px-0">
+                    <div className="flex flex-col gap-0.5 px-4 py-3">
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <div className="truncate text-sm font-semibold text-foreground">{workspace.name}</div>
+                        <div className="flex items-center gap-1 truncate text-sm text-muted-foreground">
+                          <img
+                            src={CLOUD_LOGO[workspace.cloud]}
+                            alt=""
+                            width={12}
+                            height={12}
+                            className={cn("h-3 w-3 object-contain", workspace.cloud === "AWS" && "dark:[filter:brightness(0)_invert(1)]")}
+                          />
+                          <span className="truncate">{workspace.region} · {workspace.users}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex h-24 items-center justify-center border-t border-border bg-muted">
-                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                      <NewWindowIcon className="h-5 w-5" />
+                    <div className="flex h-24 items-center justify-center border-t border-border bg-muted">
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <NewWindowIcon className="h-5 w-5" />
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="flex flex-col gap-2">
           <h2 className="text-[15px] font-semibold text-foreground">All workspaces</h2>
@@ -368,12 +396,37 @@ export function WorkspacesContent() {
               <TableHead className="font-semibold text-foreground">Name</TableHead>
               <TableHead className="font-semibold text-foreground"><div className="flex justify-center">Cloud</div></TableHead>
               <TableHead className="font-semibold text-foreground">Region</TableHead>
-              <TableHead className="font-semibold text-foreground">Storage</TableHead>
-              <TableHead className="font-semibold text-foreground">Compute</TableHead>
+              {visibleColumns.storage && <TableHead className="font-semibold text-foreground">Storage</TableHead>}
+              {visibleColumns.compute && <TableHead className="font-semibold text-foreground">Compute</TableHead>}
               <TableHead className="font-semibold text-foreground">Created</TableHead>
-              <TableHead className="font-semibold text-foreground">Pricing tier</TableHead>
-              <TableHead className="font-semibold text-foreground">Metastore</TableHead>
-              <TableHead />
+              {visibleColumns.pricingTier && <TableHead className="font-semibold text-foreground">Pricing tier</TableHead>}
+              {visibleColumns.metastore && <TableHead className="font-semibold text-foreground">Metastore</TableHead>}
+              <TableHead>
+                <div className="flex justify-end">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon-xs" aria-label="Choose columns">
+                        <ColumnsIcon size={16} className="size-4 text-muted-foreground" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[180px]">
+                      <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">
+                        Columns
+                      </DropdownMenuLabel>
+                      {OPTIONAL_WORKSPACE_COLUMNS.map((column) => (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          checked={visibleColumns[column.id]}
+                          onCheckedChange={(checked) => setColumnVisibility(column.id, checked === true)}
+                          onSelect={(event) => event.preventDefault()}
+                        >
+                          {column.label}
+                        </DropdownMenuCheckboxItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -403,28 +456,29 @@ export function WorkspacesContent() {
                   </div>
                 </TableCell>
                 <TableCell>{ws.region}</TableCell>
-                <TableCell>
-                  <span className={cn(ws.storage === "Default" && "italic")}>{ws.storage}</span>
-                </TableCell>
-                <TableCell>{ws.credentialName}</TableCell>
+                {visibleColumns.storage && (
+                  <TableCell>
+                    <span className={cn(ws.storage === "Default" && "italic")}>{ws.storage}</span>
+                  </TableCell>
+                )}
+                {visibleColumns.compute && <TableCell>{ws.credentialName}</TableCell>}
                 <TableCell>{ws.created}</TableCell>
-                <TableCell>{ws.pricingTier}</TableCell>
-                <TableCell>
-                  {ws.metastore ? (
-                    <a href="#" className="text-primary hover:underline truncate block max-w-[100px]">
-                      {ws.metastore}
-                    </a>
-                  ) : (
-                    <span className="text-muted-foreground">-</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="#"
-                    className="flex items-center gap-1 text-primary hover:underline whitespace-nowrap"
-                  >
-                    Open <ExternalLink className="h-3 w-3" />
-                  </a>
+                {visibleColumns.pricingTier && <TableCell>{ws.pricingTier}</TableCell>}
+                {visibleColumns.metastore && (
+                  <TableCell>
+                    {ws.metastore ? (
+                      <a href="#" className="text-primary hover:underline truncate block max-w-[100px]">
+                        {ws.metastore}
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                )}
+                <TableCell className="text-right">
+                  <Button asChild variant="outline" size="xs" className="text-sm">
+                    <a href="#">Open</a>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}

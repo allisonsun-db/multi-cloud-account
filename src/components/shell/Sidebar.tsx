@@ -7,6 +7,7 @@ import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { NAV_VERSIONS, NAV_VERSION_KEYS, type NavItem, type NavVersionKey } from "./navConfigs"
 import { AccountOrgSwitcher } from "./AccountOrgSwitcher"
+import { useAccountScope } from "./AppShell"
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -37,8 +38,19 @@ export function Sidebar({
   const [pinnedIds, setPinnedIds] = React.useState<Set<string>>(new Set())
   const [findQuery, setFindQuery] = React.useState("")
   const [selectedItem, setSelectedItem] = React.useState(activeItem)
+  const { scope } = useAccountScope()
 
-  const { layout = "sections", sections, maxItemsPerSection } = NAV_VERSIONS[navVersion]
+  const { layout = "sections", sections: navSections, maxItemsPerSection } = NAV_VERSIONS[navVersion]
+  const sections = React.useMemo(() => {
+    const shouldHideAccounts = scope !== "org"
+
+    return navSections
+      .map((section) => ({
+        ...section,
+        items: section.items.filter((item) => !(shouldHideAccounts && item.id === "accounts")),
+      }))
+      .filter((section) => section.items.length > 0)
+  }, [navSections, scope])
   const currentActiveItem = selectedItem || activeItem
   const activeSectionIndex = sections.findIndex((section) =>
     section.items.some((item) => item.id === currentActiveItem)

@@ -150,7 +150,9 @@ export function AppShell({
           !sidebarOpen && "ml-2",
           mainClassName,
         )}>
-          {children}
+          <div className="mx-auto w-full max-w-[1000px]">
+            {children}
+          </div>
         </main>
 
           {genieOpen && (

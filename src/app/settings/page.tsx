@@ -289,7 +289,7 @@ export default function SettingsPage() {
 
   return (
     <AppShell activeItem="settings" workspace={accountName}>
-      <div className="flex flex-col p-6 max-w-[800px] mx-auto w-full">
+      <div className="flex flex-col p-6 max-w-[1000px] mx-auto w-full">
 
         <h1 className="text-xl font-semibold text-foreground mb-2">Settings</h1>
 

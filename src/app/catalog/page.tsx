@@ -4,13 +4,16 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
 import { Search } from "lucide-react"
-import { LocationPicker, buildCloudRegions, CLOUD_ICONS } from "@/components/ui/location-picker"
+import { NewWindowIcon } from "@/components/icons"
+import { LocationPicker, buildCloudRegions, CLOUD_ICONS, CLOUD_LOGO } from "@/components/ui/location-picker"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
 type Metastore = {
@@ -40,6 +43,19 @@ const METASTORES: Metastore[] = [
   { id: "14", name: "security-audit-metastore",             cloud: "GCP",   region: "us-west1",    path: "", createdAt: "02/10/2026", updatedAt: "02/10/2026" },
 ]
 
+const MOST_USED_METASTORES = [
+  { id: "1", name: "prod-metastore", cloud: "AWS", region: "us-east-1", workspaces: "8 workspaces" },
+  { id: "2", name: "prod-metastore-west", cloud: "AWS", region: "us-west-2", workspaces: "5 workspaces" },
+  { id: "3", name: "staging-metastore", cloud: "Azure", region: "eastus", workspaces: "4 workspaces" },
+  { id: "7", name: "ml-platform-metastore", cloud: "GCP", region: "us-central1", workspaces: "3 workspaces" },
+] satisfies Array<{
+  id: string
+  name: string
+  cloud: Metastore["cloud"]
+  region: string
+  workspaces: string
+}>
+
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export function CatalogContent() {
@@ -66,9 +82,9 @@ export function CatalogContent() {
         <h1 className="text-xl font-semibold text-foreground">Metastore</h1>
 
         {/* Filter + action */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="relative w-56">
+          <div className="flex items-center gap-2">
+            <div className="flex min-w-0 flex-1 items-center gap-2">
+              <div className="relative min-w-0 flex-[1_1_224px] max-w-[280px]">
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Filter metastores"
@@ -77,10 +93,51 @@ export function CatalogContent() {
                   className="pl-8"
                 />
               </div>
-              <LocationPicker value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
+              <LocationPicker className="min-w-0 flex-[1_1_200px] max-w-[240px]" value={locations} onChange={setLocations} cloudRegions={cloudRegions} />
             </div>
-            <Button size="sm" onClick={() => router.push("/catalog/new")}>Create metastore</Button>
+            <Button className="shrink-0" size="sm" onClick={() => router.push("/catalog/new")}>Create metastore</Button>
           </div>
+
+          {locations.length === 0 && !filter.trim() && (
+            <section className="mt-2 mb-2 flex flex-col gap-3">
+              <h2 className="text-[15px] font-semibold text-foreground">Most used by workspaces</h2>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,220px),1fr))] gap-3 pb-1">
+                {MOST_USED_METASTORES.map((metastore) => (
+                  <Card
+                    key={metastore.id}
+                    className="cursor-pointer overflow-hidden py-0 transition-shadow hover:shadow-[var(--shadow-db-lg)]"
+                    onClick={() => router.push(`/catalog/${metastore.id}`)}
+                  >
+                    <CardContent className="flex flex-col gap-0 px-0">
+                      <div className="flex flex-col gap-0.5 px-4 py-3">
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <div className="truncate text-sm font-semibold text-foreground">{metastore.name}</div>
+                          <div className="flex items-center gap-1 truncate text-sm text-muted-foreground">
+                            <img
+                              src={CLOUD_LOGO[metastore.cloud]}
+                              alt=""
+                              width={12}
+                              height={12}
+                              className={cn("h-3 w-3 object-contain", metastore.cloud === "AWS" && "dark:[filter:brightness(0)_invert(1)]")}
+                            />
+                            <span className="truncate">{metastore.region} · {metastore.workspaces}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex h-24 items-center justify-center border-t border-border bg-muted">
+                        <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                          <NewWindowIcon className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </section>
+          )}
+
+          <section className="flex flex-col gap-2">
+          <h2 className="text-[15px] font-semibold text-foreground">All metastores</h2>
 
           {/* Table */}
           <Table>
@@ -120,6 +177,7 @@ export function CatalogContent() {
               ))}
             </TableBody>
           </Table>
+          </section>
 
       </div>
   )

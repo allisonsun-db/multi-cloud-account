@@ -25,10 +25,11 @@ export function buildCloudRegions(items: { cloud: string; region: string }[]) {
   return map
 }
 
-export function LocationPicker({ value, onChange, cloudRegions }: {
+export function LocationPicker({ value, onChange, cloudRegions, className }: {
   value: string[]
   onChange: (v: string[]) => void
   cloudRegions: Record<string, string[]>
+  className?: string
 }) {
   const [open, setOpen] = React.useState(false)
   const [activeCloud, setActiveCloud] = React.useState<string | null>(null)
@@ -73,7 +74,7 @@ export function LocationPicker({ value, onChange, cloudRegions }: {
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setActiveCloud(null) }}>
       <PopoverTrigger asChild>
-        <button className={cn("flex h-8 w-52 items-center justify-between rounded border border-border bg-background px-3 text-sm shadow-xs hover:bg-muted", value.length === 0 ? "text-muted-foreground" : "text-foreground")}>
+        <button className={cn("flex h-8 w-52 items-center justify-between rounded border border-border bg-background px-3 text-sm shadow-xs hover:bg-muted", value.length === 0 ? "text-muted-foreground" : "text-foreground", className)}>
           <span className="flex items-center gap-1.5 truncate min-w-0">
             {triggerCloud && <img src={CLOUD_LOGO[triggerCloud]} alt={triggerCloud} width={14} height={14} className={cn("object-contain shrink-0", triggerCloud === "AWS" && "dark:[filter:brightness(0)_invert(1)]")} />}
             <span className="truncate">{label}</span>

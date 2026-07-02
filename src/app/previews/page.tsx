@@ -139,7 +139,7 @@ export default function PreviewsPage() {
 
   return (
     <AppShell activeItem="previews">
-      <div className="flex flex-col p-6 max-w-[800px] mx-auto w-full">
+      <div className="flex flex-col p-6 max-w-[1000px] mx-auto w-full">
 
         {/* Header */}
         <h1 className="text-xl font-semibold text-foreground mb-1">Previews</h1>
@@ -214,7 +214,7 @@ export default function PreviewsPage() {
                   </span>
                 </div>
                 {/* Description */}
-                <p className="text-sm text-muted-foreground">{preview.description}</p>
+                <p className="max-w-[720px] text-sm text-muted-foreground">{preview.description}</p>
                 {/* Cloud availability */}
                 <div className="flex items-center gap-2 py-2">
                   {(["AWS", "Azure", "GCP"] as Cloud[])

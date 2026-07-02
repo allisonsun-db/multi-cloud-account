@@ -654,7 +654,7 @@ export function AccountsContent({ onDrillIn }: { onDrillIn?: (id: string) => voi
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 max-w-[1000px] w-full mx-auto">
+    <div className="flex w-full flex-col gap-6 p-6">
 
       {/* Header */}
       <div className="flex flex-col gap-1">
@@ -666,17 +666,17 @@ export function AccountsContent({ onDrillIn }: { onDrillIn?: (id: string) => voi
 
       {/* Filter + action */}
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="relative w-[280px]">
+        <div className="flex items-center gap-2">
+          <div className="relative min-w-0 flex-[1_1_280px] max-w-[280px]">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Filter accounts"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="pr-8"
+              className="pl-8"
             />
-            <Search className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto shrink-0">
             <CreateAccountDialog onCreated={(a) => setAccounts((prev) => [...prev, a])} />
           </div>
         </div>
