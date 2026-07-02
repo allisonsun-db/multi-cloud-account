@@ -4,12 +4,13 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
-import { CheckCircleIcon } from "@/components/icons"
+import { CheckCircleIcon, NewWindowIcon } from "@/components/icons"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { ExternalLink, Search, ChevronRight } from "lucide-react"
 import { LocationPicker, buildCloudRegions, CLOUD_ICONS, CLOUD_LOGO } from "@/components/ui/location-picker"
@@ -58,6 +59,19 @@ const WORKSPACES: Workspace[] = [
   { id: "19", name: "feature-store-prod",     status: "Running", cloud: "GCP",   pricingTier: "Enterprise", region: "asia-east1",        storage: "Default",            credentialName: "Serverless",              created: "03/16/2026",        metastore: "prod-metastore" },
   { id: "20", name: "model-serving-prod",     status: "Running", cloud: "AWS",   pricingTier: "Enterprise", region: "us-east-1",         storage: "Default",            credentialName: "Serverless",              created: "03/15/2026",        metastore: "prod-metastore" },
 ]
+
+const MOST_VISITED_WORKSPACES = [
+  { id: "1", name: "prod-us-west", cloud: "AWS", region: "us-west-2", users: "428 users" },
+  { id: "6", name: "ml-platform-prod", cloud: "GCP", region: "us-central1", users: "312 users" },
+  { id: "5", name: "data-eng-prod", cloud: "Azure", region: "eastus2", users: "256 users" },
+  { id: "11", name: "marketing-analytics", cloud: "Azure", region: "eastus", users: "184 users" },
+] satisfies Array<{
+  id: string
+  name: string
+  cloud: Workspace["cloud"]
+  region: string
+  users: string
+}>
 
 // ─── Create Workspace Modal ────────────────────────────────────────────────────
 
@@ -308,7 +322,46 @@ export function WorkspacesContent() {
           </div>
         </div>
 
-        <Table>
+        <section className="mt-2 mb-2 flex flex-col gap-3">
+          <h2 className="text-[15px] font-semibold text-foreground">Most visited</h2>
+          <div className="grid grid-cols-4 gap-3 overflow-x-auto pb-1">
+            {MOST_VISITED_WORKSPACES.map((workspace) => (
+              <Card
+                key={workspace.id}
+                className="min-w-[220px] cursor-pointer overflow-hidden py-0 transition-shadow hover:shadow-[var(--shadow-db-lg)]"
+                onClick={() => router.push(`/workspaces/${workspace.id}`)}
+              >
+                <CardContent className="flex flex-col gap-0 px-0">
+                  <div className="flex flex-col gap-0.5 px-4 py-3">
+                    <div className="flex min-w-0 flex-col gap-0.5">
+                      <div className="truncate text-sm font-semibold text-foreground">{workspace.name}</div>
+                      <div className="flex items-center gap-1 truncate text-sm text-muted-foreground">
+                        <img
+                          src={CLOUD_LOGO[workspace.cloud]}
+                          alt=""
+                          width={12}
+                          height={12}
+                          className={cn("h-3 w-3 object-contain", workspace.cloud === "AWS" && "dark:[filter:brightness(0)_invert(1)]")}
+                        />
+                        <span className="truncate">{workspace.region} · {workspace.users}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex h-24 items-center justify-center border-t border-border bg-muted">
+                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                      <NewWindowIcon className="h-5 w-5" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+
+        <section className="flex flex-col gap-2">
+          <h2 className="text-[15px] font-semibold text-foreground">All workspaces</h2>
+
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-8" />
@@ -376,7 +429,8 @@ export function WorkspacesContent() {
               </TableRow>
             ))}
           </TableBody>
-        </Table>
+          </Table>
+        </section>
 
       </div>
   )

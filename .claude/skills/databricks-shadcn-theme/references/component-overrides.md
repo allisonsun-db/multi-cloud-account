@@ -263,7 +263,7 @@ const alertVariants = cva(
 
 ## P2 — Tabs (`components/ui/tabs.tsx`)
 
-DuBois **line** tabs (`TabsList variant="line"`): full-width list with `border-b border-border` (often via `className` on `TabsList`), **no horizontal padding** on the list (`px-0 py-1`), **`gap-4`** (16px between tabs), **TabsTrigger** `px-0`; active tab uses primary text + semibold + `after:` blue underline indicator. **Default** pill tabs: `TabsList` `bg-muted p-[3px]`, **TabsTrigger** `px-2`.
+DuBois **line** tabs (`TabsList variant="line"`): full-width list with `border-b border-border` (often via `className` on `TabsList`), **no horizontal padding** on the list (`px-0 py-1`), **`gap-4`** (16px between tabs), **TabsTrigger** `px-0`; active tab uses `text-accent-foreground` + semibold + `after:` blue underline indicator. **Default** pill tabs: `TabsList` `bg-muted p-[3px]`, **TabsTrigger** `px-2`.
 
 ```tsx
 // Usage — line variant (typical page tabs)

@@ -74,7 +74,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
           { id: "accounts",         label: "Accounts",         icon: OfficeIcon,      href: "/accounts" },
           { id: "workspaces",       label: "Workspaces",       icon: WorkspacesIcon,  href: "/workspaces" },
           { id: "catalog",          label: "Catalog",          icon: CatalogIcon,     href: "/catalog" },
-          { id: "user-management",  label: "User management",  icon: UserGroupIcon,   href: "https://db-ui-mockups.vercel.app/user-management" },
+          { id: "user-management",  label: "Identity",         icon: UserGroupIcon,   href: "/user-management" },
           { id: "security",         label: "Security",         icon: ShieldCheckIcon },
           { id: "resilience",       label: "Resilience",       icon: ShieldIcon,      href: "/resilience" },
           { id: "cloud-resources",  label: "Cloud resources",  icon: CloudIcon,       href: "/cloud-resources" },

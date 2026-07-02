@@ -7,11 +7,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { CheckIcon, ChevronDownIcon, OfficeIcon } from "@/components/icons"
-import { DbIcon } from "@/components/ui/db-icon"
+import { Badge } from "@/components/ui/badge"
+import { ChevronDownIcon } from "@/components/icons"
 import { cn } from "@/lib/utils"
 import { useAccountScope } from "./AppShell"
 
@@ -70,25 +69,20 @@ export function AccountOrgSwitcher({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[220px]">
-          <DropdownMenuItem
-            className={cn(scope === "org" && "font-semibold text-primary")}
-            onClick={() => setScope("org")}
-          >
-            <DbIcon icon={OfficeIcon} size={16} color={scope === "org" ? "primary" : "muted"} />
+          <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">
+            Organization
+          </DropdownMenuLabel>
+          <DropdownMenuItem onClick={() => setScope("org")}>
             {ORG_NAME}
-            {scope === "org" && <CheckIcon className="ml-auto h-3.5 w-3.5 text-primary" />}
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <div className="mx-2 my-1 h-px bg-border" />
           <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">
             Accounts
           </DropdownMenuLabel>
           {ACCOUNTS.map((account) => (
             <DropdownMenuItem key={account.id} onClick={() => setScope(account.id)}>
               {account.name}
-              {scope === account.id && <CheckIcon className="ml-auto h-3.5 w-3.5 text-primary" />}
-              {account.isMain && scope !== account.id && (
-                <span className="ml-auto text-xs text-muted-foreground">Main</span>
-              )}
+              {account.isMain && <Badge variant="secondary" className="ml-auto font-normal">Main</Badge>}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

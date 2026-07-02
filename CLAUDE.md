@@ -48,7 +48,7 @@ These shadcn components have DuBois overrides — use them as-is:
 - **`Dialog`** / **`DialogHeader`** / **`DialogFooter`** / **`DialogBody`** — 40px padding, no dividers
 - **`Table`** / **`TableRow`** — DuBois hover/selected row colors; **`TableHead`** always `text-sm` (13px)
 - **`Alert`** — variants: `default` `info` `warning` `success` `destructive` — full border with light tinted bg, 4px radius. CSS tokens: `--border-danger` `--border-warning` `--border-success` `--background-danger` `--background-warning` `--background-success`
-- **`Tabs`** / **`TabsList`** — use `variant="line"` for DuBois underline style; line **TabsList** uses `px-0 py-1`, `gap-4` (16px between tabs), line **TabsTrigger** has no horizontal padding (`px-0`); pill **default** keeps `p-[3px]` on the list and `px-2` on triggers
+- **`Tabs`** / **`TabsList`** — use `variant="line"` for DuBois underline style; line **TabsList** uses `px-0 py-1`, `gap-4` (16px between tabs), line **TabsTrigger** has no horizontal padding (`px-0`); active tab labels use `text-accent-foreground` with a primary underline; pill **default** keeps `p-[3px]` on the list and `px-2` on triggers
 - **`Tooltip`** — grey-800 background (dark in light mode), `text-sm` (13px)
 - **`Card`** — 8px radius, subtle shadow
 - **`Breadcrumb`** — `BreadcrumbLink` uses `text-primary` · `BreadcrumbPage` uses `text-muted-foreground` · separator is ChevronRight at `size-3`

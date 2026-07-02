@@ -203,8 +203,8 @@ function OrgSettingsView() {
             key={t}
             onClick={() => setTab(i)}
             className={cn(
-              "-mb-px border-b-2 pb-2 text-sm transition-colors",
-              i === tab ? "border-primary font-semibold text-primary" : "border-transparent text-muted-foreground hover:text-foreground",
+              "-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors",
+              i === tab ? "border-primary text-accent-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {t}
@@ -254,9 +254,9 @@ function AccountIdentityView({ accountId, onGoToOrg }: { accountId: string; onGo
             key={t}
             onClick={() => setTab(i)}
             className={cn(
-              "-mb-px border-b-2 pb-2 text-sm transition-colors",
+              "-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors",
               i === tab
-                ? "border-primary font-semibold text-primary"
+                ? "border-primary text-accent-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
@@ -359,8 +359,8 @@ function AccountSettingsView({ accountId, onGoToOrg }: { accountId: string; onGo
             key={t}
             onClick={() => setTab(i)}
             className={cn(
-              "-mb-px border-b-2 pb-2 text-sm transition-colors",
-              i === tab ? "border-primary font-semibold text-primary" : "border-transparent text-muted-foreground hover:text-foreground",
+              "-mb-px border-b-2 pb-2 text-sm font-semibold transition-colors",
+              i === tab ? "border-primary text-accent-foreground" : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             {t}

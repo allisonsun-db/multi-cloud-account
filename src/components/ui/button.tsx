@@ -15,7 +15,7 @@ const buttonVariants = cva(
           "bg-primary text-primary-foreground hover:bg-blue-700 active:bg-blue-800",
         // DuBois outline — border, transparent bg
         outline:
-          "border border-input bg-background hover:bg-secondary hover:text-secondary-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
+          "border border-[var(--button-default-border)] bg-background hover:bg-secondary hover:text-secondary-foreground dark:bg-input/30 dark:hover:bg-input/50",
         // DuBois tertiary / ghost
         ghost:
           "hover:bg-secondary hover:text-secondary-foreground dark:hover:bg-accent/50",
