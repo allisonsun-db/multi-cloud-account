@@ -43,9 +43,15 @@ export function AccountOrgSwitcher({
   variant?: "full" | "compact"
 }) {
   const { scope, setScope } = useAccountScope()
+  const shouldBlurOnCloseRef = React.useRef(false)
   const selectedAccount = ACCOUNTS.find((account) => account.id === scope)
   const label = scope === "org" ? ORG_NAME : selectedAccount?.name
   const compact = variant === "compact"
+
+  function selectScope(nextScope: string) {
+    shouldBlurOnCloseRef.current = true
+    setScope(nextScope)
+  }
 
   return (
     <div className={cn("shrink-0 px-2 pb-1", className)}>
@@ -68,11 +74,20 @@ export function AccountOrgSwitcher({
             )}
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[220px]">
+        <DropdownMenuContent
+          align="start"
+          className="w-[220px]"
+          onCloseAutoFocus={(event) => {
+            if (!shouldBlurOnCloseRef.current) return
+
+            event.preventDefault()
+            shouldBlurOnCloseRef.current = false
+          }}
+        >
           <DropdownMenuLabel className="px-2 py-1 text-xs font-normal text-muted-foreground">
             Organization
           </DropdownMenuLabel>
-          <DropdownMenuItem onClick={() => setScope("org")}>
+          <DropdownMenuItem onClick={() => selectScope("org")}>
             {ORG_NAME}
           </DropdownMenuItem>
           <div className="mx-2 my-1 h-px bg-border" />
@@ -80,7 +95,7 @@ export function AccountOrgSwitcher({
             Accounts
           </DropdownMenuLabel>
           {ACCOUNTS.map((account) => (
-            <DropdownMenuItem key={account.id} onClick={() => setScope(account.id)}>
+            <DropdownMenuItem key={account.id} onClick={() => selectScope(account.id)}>
               {account.name}
               {account.isMain && <Badge variant="secondary" className="ml-auto font-normal">Main</Badge>}
             </DropdownMenuItem>
