@@ -2,32 +2,37 @@
 
 import * as React from "react"
 import { CheckCircleFillIcon, CheckCircleIcon, ChevronDownIcon, ChevronRightIcon, ChevronUpIcon } from "@/components/icons"
+import type { SetupStep } from "./personaConfigs"
 
-type Step = {
-  id: string
-  label: string
-  href: string
-}
-
-const STEPS: Step[] = [
-  { id: "sso",     label: "Connect identity provider",  href: "/settings" },
-  { id: "admins",  label: "Assign admin roles",         href: "/accounts" },
+const DEFAULT_STEPS: SetupStep[] = [
+  { id: "sso",     label: "Connect identity provider",  href: "/settings", done: true },
+  { id: "admins",  label: "Assign admin roles",         href: "/accounts", done: true },
   { id: "audit",   label: "Enable audit log delivery",  href: "/settings" },
   { id: "network", label: "Configure network access",   href: "/settings" },
   { id: "billing", label: "Add billing information",    href: "/settings" },
 ]
 
-export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: string[] }) {
-  const completed = React.useMemo(() => new Set(initialCompleted), [initialCompleted])
+export function SetupChecklist({ steps = DEFAULT_STEPS, onHide }: { steps?: SetupStep[]; onHide?: () => void }) {
   const [showCompleted, setShowCompleted] = React.useState(false)
 
-  const completedSteps = STEPS.filter((step) => completed.has(step.id))
-  const visibleSteps = STEPS.filter((step) => !completed.has(step.id))
+  const completedSteps = steps.filter((step) => step.done)
+  const visibleSteps = steps.filter((step) => !step.done)
 
   return (
     <section className="flex flex-col gap-3">
       {/* Header */}
-      <h2 className="text-[15px] font-semibold text-foreground">Finish setup</h2>
+      <div className="group/setup-header flex items-center justify-between gap-4">
+        <h2 className="text-[15px] font-semibold text-foreground">Finish setup</h2>
+        {onHide && (
+          <button
+            type="button"
+            className="pr-4 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-accent-foreground group-hover/setup-header:opacity-100"
+            onClick={onHide}
+          >
+            Hide
+          </button>
+        )}
+      </div>
 
       {/* Rows */}
       <div className="rounded-md border border-border">
@@ -41,7 +46,7 @@ export function SetupChecklist({ initialCompleted = [] }: { initialCompleted?: s
               aria-expanded={showCompleted}
               onClick={() => setShowCompleted((open) => !open)}
             >
-              <span className="flex-1 text-sm text-accent-foreground">{completedSteps.length} of {STEPS.length} completed</span>
+              <span className="flex-1 text-sm text-accent-foreground">{completedSteps.length} of {steps.length} completed</span>
               {showCompleted ? (
                 <ChevronUpIcon width={18} height={18} className="shrink-0 text-muted-foreground" />
               ) : (

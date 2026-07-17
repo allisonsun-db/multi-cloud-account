@@ -11,7 +11,7 @@ export function GenieCommandBar() {
 
   return (
     <div
-      className="w-full rounded-2xl bg-background px-5 py-4 shadow-[var(--shadow-db-lg)]"
+      className="mx-auto w-full max-w-[640px] rounded-2xl border border-border bg-background px-5 py-4 shadow-[var(--shadow-db-lg)]"
       onClick={() => inputRef.current?.focus()}
     >
       {/* Input */}

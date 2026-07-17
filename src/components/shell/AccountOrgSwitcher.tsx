@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge"
 import { ChevronDownIcon } from "@/components/icons"
 import { cn } from "@/lib/utils"
 import { useAccountScope } from "./AppShell"
+import { setPersona } from "@/components/home/usePersona"
 
 const ORG_NAME = "Nike Organization"
 
@@ -51,6 +52,8 @@ export function AccountOrgSwitcher({
   function selectScope(nextScope: string) {
     shouldBlurOnCloseRef.current = true
     setScope(nextScope)
+    if (nextScope === "org") setPersona("org-admin")
+    else setPersona("account-admin")
   }
 
   return (

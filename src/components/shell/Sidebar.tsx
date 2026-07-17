@@ -5,7 +5,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, Pin, Search } from "lucide-reac
 import { DbIcon } from "@/components/ui/db-icon"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
-import { NAV_VERSIONS, NAV_VERSION_KEYS, type NavItem, type NavVersionKey } from "./navConfigs"
+import { DEFAULT_NAV_VERSION, NAV_VERSIONS, type NavItem, type NavVersionKey } from "./navConfigs"
 import { AccountOrgSwitcher } from "./AccountOrgSwitcher"
 import { useAccountScope } from "./AppShell"
 
@@ -31,8 +31,15 @@ export function Sidebar({
   const [collapsed, setCollapsed] = React.useState<Record<string, boolean>>({})
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({})
   const [navVersion, setNavVersion] = React.useState<NavVersionKey>(
-    defaultNavVersion ?? NAV_VERSION_KEYS[0]
+    defaultNavVersion ?? DEFAULT_NAV_VERSION
   )
+  const hasHydrated = React.useRef(false)
+  React.useEffect(() => {
+    if (hasHydrated.current) return
+    hasHydrated.current = true
+    const stored = sessionStorage.getItem("proto-nav-version")
+    if (stored && stored in NAV_VERSIONS) setNavVersion(stored as NavVersionKey)
+  }, [])
   const [activeSection, setActiveSection] = React.useState(0)
   const [drillSection, setDrillSection] = React.useState<number | null>(null)
   const [pinnedIds, setPinnedIds] = React.useState<Set<string>>(new Set())
@@ -43,11 +50,15 @@ export function Sidebar({
   const { layout = "sections", sections: navSections, maxItemsPerSection } = NAV_VERSIONS[navVersion]
   const sections = React.useMemo(() => {
     const shouldHideAccounts = scope !== "org"
+    const shouldHideAccountSettings = scope === "org"
 
     return navSections
       .map((section) => ({
         ...section,
-        items: section.items.filter((item) => !(shouldHideAccounts && item.id === "accounts")),
+        items: section.items.filter((item) => (
+          !(shouldHideAccounts && item.id === "accounts") &&
+          !(shouldHideAccountSettings && item.id === "custom-url")
+        )),
       }))
       .filter((section) => section.items.length > 0)
   }, [navSections, scope])
@@ -64,6 +75,16 @@ export function Sidebar({
     setSelectedItem(id)
     onNavigate?.(id)
   }
+
+  // Listen for nav version changes from settings page
+  React.useEffect(() => {
+    const handler = (e: Event) => {
+      const key = (e as CustomEvent).detail as NavVersionKey
+      if (key in NAV_VERSIONS) setNavVersion(key)
+    }
+    window.addEventListener("proto-nav-version-change", handler)
+    return () => window.removeEventListener("proto-nav-version-change", handler)
+  }, [])
 
   // Reset state and notify parent when version/layout changes
   React.useEffect(() => {
@@ -259,25 +280,6 @@ export function Sidebar({
             </div>
           </div>
 
-          {/* Version switcher footer */}
-          {open && (
-            <footer className="flex shrink-0 items-center gap-1 px-3 py-2 opacity-40 transition-opacity hover:opacity-100">
-              {NAV_VERSION_KEYS.map((key) => (
-                <button
-                  key={key}
-                  onClick={() => setNavVersion(key)}
-                  className={cn(
-                    "flex h-5 items-center rounded px-2 text-xs transition-colors",
-                    navVersion === key
-                      ? "bg-muted text-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {key}
-                </button>
-              ))}
-            </footer>
-          )}
         </>
       ) : layout === "rail" ? (
         /* ── Rail layout ───────────────────────────────────────────────── */
@@ -314,25 +316,6 @@ export function Sidebar({
               ))}
             </div>
 
-            {/* Version switcher inside rail column */}
-            {open && (
-              <footer className="flex shrink-0 flex-col items-center gap-1 px-2 py-2 opacity-40 transition-opacity hover:opacity-100">
-                {NAV_VERSION_KEYS.map((key) => (
-                  <button
-                    key={key}
-                    onClick={() => setNavVersion(key)}
-                    className={cn(
-                      "flex h-5 w-full items-center justify-center rounded px-1 text-xs transition-colors",
-                      navVersion === key
-                        ? "bg-muted text-foreground font-semibold"
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {key}
-                  </button>
-                ))}
-              </footer>
-            )}
           </div>
 
           {/* Panel column — visually merges with <main> */}
@@ -433,25 +416,6 @@ export function Sidebar({
             })}
           </nav>
 
-          {/* Version switcher — fixed footer */}
-          {open && (
-            <footer className="flex shrink-0 items-center gap-1 px-3 py-2 opacity-40 transition-opacity hover:opacity-100">
-              {NAV_VERSION_KEYS.map((key) => (
-                <button
-                  key={key}
-                  onClick={() => setNavVersion(key)}
-                  className={cn(
-                    "flex h-5 items-center rounded px-2 text-xs transition-colors",
-                    navVersion === key
-                      ? "bg-muted text-foreground font-semibold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {key}
-                </button>
-              ))}
-            </footer>
-          )}
         </>
       )}
     </aside>

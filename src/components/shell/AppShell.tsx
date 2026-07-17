@@ -25,6 +25,7 @@ type AccountScopeContextValue = {
 
 const GenieCodeContext = React.createContext<GenieCodeContextValue | null>(null)
 const AccountScopeContext = React.createContext<AccountScopeContextValue | null>(null)
+const ACCOUNT_SCOPE_STORAGE_KEY = "proto-account-scope"
 
 export function useGenieCodePanel() {
   const context = React.useContext(GenieCodeContext)
@@ -67,7 +68,16 @@ export function AppShell({
   const [genieOpen, setGenieOpen]     = React.useState(false)
   const [genieDraft, setGenieDraft]   = React.useState<GenieCodeDraft | null>(null)
   const [genieDraftKey, setGenieDraftKey] = React.useState(0)
-  const [scope, setScope] = React.useState("org")
+  const [scope, setScopeState] = React.useState("org")
+
+  React.useEffect(() => {
+    setScopeState(sessionStorage.getItem(ACCOUNT_SCOPE_STORAGE_KEY) ?? "org")
+  }, [])
+
+  const setScope = React.useCallback((nextScope: string) => {
+    setScopeState(nextScope)
+    sessionStorage.setItem(ACCOUNT_SCOPE_STORAGE_KEY, nextScope)
+  }, [])
 
   const openGenieCode = React.useCallback((draft?: GenieCodeDraft) => {
     if (draft) {
@@ -98,7 +108,7 @@ export function AppShell({
   )
   const accountScopeContextValue = React.useMemo(
     () => ({ scope, setScope }),
-    [scope],
+    [scope, setScope],
   )
 
   return (

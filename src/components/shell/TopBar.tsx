@@ -50,7 +50,7 @@ export function TopBar({
       )}
     >
       {/* Left: toggle + logo */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-[10px]">
         {/* Mobile: hamburger opens Sheet */}
         <Button
           variant="ghost"

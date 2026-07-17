@@ -3,6 +3,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { ProtoSettingsPanel } from "@/components/proto-settings-panel";
 
 export const metadata: Metadata = {
   title: "Multi-cloud account",
@@ -26,6 +27,7 @@ export default function RootLayout({
           <TooltipProvider>
             {children}
             <Toaster position="top-right" />
+            <ProtoSettingsPanel />
           </TooltipProvider>
         </ThemeProvider>
       </body>

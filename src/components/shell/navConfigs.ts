@@ -24,11 +24,9 @@ import {
   AssistantIcon,
   CreditCardIcon,
   ChecklistIcon,
-  GlobeIcon,
   UserCircleIcon,
   OfficeIcon,
 } from "@/components/icons"
-import { Sun as SunIcon, Mail as MailIcon } from "lucide-react"
 import type React from "react"
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -64,8 +62,10 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
       {
         label: "Governance",
         items: [
-          { id: "data",  label: "Data",  icon: DataIcon },
-          { id: "cost",  label: "Cost",  icon: DollarIcon },
+          { id: "data",         label: "Data",         icon: DataIcon,          href: "/data" },
+          { id: "ai-gov",       label: "AI",           icon: SparkleDoubleIcon, href: "/ai" },
+          { id: "cost",         label: "Cost",         icon: DollarIcon,        href: "/cost" },
+          { id: "performance",  label: "Performance",  icon: SpeedometerIcon,   href: "/performance" },
         ],
       },
       {
@@ -75,7 +75,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
           { id: "workspaces",       label: "Workspaces",       icon: WorkspacesIcon,  href: "/workspaces" },
           { id: "catalog",          label: "Catalog",          icon: CatalogIcon,     href: "/catalog" },
           { id: "user-management",  label: "Identity",         icon: UserGroupIcon,   href: "/user-management" },
-          { id: "security",         label: "Security",         icon: ShieldCheckIcon },
+          { id: "security",         label: "Security",         icon: ShieldCheckIcon, href: "/security" },
           { id: "resilience",       label: "Resilience",       icon: ShieldIcon,      href: "/resilience" },
           { id: "cloud-resources",  label: "Cloud resources",  icon: CloudIcon,       href: "/cloud-resources" },
           { id: "previews",         label: "Previews",         icon: GiftIcon,        href: "/previews" },
@@ -91,222 +91,154 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
       {
         label: "Governance",
         items: [
-          { id: "data",         label: "Data",        icon: DataIcon },
-          { id: "cost",         label: "Cost",        icon: DollarIcon },
-          { id: "tags",         label: "Tags",        icon: TagIcon },
-          { id: "performance",  label: "Performance", icon: SpeedometerIcon },
-          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon },
-          { id: "ai-gateway",   label: "AI gateway",  icon: SparkleDoubleIcon },
+          { id: "data",         label: "Data",        icon: DataIcon,          href: "/data" },
+          { id: "cost",         label: "Cost",        icon: DollarIcon,        href: "/cost" },
+          { id: "tags",         label: "Tags",        icon: TagIcon,           href: "/tags" },
+          { id: "performance",  label: "Performance", icon: SpeedometerIcon,   href: "/performance" },
+          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon,   href: "/security" },
+          { id: "ai-gateway",   label: "AI",          icon: SparkleDoubleIcon, href: "/ai" },
         ],
       },
       {
-        label: "Cloud infrastructure",
+        label: "Infrastructure",
         items: [
-          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
-          { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
-          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
-          { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
+          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon, href: "/workspaces" },
+          { id: "catalog",         label: "Metastores",      icon: CatalogIcon,    href: "/catalog" },
+          { id: "resilience",      label: "Resilience",      icon: ShieldIcon,     href: "/resilience" },
+          { id: "cloud-resources", label: "Cloud resources",  icon: CloudIcon,     href: "/cloud-resources" },
         ],
       },
       {
-        label: "Identity and access",
+        label: "Identity",
         items: [
-          { id: "identities",        label: "Identities",        icon: UserGroupIcon },
-          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon },
+          { id: "identities",        label: "Identities", icon: UserGroupIcon,  href: "/identities" },
+          { id: "identity-provider", label: "Provider",   icon: UserKeyIconIcon, href: "/identity-provider" },
         ],
       },
       {
         label: "AI",
         items: [
-          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
-          { id: "genie",     label: "Genie",     icon: AssistantIcon },
+          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon,      href: "/knowledge-platform" },
+          { id: "genie",     label: "Genie",               icon: AssistantIcon, href: "/genie" },
         ],
       },
       {
         label: "Account",
         items: [
-          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
-          { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
-          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
-          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
-          { id: "preferences",     label: "Preferences",            icon: GearIcon },
+          { id: "accounts",        label: "Accounts",               icon: OfficeIcon,     href: "/accounts" },
+          { id: "custom-url",      label: "Account settings",       icon: OfficeIcon,     href: "/custom-url" },
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon,  href: "/previews" },
+          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon, href: "/billing" },
         ],
       },
     ],
   },
 
   "C": {
-    layout: "sections",
-    maxItemsPerSection: 2,
-    sections: [
-      {
-        label: "Governance",
-        items: [
-          { id: "data",         label: "Data",        icon: DataIcon },
-          { id: "cost",         label: "Cost",        icon: DollarIcon },
-          { id: "tags",         label: "Tags",        icon: TagIcon },
-          { id: "performance",  label: "Performance", icon: SpeedometerIcon },
-          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon },
-          { id: "ai-gateway",   label: "AI gateway",  icon: SparkleDoubleIcon },
-        ],
-      },
-      {
-        label: "Cloud infrastructure",
-        items: [
-          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
-          { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
-          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
-          { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
-        ],
-      },
-      {
-        label: "Identity and access",
-        items: [
-          { id: "identities",        label: "Identities",        icon: UserGroupIcon },
-          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon },
-        ],
-      },
-      {
-        label: "AI",
-        items: [
-          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
-          { id: "genie",     label: "Genie",     icon: AssistantIcon },
-        ],
-      },
-      {
-        label: "Account",
-        items: [
-          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
-          { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
-          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
-          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
-          { id: "preferences",     label: "Preferences",            icon: GearIcon },
-        ],
-      },
-    ],
-  },
-
-  "D": {
     layout: "drill-down",
     sections: [
       {
         label: "Monitoring",
         icon: ShieldCheckIcon,
         items: [
-          { id: "data",         label: "Data",        icon: DataIcon },
-          { id: "cost",         label: "Cost",        icon: DollarIcon },
-          { id: "tags",         label: "Tags",        icon: TagIcon },
-          { id: "performance",  label: "Performance", icon: SpeedometerIcon },
-          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon },
-          { id: "ai-gateway",   label: "AI gateway",  icon: SparkleDoubleIcon },
+          { id: "data",         label: "Data",        icon: DataIcon,          href: "/data" },
+          { id: "cost",         label: "Cost",        icon: DollarIcon,        href: "/cost" },
+          { id: "tags",         label: "Tags",        icon: TagIcon,           href: "/tags" },
+          { id: "performance",  label: "Performance", icon: SpeedometerIcon,   href: "/performance" },
+          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon,   href: "/security" },
+          { id: "ai-gateway",   label: "AI",          icon: SparkleDoubleIcon, href: "/ai" },
         ],
       },
       {
-        label: "Cloud infrastructure",
+        label: "Infrastructure",
         icon: CloudIcon,
         items: [
-          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
-          { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
-          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
-          { id: "security-cloud",  label: "Security",        icon: ShieldCheckIcon },
-          { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
+          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon,  href: "/workspaces" },
+          { id: "catalog",         label: "Metastores",      icon: CatalogIcon,     href: "/catalog" },
+          { id: "resilience",      label: "Resilience",      icon: ShieldIcon,      href: "/resilience" },
+          { id: "security-cloud",  label: "Security",        icon: ShieldCheckIcon, href: "/security" },
+          { id: "cloud-resources", label: "Cloud resources",  icon: CloudIcon,      href: "/cloud-resources" },
         ],
       },
       {
         label: "Identity and access",
         icon: UserGroupIcon,
         items: [
-          { id: "identities",        label: "Identities",        icon: UserGroupIcon },
-          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon },
+          { id: "identities",        label: "Identities",        icon: UserGroupIcon,   href: "/identities" },
+          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon,  href: "/identity-provider" },
         ],
       },
       {
         label: "AI",
         icon: SparkleDoubleIcon,
         items: [
-          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
-          { id: "genie",     label: "Genie",     icon: AssistantIcon },
+          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon,      href: "/knowledge-platform" },
+          { id: "genie",     label: "Genie",               icon: AssistantIcon, href: "/genie" },
         ],
       },
       {
         label: "Account",
         icon: OfficeIcon,
         items: [
-          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
-          { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
-          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
-          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
-        ],
-      },
-      {
-        label: "Preferences",
-        icon: GearIcon,
-        items: [
-          { id: "appearance",  label: "Appearance",        icon: SunIcon },
-          { id: "notifications",  label: "Notifications", icon: MailIcon },
+          { id: "accounts",        label: "Accounts",               icon: OfficeIcon,     href: "/accounts" },
+          { id: "custom-url",      label: "Account settings",       icon: OfficeIcon,     href: "/custom-url" },
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon,  href: "/previews" },
+          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon, href: "/billing" },
         ],
       },
     ],
   },
 
-  "E": {
+  "D": {
     layout: "rail",
     sections: [
       {
         label: "Monitor",
         icon: ShieldCheckIcon,
         items: [
-          { id: "data",         label: "Data",        icon: DataIcon },
-          { id: "cost",         label: "Cost",        icon: DollarIcon },
-          { id: "tags",         label: "Tags",        icon: TagIcon },
-          { id: "performance",  label: "Performance", icon: SpeedometerIcon },
-          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon },
-          { id: "ai-gateway",   label: "AI gateway",  icon: SparkleDoubleIcon },
+          { id: "data",         label: "Data",        icon: DataIcon,          href: "/data" },
+          { id: "cost",         label: "Cost",        icon: DollarIcon,        href: "/cost" },
+          { id: "tags",         label: "Tags",        icon: TagIcon,           href: "/tags" },
+          { id: "performance",  label: "Performance", icon: SpeedometerIcon,   href: "/performance" },
+          { id: "security-gov", label: "Security",    icon: ShieldCheckIcon,   href: "/security" },
+          { id: "ai-gateway",   label: "AI",          icon: SparkleDoubleIcon, href: "/ai" },
         ],
       },
       {
         label: "Cloud",
         icon: CloudIcon,
         items: [
-          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon },
-          { id: "catalog",         label: "Metastores",      icon: CatalogIcon },
-          { id: "resilience",      label: "Resilience",      icon: ShieldIcon },
-          { id: "security-cloud",  label: "Security",        icon: ShieldCheckIcon },
-          { id: "cloud-resources", label: "Cloud resources", icon: CloudIcon },
+          { id: "workspaces",      label: "Workspaces",      icon: WorkspacesIcon,  href: "/workspaces" },
+          { id: "catalog",         label: "Metastores",      icon: CatalogIcon,     href: "/catalog" },
+          { id: "resilience",      label: "Resilience",      icon: ShieldIcon,      href: "/resilience" },
+          { id: "security-cloud",  label: "Security",        icon: ShieldCheckIcon, href: "/security" },
+          { id: "cloud-resources", label: "Cloud resources",  icon: CloudIcon,      href: "/cloud-resources" },
         ],
       },
       {
         label: "Identity",
         icon: UserGroupIcon,
         items: [
-          { id: "identities",        label: "Identities",        icon: UserGroupIcon },
-          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon },
+          { id: "identities",        label: "Identities",        icon: UserGroupIcon,   href: "/identities" },
+          { id: "identity-provider", label: "Identity provider", icon: UserKeyIconIcon,  href: "/identity-provider" },
         ],
       },
       {
         label: "AI",
         icon: SparkleDoubleIcon,
         items: [
-          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon },
-          { id: "genie",     label: "Genie",     icon: AssistantIcon },
+          { id: "glean-mcp", label: "Knowledge platform", icon: McpIcon,      href: "/knowledge-platform" },
+          { id: "genie",     label: "Genie",               icon: AssistantIcon, href: "/genie" },
         ],
       },
       {
         label: "Account",
         icon: OfficeIcon,
         items: [
-          { id: "accounts",        label: "Accounts",               icon: OfficeIcon },
-          { id: "custom-url",      label: "Custom URL",             icon: GlobeIcon },
-          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon },
-          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon },
-        ],
-      },
-      {
-        label: "Preferences",
-        icon: GearIcon,
-        items: [
-          { id: "appearance",    label: "Appearance",    icon: SunIcon },
-          { id: "notifications", label: "Notifications", icon: MailIcon },
+          { id: "accounts",        label: "Accounts",               icon: OfficeIcon,     href: "/accounts" },
+          { id: "custom-url",      label: "Account settings",       icon: OfficeIcon,     href: "/custom-url" },
+          { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon,  href: "/previews" },
+          { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon, href: "/billing" },
         ],
       },
     ],
@@ -315,3 +247,4 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
 
 export type NavVersionKey = keyof typeof NAV_VERSIONS
 export const NAV_VERSION_KEYS = Object.keys(NAV_VERSIONS) as NavVersionKey[]
+export const DEFAULT_NAV_VERSION: NavVersionKey = "B"
