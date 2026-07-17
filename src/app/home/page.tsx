@@ -11,7 +11,7 @@ import { Meter, SegmentBar, StatusDots } from "@/components/home/CardVisual"
 import { usePersona } from "@/components/home/usePersona"
 import { setMaturity, useMaturity } from "@/components/home/useMaturity"
 import { useCardCustomization } from "@/components/home/useCardCustomization"
-import { PERSONA_CONFIGS, PERSONA_KEYS, type ChangeTone, type AlertLevel, type AttentionAlert, type OverviewCard, type QuickAction } from "@/components/home/personaConfigs"
+import { PERSONA_CONFIGS, PERSONA_KEYS, type ChangeTone, type AlertLevel, type AttentionAlert, type OverviewCard } from "@/components/home/personaConfigs"
 import { Card, CardContent } from "@/components/ui/card"
 import { DangerIcon, WarningIcon, DotsCircleIcon, ChevronRightIcon, LockIcon, DownloadIcon } from "@/components/icons"
 import { Button } from "@/components/ui/button"
@@ -231,21 +231,6 @@ function HomeContent() {
     })
   }
 
-  function handleQuickActionClick(action: QuickAction) {
-    openGenieCode({
-      input: [
-        `Help me ${action.label.toLowerCase()}.`,
-        `Role: ${PERSONA_CONFIGS[persona].label}`,
-        `Target area: ${action.href}`,
-        "Account: Nike Production",
-      ].join("\n"),
-      tags: [
-        { id: `quick-action-${action.id}`, label: action.label, kind: "node" },
-      ],
-      autoSubmit: true,
-    })
-  }
-
   const reviewHref = alerts[0]?.href ?? "/security"
 
   return (
@@ -405,7 +390,7 @@ function HomeContent() {
                     type="button"
                     key={action.id}
                     className="inline-flex h-8 w-fit items-center gap-2 rounded-full border border-border bg-background px-3 text-sm text-foreground transition-colors hover:bg-muted"
-                    onClick={() => handleQuickActionClick(action)}
+                    onClick={() => router.push(action.href)}
                   >
                     <action.icon width={16} height={16} className="shrink-0 text-muted-foreground" />
                     <span>{action.label}</span>
