@@ -109,9 +109,11 @@ export function TopBar({
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
-            <DropdownMenuItem>
-              <GearIcon className="h-4 w-4 text-muted-foreground" />
-              Preferences
+            <DropdownMenuItem asChild>
+              <Link href="/my-preferences">
+                <GearIcon className="h-4 w-4 text-muted-foreground" />
+                My preferences
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem>

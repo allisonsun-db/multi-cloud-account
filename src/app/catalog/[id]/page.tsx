@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { useParams, useRouter } from "next/navigation"
+import { useParams } from "next/navigation"
 import { MoreVertical, Info, ChevronUp, ChevronDown, ExternalLink, UserRound, Search, AlertTriangle } from "lucide-react"
 import { AppShell, PageHeader } from "@/components/shell"
 import { Button } from "@/components/ui/button"
@@ -171,10 +171,65 @@ function KVRow({
 
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
-export default function MetastoreDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const ms = METASTORES.find((m) => m.id === params.id) ?? METASTORES[0]
+// Header metadata strip — stable identity (cloud · region · created · id) as an inline
+// row of key-values under the page title, the way AWS/GCP present resource identity.
+// Always-visible and display-only; sits above the Overview/Configuration tabs.
+export function MetastoreMetaStrip({ metastoreId, className }: { metastoreId: string; className?: string }) {
+  const ms = METASTORES.find((m) => m.id === metastoreId) ?? METASTORES[0]
+  return (
+    <div className={cn("flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground", className)}>
+      <span className="flex items-center gap-1.5">
+        {CLOUD_ICONS[ms.cloud]}
+        {ms.cloud}
+      </span>
+      <span aria-hidden="true">·</span>
+      <span>{ms.region}</span>
+      <span aria-hidden="true">·</span>
+      <span>Created {ms.createdAt}</span>
+      <span aria-hidden="true">·</span>
+      <span>Owner {ms.owner}</span>
+      <span aria-hidden="true">·</span>
+      <span className="font-mono text-[12px]">{ms.metastoreId}</span>
+    </div>
+  )
+}
+
+// "About this metastore" sidebar — exported so it can be shown independently of the
+// detail body (e.g. always visible across tabs in the unified /e/data view).
+export function MetastoreAboutSidebar({ metastoreId, className }: { metastoreId: string; className?: string }) {
+  const ms = METASTORES.find((m) => m.id === metastoreId) ?? METASTORES[0]
+  return (
+    <div className={cn("flex flex-col gap-2", className)}>
+      <p className="text-sm font-semibold text-foreground">About this metastore</p>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground w-[110px] shrink-0">Created</span>
+        <span className="text-sm text-foreground">{ms.createdAt}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground w-[110px] shrink-0">Region</span>
+        <span className="flex items-center gap-1.5 text-sm text-foreground">
+          {CLOUD_ICONS[ms.cloud]}
+          {ms.region}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground w-[110px] shrink-0">Owner</span>
+        <span className="text-sm text-foreground">{ms.owner}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <span className="text-sm text-muted-foreground w-[110px] shrink-0">Metastore ID</span>
+        <span className="font-mono text-[12px] text-foreground">{ms.metastoreId}</span>
+      </div>
+    </div>
+  )
+}
+
+// Reusable detail body (no AppShell / PageHeader) so it can be embedded in the unified
+// /e/data view when a single metastore is selected, as well as on /catalog/[id].
+// `showAbout` renders the "About this metastore" sidebar; set false when the embedding
+// view already shows it separately (e.g. always-visible across tabs).
+export function MetastoreDetailContent({ metastoreId, showAbout = true }: { metastoreId: string; showAbout?: boolean }) {
+  const ms = METASTORES.find((m) => m.id === metastoreId) ?? METASTORES[0]
   const assignedWorkspaces = WORKSPACES.filter((w) => w.metastore === ms.name)
   const [deltaSharing, setDeltaSharing] = React.useState(false)
   const [showAssignModal, setShowAssignModal] = React.useState(false)
@@ -207,36 +262,10 @@ export default function MetastoreDetailPage() {
   }
 
   return (
-    <AppShell activeItem="catalog">
-      <div className="flex flex-col gap-4 p-6">
-
-        <PageHeader
-          breadcrumbs={
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem>
-                  <BreadcrumbLink href="/catalog">Metastore</BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>{ms.name}</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
-          }
-          title={ms.name}
-          actions={
-            <>
-              <Button variant="ghost" size="icon-sm" aria-label="More options">
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </>
-          }
-        />
-
-        <div className="-mt-2">
-          <div className="border-b border-border" />
-          <div className="flex gap-6 mt-4">
+    <>
+      <div className="flex flex-col gap-4">
+        <div>
+          <div className="flex gap-6">
 
               {/* Main content */}
               <div className="flex-1 flex flex-col gap-4 min-w-0">
@@ -308,24 +337,10 @@ export default function MetastoreDetailPage() {
 
               </div>
 
-              {/* Sidebar */}
-              <div className="w-[280px] shrink-0">
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-foreground">About this metastore</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground w-[150px] shrink-0">Created</span>
-                    <span className="text-sm text-foreground">{ms.createdAt}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground w-[150px] shrink-0">Region</span>
-                    <span className="flex items-center gap-1.5 text-sm text-foreground">
-                      {CLOUD_ICONS[ms.cloud]}
-                      {ms.region}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              {/* Sidebar — omitted when the embedding view shows About separately. */}
+              {showAbout && (
+                <MetastoreAboutSidebar metastoreId={ms.id} className="w-[280px] shrink-0" />
+              )}
 
             </div>
         </div>
@@ -471,7 +486,42 @@ export default function MetastoreDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </>
+  )
+}
 
+// Full page for /catalog/[id] — the shell + page header wrap the reusable content.
+export default function MetastoreDetailPage() {
+  const params = useParams()
+  const ms = METASTORES.find((m) => m.id === params.id as string) ?? METASTORES[0]
+
+  return (
+    <AppShell activeItem="catalog">
+      <div className="flex flex-col gap-4 p-6">
+        <PageHeader
+          breadcrumbs={
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink href="/catalog">Metastore</BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>{ms.name}</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          }
+          title={ms.name}
+          actions={
+            <Button variant="ghost" size="icon-sm" aria-label="More options">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          }
+        />
+        <div className="border-b border-border" />
+        <MetastoreDetailContent metastoreId={ms.id} />
+      </div>
     </AppShell>
   )
 }

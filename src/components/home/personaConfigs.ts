@@ -11,7 +11,6 @@
 
 import type React from "react"
 import {
-  OfficeIcon,
   WorkspacesIcon,
   DollarIcon,
   ShieldCheckIcon,
@@ -26,12 +25,12 @@ import {
 } from "@/components/icons"
 
 export type PersonaKey =
-  | "org-admin"
   | "account-admin"
+  | "workspace-admin"
   | "security-admin"
   | "finops-admin"
-  | "infra-admin"
   | "identity-admin"
+  | "read-only-admin"
 
 export type ChangeTone = "success" | "warning" | "danger" | "muted"
 
@@ -112,15 +111,15 @@ export type PersonaConfig = {
 }
 
 export const PERSONA_KEYS: PersonaKey[] = [
-  "org-admin",
   "account-admin",
-  "security-admin",
+  "workspace-admin",
   "finops-admin",
-  "infra-admin",
+  "security-admin",
   "identity-admin",
+  "read-only-admin",
 ]
 
-export const DEFAULT_PERSONA: PersonaKey = "org-admin"
+export const DEFAULT_PERSONA: PersonaKey = "account-admin"
 
 // Seeded PRNG + random walk so the spend trend has realistic intraday texture
 // (many fine ticks, short runs that reverse) while staying deterministic across
@@ -154,42 +153,6 @@ const SPEND_TREND = buildWalk(5150, (t) => 9.0 + Math.pow(t, 1.4) * 4.4)
 const USERS_TREND = buildWalk(8420, (t) => 7.2 + t * 3.6)
 
 export const PERSONA_CONFIGS: Record<PersonaKey, PersonaConfig> = {
-  // ── Org admin (GLOBALORGADMIN — cross-account) ──────────────────────────
-  "org-admin": {
-    label: "Org admin",
-    blurb: "Cross-account view of cost, accounts, and posture across the org.",
-    greeting: "Manage your organization",
-    cards: [
-      { label: "Org spend", value: "$74.6K", change: "+34%", changeTone: "warning", caption: "vs. last month", href: "/cost", visual: "trend", spark: SPEND_TREND },
-      { label: "Accounts", value: "4", change: "all healthy", changeTone: "success", caption: "network-isolated", href: "/accounts", visual: "status", status: [{ tone: "success" }, { tone: "success" }, { tone: "success" }, { tone: "success" }] },
-      { label: "Security findings", value: "70%", change: "passed", changeTone: "success", caption: "passed org-wide", href: "/security", visual: "segment", segments: [{ kind: "passed", value: 70, label: "70% passed" }, { kind: "high", value: 12, label: "12% high-risk" }, { kind: "medium", value: 10, label: "10% medium" }, { kind: "low", value: 8, label: "8% low" }] },
-    ],
-    alerts: [
-      { id: "budget",  level: "urgent",  text: "Account B forecast is 10% over budget",         href: "/cost",       source: "Budget alerts" },
-      { id: "mfa",     level: "warning", text: "12 users org-wide have no MFA enrolled",         href: "/identities", source: "Account users" },
-      { id: "access",  level: "pending", text: "3 access requests awaiting approval",            href: "/identities", source: "Access requests" },
-      { id: "tokens",  level: "warning", text: "5 service principals have non-expiring tokens",  href: "/security",   source: "Service principals" },
-    ],
-    setup: [
-      { id: "idp",     label: "Connect identity provider", href: "/identity-provider", done: true },
-      { id: "admins",  label: "Assign admin roles",        href: "/accounts",          done: true },
-      { id: "audit",   label: "Enable audit log delivery", href: "/settings" },
-      { id: "budget",  label: "Set an org-wide budget",    href: "/cost" },
-      { id: "billing", label: "Add billing information",   href: "/billing" },
-    ],
-    quickActions: [
-      { id: "account",   label: "Create an account",      href: "/accounts",   icon: OfficeIcon },
-      { id: "idp",       label: "Add identity provider",   href: "/identity-provider", icon: KeyIcon },
-      { id: "budget",    label: "Review org spend",        href: "/cost",       icon: DollarIcon },
-      { id: "posture",   label: "Check security posture",  href: "/security",   icon: ShieldCheckIcon },
-    ],
-    geniePrompts: [
-      "Compare spend across all accounts",
-      "Which accounts are over budget?",
-      "Show security posture by account",
-    ],
-  },
-
   // ── Account admin ───────────────────────────────────────────────────────
   "account-admin": {
     label: "Account admin",
@@ -297,11 +260,11 @@ export const PERSONA_CONFIGS: Record<PersonaKey, PersonaConfig> = {
     ],
   },
 
-  // ── Infra / Ops admin (cluster/job/pipeline status, NO data) ────────────
-  "infra-admin": {
-    label: "Infra/Ops admin",
-    blurb: "Workspaces, cloud resources, jobs, and resilience — no data access.",
-    greeting: "Manage your infrastructure",
+  // ── Workspace admin (workspace operations) ───────────────────────────────
+  "workspace-admin": {
+    label: "Workspace admin",
+    blurb: "Workspace lifecycle, settings, previews, compute, and operational health.",
+    greeting: "Manage your workspaces",
     cards: [
       { label: "Workspaces", value: "20", change: "+2", changeTone: "success", caption: "new this week", href: "/workspaces" },
       { label: "Cloud resources", value: "1", change: "needs attention", changeTone: "warning", caption: "network misconfigured", href: "/cloud-resources", visual: "status", status: [{ tone: "warning", label: "1 needs attention" }] },
@@ -364,6 +327,35 @@ export const PERSONA_CONFIGS: Record<PersonaKey, PersonaConfig> = {
       "Add a user",
       "Set up SCIM for a new identity provider",
       "Which users aren't syncing from our directory?",
+    ],
+  },
+
+  // ── Read-only admin (audit / platform / practitioner visibility) ────────
+  "read-only-admin": {
+    label: "Read-only admin",
+    blurb: "Audit, platform health, and practitioner visibility without write access.",
+    greeting: "Review platform health",
+    readOnly: true,
+    cards: [
+      { label: "Workspaces", value: "20", change: "view only", changeTone: "muted", caption: "across account", href: "/workspaces" },
+      { label: "Security findings", value: "70%", change: "passed", changeTone: "success", caption: "read-only evidence", href: "/security", visual: "segment", segments: [{ kind: "passed", value: 70, label: "70% passed" }, { kind: "high", value: 12, label: "12% high-risk" }, { kind: "medium", value: 10, label: "10% medium" }, { kind: "low", value: 8, label: "8% low" }] },
+      { label: "DR coverage", value: "18/20", change: "2 uncovered", changeTone: "warning", caption: "platform owner view", href: "/resilience", visual: "meter", meter: { value: 18, max: 20 } },
+    ],
+    alerts: [
+      { id: "evidence", level: "pending", text: "Audit evidence is ready for export", href: "/security", source: "Compliance evidence" },
+      { id: "health",   level: "warning", text: "2 workspaces have resilience gaps",   href: "/resilience", source: "Platform health" },
+      { id: "jobs",     level: "warning", text: "8 job runs failed in the last 24 hours", href: "/workspaces", source: "Workspace operations" },
+    ],
+    setup: [],
+    quickActions: [
+      { id: "workspaces", label: "View workspaces",        href: "/workspaces",  icon: WorkspacesIcon },
+      { id: "evidence",   label: "Review audit evidence",  href: "/security",    icon: ChecklistIcon },
+      { id: "health",     label: "Check platform health",  href: "/performance", icon: ChartLineIcon },
+    ],
+    geniePrompts: [
+      "Show platform health across workspaces",
+      "Which workspaces have resilience gaps?",
+      "Summarize audit evidence for this account",
     ],
   },
 }

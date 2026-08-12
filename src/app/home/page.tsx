@@ -169,18 +169,8 @@ function HomeContent() {
       .filter((card) => overview.some((defaultCard) => defaultCard.label === card.label) || (card.href && relevantHrefs.has(card.href)))
     const defaultLabels = new Set(overview.map((card) => card.label))
 
-    // Spend scoping: org scope shows org-wide spend and never account spend;
-    // an account scope shows that account's spend and never org-wide spend.
-    const scopedRelevantCards = persona === "org-admin"
-      ? relevantCards.filter((card) => card.label !== "Account spend")
-      : relevantCards.filter((card) => card.label !== "Org spend" && card.label !== "High-risk findings")
-    const prioritizedCards = persona === "org-admin"
-      ? [
-        ...overview,
-        ...scopedRelevantCards.filter((card) => card.label === "Active users"),
-        ...scopedRelevantCards.filter((card) => card.label !== "Active users"),
-      ]
-      : persona === "account-admin"
+    const scopedRelevantCards = relevantCards.filter((card) => card.label !== "Org spend" && card.label !== "High-risk findings")
+    const prioritizedCards = persona === "account-admin"
         ? [
           ...overview,
           ...scopedRelevantCards.filter((card) => card.label === "New users"),
@@ -326,7 +316,7 @@ function HomeContent() {
               </div>
               <button
                 type="button"
-                className="pr-4 text-xs text-muted-foreground hover:text-accent-foreground"
+                className="pr-4 text-sm text-muted-foreground hover:text-accent-foreground"
                 onClick={() => router.push(reviewHref)}
               >
                 View all

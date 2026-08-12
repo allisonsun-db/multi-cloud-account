@@ -15,10 +15,10 @@ import { cn } from "@/lib/utils"
 import { useAccountScope } from "./AppShell"
 import { setPersona } from "@/components/home/usePersona"
 
-const ORG_NAME = "Nike Organization"
+const ORG_NAME = "Nike"
 
 const ACCOUNTS = [
-  { id: "main", name: "Nike", isMain: true },
+  { id: "main", name: "Nike APAC", isMain: true },
   { id: "emea", name: "Nike EMEA", isMain: false },
   { id: "ds", name: "Nike Data Science", isMain: false },
   { id: "sandbox", name: "Nike Sandbox", isMain: false },
@@ -29,9 +29,9 @@ function NikeLogo() {
     <Image
       src="/nike-logo.png"
       alt=""
-      width={28}
-      height={28}
-      className="h-7 w-7 shrink-0 rounded object-cover"
+      width={32}
+      height={32}
+      className="h-8 w-8 shrink-0 rounded object-cover"
     />
   )
 }
@@ -47,13 +47,13 @@ export function AccountOrgSwitcher({
   const shouldBlurOnCloseRef = React.useRef(false)
   const selectedAccount = ACCOUNTS.find((account) => account.id === scope)
   const label = scope === "org" ? ORG_NAME : selectedAccount?.name
+  const scopeTypeLabel = scope === "org" ? "Organization" : "Account"
   const compact = variant === "compact"
 
   function selectScope(nextScope: string) {
     shouldBlurOnCloseRef.current = true
     setScope(nextScope)
-    if (nextScope === "org") setPersona("org-admin")
-    else setPersona("account-admin")
+    setPersona("account-admin")
   }
 
   return (
@@ -63,17 +63,20 @@ export function AccountOrgSwitcher({
           <button
             className={cn(
               "flex items-center rounded-md bg-transparent text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10",
-              compact ? "h-12 w-full justify-center px-1.5" : "h-11 w-full gap-2 pl-1.5 pr-2",
+              compact ? "h-12 w-full justify-center px-1.5" : "h-12 w-full gap-[10px] pl-[8px] pr-[10px]",
             )}
             title={label}
             aria-label={`Switch account or organization, current scope ${label}`}
           >
             <NikeLogo />
             {!compact && (
-              <>
-                <span className="truncate">{label}</span>
-                <ChevronDownIcon className="-ml-1 h-4 w-4 shrink-0 text-muted-foreground" />
-              </>
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate leading-5">{label}</span>
+                  <span className="truncate text-xs leading-4 text-muted-foreground">{scopeTypeLabel}</span>
+                </span>
+                <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+              </span>
             )}
           </button>
         </DropdownMenuTrigger>

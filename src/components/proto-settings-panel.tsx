@@ -17,6 +17,7 @@ const NAV_DISPLAY_LABELS: Record<string, string> = {
   B: "Groupings",
   C: "Nested",
   D: "Rails",
+  E: "Unified",
 }
 
 export function ProtoSettingsPanel() {

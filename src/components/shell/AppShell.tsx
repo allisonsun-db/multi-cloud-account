@@ -51,6 +51,7 @@ interface AppShellProps {
   children: React.ReactNode
   className?: string
   mainClassName?: string
+  contentClassName?: string
 }
 
 export function AppShell({
@@ -61,6 +62,7 @@ export function AppShell({
   children,
   className,
   mainClassName,
+  contentClassName,
 }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = React.useState(true)   // desktop inline
   const [mobileOpen, setMobileOpen]   = React.useState(false)  // mobile sheet
@@ -160,7 +162,7 @@ export function AppShell({
           !sidebarOpen && "ml-2",
           mainClassName,
         )}>
-          <div className="mx-auto w-full max-w-[1000px]">
+          <div className={cn("mx-auto w-full max-w-[1000px]", contentClassName)}>
             {children}
           </div>
         </main>
