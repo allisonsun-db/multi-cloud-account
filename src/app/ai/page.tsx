@@ -148,7 +148,7 @@ function RankedBarList({
           <div key={r.name} className="flex items-center gap-3">
             <div className="min-w-0 flex-1">
               <div
-                className="flex h-6 items-center gap-2 rounded bg-[var(--chart-bar)] px-2.5"
+                className="flex h-[22px] items-center gap-2 rounded bg-[var(--chart-bar)] px-2.5"
                 style={{ width: `${Math.max((r.spend / max) * 100, 24)}%` }}
               >
                 {Logo && <Logo className="h-3.5 w-3.5 shrink-0 text-foreground" />}

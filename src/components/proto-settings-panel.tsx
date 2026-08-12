@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Settings, ChevronDown } from "lucide-react"
+import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { DEFAULT_NAV_VERSION, NAV_VERSIONS, NAV_VERSION_KEYS, type NavVersionKey } from "@/components/shell/navConfigs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -22,6 +23,9 @@ const NAV_DISPLAY_LABELS: Record<string, string> = {
 
 export function ProtoSettingsPanel() {
   const [open, setOpen] = React.useState(false)
+  const { resolvedTheme, setTheme } = useTheme()
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
   const [navVersion, setNavVersionState] = React.useState<NavVersionKey>(DEFAULT_NAV_VERSION)
   const [persona, setPersonaState] = React.useState<PersonaKey>(DEFAULT_PERSONA)
   const [maturity, setMaturityStateLocal] = React.useState<Maturity>(DEFAULT_MATURITY)
@@ -63,6 +67,33 @@ export function ProtoSettingsPanel() {
       {open && (
         <div className="mb-2 w-[280px] rounded-md border border-border bg-background shadow-[var(--shadow-db-lg)] overflow-hidden">
           <div className="flex flex-col gap-4 p-4">
+            {/* Appearance */}
+            <div className="flex flex-col gap-2">
+              <Label>Appearance</Label>
+              <div className="inline-flex rounded bg-secondary p-0.5">
+                {([
+                  { id: "light", label: "Light" },
+                  { id: "dark", label: "Dark" },
+                ] as { id: string; label: string }[]).map((opt) => (
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => setTheme(opt.id)}
+                    className={cn(
+                      "flex-1 rounded px-3 h-7 text-sm font-normal transition-colors",
+                      mounted && resolvedTheme === opt.id
+                        ? "bg-background text-foreground shadow-[var(--shadow-db-sm)]"
+                        : "bg-transparent text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="border-t border-border" />
+
             {/* Nav version */}
             <div className="flex flex-col gap-2">
               <Label>Nav style</Label>
