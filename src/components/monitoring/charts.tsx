@@ -54,7 +54,7 @@ export function BarChart({ data, xLabels = [], height = 180, className, formatY 
             {data.map((d, i) => (
               <div
                 key={i}
-                className="min-w-0 flex-1 rounded-t-[3px] bg-[var(--color-blue-400)] transition-[height]"
+                className="min-w-0 flex-1 rounded-t-[3px] bg-[var(--chart-bar)] transition-[height]"
                 style={{ height: `${Math.max((d / max) * 100, 1)}%` }}
                 title={formatY(d)}
               />

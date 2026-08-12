@@ -138,11 +138,11 @@ function RankedBarList({ header, rows }: { header: string; rows: RankedRow[] }) 
         <div key={r.name} className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <div
-              className="flex h-6 items-center gap-2 rounded bg-[var(--color-blue-500)] px-2.5"
+              className="flex h-6 items-center gap-2 rounded bg-[var(--chart-bar)] px-2.5"
               style={{ width: `${Math.max((r.spend / max) * 100, 30)}%` }}
             >
-              <DbIcon icon={r.icon} size={14} className="shrink-0 text-white" />
-              <span className="truncate text-sm text-white">{r.name}</span>
+              <DbIcon icon={r.icon} size={14} className="shrink-0 text-foreground" />
+              <span className="truncate text-sm text-foreground">{r.name}</span>
             </div>
           </div>
           <span className="shrink-0 text-sm font-semibold text-foreground">{r.label}</span>

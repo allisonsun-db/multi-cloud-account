@@ -228,10 +228,10 @@ export default function Page() {
                   <div key={t.tag} className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
                       <div
-                        className="flex h-6 items-center rounded bg-[var(--color-blue-500)] px-2.5"
+                        className="flex h-6 items-center rounded bg-[var(--chart-bar)] px-2.5"
                         style={{ width: `${Math.max((t.assets / maxAssets) * 100, 24)}%` }}
                       >
-                        <span className="truncate text-sm text-white">{t.tag}</span>
+                        <span className="truncate text-sm text-foreground">{t.tag}</span>
                       </div>
                     </div>
                     <span className="shrink-0 text-sm font-semibold text-foreground">

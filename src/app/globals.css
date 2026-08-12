@@ -205,6 +205,8 @@
   --chart-3: #be501e;
   --chart-4: #c82d4c;
   --chart-5: #9b6ae8;
+  /* Bar-chart fill — soft blue in light mode; brighter blue in dark (see .dark) */
+  --chart-bar: #cbe3fb;
 
   /* Sidebar */
   --sidebar: #f7f7f7;
@@ -266,6 +268,8 @@
   --chart-3: #dc6222;
   --chart-4: #e83a5f;
   --chart-5: #9b6ae8;
+  /* Keep the previous blue-400 fill in dark mode (light-blue only applies in light) */
+  --chart-bar: #4ba3d6;
 
   --sidebar: #1a2530;
   --sidebar-foreground: #e8ecf0;
