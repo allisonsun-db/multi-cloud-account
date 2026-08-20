@@ -8,7 +8,11 @@ import { scaleSeries, scaleValue } from "@/lib/scope-data"
 import { CLOUD_LOGO } from "@/components/ui/location-picker"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
-import { Info, ChevronDown, Check } from "lucide-react"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Info, ChevronDown, Check, Lock, ArrowDown, Search } from "lucide-react"
 import { ChevronRightIcon } from "@/components/icons"
 import { cn } from "@/lib/utils"
 
@@ -50,6 +54,39 @@ const POPULAR_TAGS = [
   { tag: "owner", assets: 8.6 },
 ]
 
+// Governed tags catalog — the account's defined tag keys, how many assets each is
+// assigned to, its type, an optional description, and its allowed values.
+type GovernedTag = {
+  key: string
+  assignments: number
+  type: string
+  description?: string
+  allowedValues?: string
+}
+
+const GOVERNED_TAGS: GovernedTag[] = [
+  { key: "some_id", assignments: 12584, type: "User-Defined", allowedValues: "123133" },
+  { key: "Account", assignments: 11796, type: "User-Defined" },
+  { key: "owner", assignments: 8638, type: "User-Defined", description: "Table owner (user email)", allowedValues: "andrew.qian@databricks.com, unassigned, liv-…" },
+  { key: "url", assignments: 2913, type: "User-Defined", allowedValues: "internal" },
+  { key: "noah-test", assignments: 913, type: "User-Defined" },
+  { key: "abac", assignments: 479, type: "User-Defined", description: "werfwefwfwhello 42", allowedValues: "TEST, abc" },
+  { key: "pii", assignments: 461, type: "User-Defined", description: "This tag is managed by the corporate governance team.", allowedValues: "address, ssn, email, name, nhs, others" },
+  { key: "lt_class_0289358e", assignments: 104, type: "User-Defined", description: "load test", allowedValues: "high, medium, low" },
+  { key: "unassigned421", assignments: 98, type: "User-Defined" },
+  { key: "unassigned426", assignments: 98, type: "User-Defined" },
+  { key: "fgac_policy", assignments: 96, type: "User-Defined", allowedValues: "pii_email, pii_name, pii_address, pii_demograp…" },
+  { key: "unassigned603", assignments: 94, type: "User-Defined" },
+  { key: "unassigned355", assignments: 93, type: "User-Defined" },
+  { key: "unassigned604", assignments: 93, type: "User-Defined" },
+  { key: "unassigned652", assignments: 93, type: "User-Defined" },
+  { key: "unassigned606", assignments: 92, type: "User-Defined" },
+  { key: "unassigned548", assignments: 89, type: "User-Defined" },
+  { key: "AF Demos", assignments: 85, type: "User-Defined", description: "# This is a demo domain Descriptions of domains…" },
+  { key: "Customer Usage Data", assignments: 85, type: "User-Defined", description: "This domain encompasses all data assets related…" },
+  { key: "sensitivity_level", assignments: 77, type: "User-Defined", description: "This tag represents how sensitive the data on…", allowedValues: "public, restricted, confidential, sensitive" },
+]
+
 // ─── Reusable pieces ─────────────────────────────────────────────────────────────
 
 function CardTitle({ children }: { children: React.ReactNode }) {
@@ -89,6 +126,16 @@ function GradientMeter({ pct }: { pct: number }) {
 
 export default function Page() {
   const maxAssets = Math.max(...POPULAR_TAGS.map((t) => t.assets))
+  const maxAssignments = Math.max(...GOVERNED_TAGS.map((t) => t.assignments))
+
+  // Governed tags tab: text filter + type segment (All / System / User-Defined).
+  const [tagFilter, setTagFilter] = React.useState("")
+  const [tagType, setTagType] = React.useState("All")
+  const filteredTags = GOVERNED_TAGS.filter(
+    (t) =>
+      (tagType === "All" || t.type === tagType) &&
+      t.key.toLowerCase().includes(tagFilter.toLowerCase())
+  )
 
   // Prototype-only: the picker scopes the (mock) dashboard. "all" = across all workspaces.
   const [workspace, setWorkspace] = React.useState("all")
@@ -170,6 +217,13 @@ export default function Page() {
           </Popover>
         </h1>
 
+        <Tabs defaultValue="overview" className="gap-4">
+          <TabsList variant="line" className="w-full justify-start border-b border-border">
+            <TabsTrigger value="overview" className="flex-none">Overview</TabsTrigger>
+            <TabsTrigger value="governed" className="flex-none">Governed tags</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="overview">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {/* ── Governed Tags ─────────────────────────────────────────── */}
           <Card className="py-0 shadow-none">
@@ -274,6 +328,84 @@ export default function Page() {
             </CardContent>
           </Card>
         </div>
+          </TabsContent>
+
+          <TabsContent value="governed" className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="relative w-[280px]">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Filter governed tags"
+                  value={tagFilter}
+                  onChange={(e) => setTagFilter(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Tabs value={tagType} onValueChange={setTagType}>
+                <TabsList>
+                  <TabsTrigger value="All">All</TabsTrigger>
+                  <TabsTrigger value="System">System</TabsTrigger>
+                  <TabsTrigger value="User-Defined">User-Defined</TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Button variant="outline" size="sm" className="ml-auto">Permissions</Button>
+              <Button size="sm">Create governed tag</Button>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[16%] text-foreground">Tag key</TableHead>
+                  <TableHead className="w-[20%] text-foreground">
+                    <span className="inline-flex items-center gap-1">
+                      Tag assignments
+                      <ArrowDown className="h-3.5 w-3.5 text-muted-foreground" />
+                    </span>
+                  </TableHead>
+                  <TableHead className="w-[14%] text-foreground">Type</TableHead>
+                  <TableHead className="w-[26%] text-foreground">Description</TableHead>
+                  <TableHead className="w-[24%] text-foreground">Allowed values</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTags.map((t) => (
+                  <TableRow key={t.key}>
+                    <TableCell>
+                      <a href="#" className="text-primary hover:underline">
+                        {t.key}
+                      </a>
+                    </TableCell>
+                    <TableCell>
+                      <div
+                        className="flex h-[22px] min-w-[44px] items-center rounded bg-[var(--chart-bar)] px-2"
+                        style={{ width: `${Math.max((t.assignments / maxAssignments) * 100, 6)}%` }}
+                      >
+                        <span className="text-sm text-foreground tabular-nums">
+                          {t.assignments.toLocaleString()}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center gap-1.5 text-sm text-foreground">
+                        <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                        {t.type}
+                      </span>
+                    </TableCell>
+                    <TableCell className="max-w-0">
+                      <span className="block truncate text-sm text-foreground">{t.description}</span>
+                    </TableCell>
+                    <TableCell className="max-w-0">
+                      {t.allowedValues ? (
+                        <span className="block truncate text-sm text-foreground">{t.allowedValues}</span>
+                      ) : (
+                        <span className="text-sm italic text-muted-foreground">None</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TabsContent>
+        </Tabs>
       </div>
     </AppShell>
   )

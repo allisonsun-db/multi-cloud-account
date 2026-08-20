@@ -10,9 +10,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useRouter } from "next/navigation"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { EllipsisVertical, Search } from "lucide-react"
-import { CLOUD_LOGO } from "@/components/ui/location-picker"
-import { cn } from "@/lib/utils"
+import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import { METASTORES } from "@/app/catalog/page"
 
 // The per-metastore list — identity (cloud, region, workspaces) plus management actions
@@ -73,13 +73,12 @@ export function MetastoreMonitorList({ onSelect }: { onSelect: (id: string) => v
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-center">
-                    <img
-                      src={CLOUD_LOGO[m.cloud]}
-                      alt={m.cloud}
-                      width={14}
-                      height={14}
-                      className={cn("h-3.5 w-3.5 object-contain", m.cloud === "AWS" && "dark:[filter:brightness(0)_invert(1)]")}
-                    />
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>{CLOUD_ICONS[m.cloud]}</span>
+                      </TooltipTrigger>
+                      <TooltipContent>{m.cloud}</TooltipContent>
+                    </Tooltip>
                   </div>
                 </TableCell>
                 <TableCell>{m.region}</TableCell>

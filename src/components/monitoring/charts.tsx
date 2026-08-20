@@ -10,6 +10,14 @@ import * as React from "react"
 // A single-series vertical bar chart (e.g. daily query volume). One series, so no
 // legend; faint y gridlines with min/mid/max labels and sparse x date ticks.
 
+interface Threshold {
+  value: number
+  /** CSS color for the dashed line (e.g. "var(--trend-negative)"). */
+  color: string
+  /** Legend label; when set the threshold appears in the top-right legend. */
+  label?: string
+}
+
 interface BarChartProps {
   data: number[]
   /** Optional x-axis tick labels, placed at evenly spaced positions. */
@@ -20,10 +28,16 @@ interface BarChartProps {
   formatY?: (value: number) => string
   /** Pixel gap between bars. Larger values render thinner bars. */
   gap?: number
+  /** Horizontal dashed reference lines (e.g. budget alert thresholds). */
+  thresholds?: Threshold[]
+  /** Label for the bar series in the legend (shown only when thresholds have labels). */
+  seriesLabel?: string
 }
 
-export function BarChart({ data, xLabels = [], height = 180, className, formatY = (v) => `${v}`, gap = 2 }: BarChartProps) {
-  const max = Math.max(...data, 1)
+export function BarChart({ data, xLabels = [], height = 180, className, formatY = (v) => `${v}`, gap = 2, thresholds = [], seriesLabel }: BarChartProps) {
+  // The scale must fit both the tallest bar and the highest threshold line.
+  const max = Math.max(...data, ...thresholds.map((t) => t.value), 1)
+  const legendItems = thresholds.filter((t) => t.label)
 
   return (
     <div className={className}>
@@ -60,6 +74,32 @@ export function BarChart({ data, xLabels = [], height = 180, className, formatY 
               />
             ))}
           </div>
+          {/* Threshold lines */}
+          {thresholds.map((t, i) => (
+            <div
+              key={i}
+              className="absolute left-0 right-0 border-t border-dashed"
+              style={{ top: `${(1 - t.value / max) * 100}%`, borderColor: t.color }}
+              aria-hidden="true"
+            />
+          ))}
+          {/* Legend (top-right) */}
+          {legendItems.length > 0 && (
+            <div className="absolute right-0 top-0 flex flex-col gap-1 rounded border border-border bg-background/80 p-2 text-[11px] leading-none text-muted-foreground backdrop-blur-sm">
+              {legendItems.map((t, i) => (
+                <span key={i} className="flex items-center gap-1.5">
+                  <span className="inline-block h-0 w-4 border-t border-dashed" style={{ borderColor: t.color }} />
+                  {t.label}
+                </span>
+              ))}
+              {seriesLabel && (
+                <span className="flex items-center gap-1.5">
+                  <span className="inline-block size-2.5 rounded-[2px] bg-[var(--chart-bar)]" />
+                  {seriesLabel}
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

@@ -79,78 +79,80 @@ export function AccountSettingsContent({ saved, onSave }: { saved: string; onSav
     <div className="flex w-full flex-col gap-8">
       <div className="flex flex-col gap-1">
         <h3 className="mb-3 text-[15px] font-semibold text-foreground">Customization</h3>
-        <div className="overflow-hidden rounded-md border border-border">
-          <div className="flex items-start gap-4 px-4 py-4">
-            <span className="w-[200px] shrink-0 pt-[5px] text-sm font-semibold text-foreground">Account name</span>
-            <div className="flex flex-1 flex-col gap-2">
-              {editing ? (
-                <div className="flex items-start gap-1 self-end">
-                  <div className="flex w-[260px] flex-col gap-2">
-                    <Input
-                      value={accountName}
-                      onChange={(e) => setAccountName(e.target.value)}
-                      autoFocus
-                    />
-                    <div className="flex h-8 items-center gap-2.5 rounded-md border border-border bg-muted px-3">
-                      <svg width={13} height={14} viewBox="0 0 105 113" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
-                        <path d="M98.9 46.5996L52.3 72.8996L2.4 44.7996L0 46.0996V66.4996L52.3 95.8996L98.9 69.6996V80.4996L52.3 106.8L2.4 78.6996L0 79.9996V83.4996L52.3 112.9L104.5 83.4996V63.0996L102.1 61.7996L52.3 89.7996L5.6 63.5996V52.7996L52.3 78.9996L104.5 49.5996V29.4996L101.9 27.9996L52.3 55.8996L8 31.0996L52.3 6.19961L88.7 26.6996L91.9 24.8996V22.3996L52.3 0.0996094L0 29.4996V32.6996L52.3 62.0996L98.9 35.7996V46.5996Z" fill="#FF3621" />
-                      </svg>
-                      <span className="truncate text-sm text-foreground">{accountName}</span>
+        <div className="flex flex-col gap-3">
+          <div className="overflow-hidden rounded-md border border-border bg-card">
+            <div className="flex items-start gap-4 px-4 py-4">
+              <span className="w-[200px] shrink-0 pt-[5px] text-sm font-semibold text-foreground">Account name</span>
+              <div className="flex flex-1 flex-col gap-2">
+                {editing ? (
+                  <div className="flex items-start gap-1 self-end">
+                    <div className="flex w-[260px] flex-col gap-2">
+                      <Input
+                        value={accountName}
+                        onChange={(e) => setAccountName(e.target.value)}
+                        autoFocus
+                      />
+                      <div className="flex h-8 items-center gap-2.5 rounded-md border border-border bg-muted px-3">
+                        <svg width={13} height={14} viewBox="0 0 105 113" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                          <path d="M98.9 46.5996L52.3 72.8996L2.4 44.7996L0 46.0996V66.4996L52.3 95.8996L98.9 69.6996V80.4996L52.3 106.8L2.4 78.6996L0 79.9996V83.4996L52.3 112.9L104.5 83.4996V63.0996L102.1 61.7996L52.3 89.7996L5.6 63.5996V52.7996L52.3 78.9996L104.5 49.5996V29.4996L101.9 27.9996L52.3 55.8996L8 31.0996L52.3 6.19961L88.7 26.6996L91.9 24.8996V22.3996L52.3 0.0996094L0 29.4996V32.6996L52.3 62.0996L98.9 35.7996V46.5996Z" fill="#FF3621" />
+                        </svg>
+                        <span className="truncate text-sm text-foreground">{accountName}</span>
+                      </div>
                     </div>
+                    <Button variant="ghost" size="icon-sm" aria-label="Save" onClick={() => { onSave(accountName); setEditing(false) }}>
+                      <Check className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon-sm" aria-label="Cancel" onClick={() => { setAccountName(saved); setEditing(false) }}>
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Button variant="ghost" size="icon-sm" aria-label="Save" onClick={() => { onSave(accountName); setEditing(false) }}>
-                    <Check className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon-sm" aria-label="Cancel" onClick={() => { setAccountName(saved); setEditing(false) }}>
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex h-8 items-center justify-end gap-2">
-                  <span className="text-sm text-foreground">{accountName}</span>
-                  <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" aria-label="Edit" onClick={() => setEditing(true)}>
-                    <PencilIcon size={16} />
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mx-4 border-t border-border" />
-
-          <div className="flex items-center justify-between gap-8 px-4 py-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-semibold text-foreground">Custom URL</span>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <span className="text-sm text-foreground">omnimart.databricks.com</span>
-              <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" aria-label="Edit">
-                <PencilIcon size={16} />
-              </Button>
-            </div>
-          </div>
-
-          <div className="mx-4 border-t border-border" />
-
-          <div className="flex flex-col gap-3 px-4 py-4">
-            <span className="text-sm font-semibold text-foreground">Auto redirect</span>
-            <div className="overflow-hidden rounded-md border border-border">
-              <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-                <span className="text-sm text-foreground">e2-spog.staging.cloud.databricks.com</span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="rounded bg-muted px-2 py-0.5 text-sm text-foreground">omnimart.databricks.com</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="text-sm text-foreground">{redirectRow1 ? "On" : "Off"}</span>
-                  <Switch checked={redirectRow1} onCheckedChange={setRedirectRow1} />
-                </div>
+                ) : (
+                  <div className="flex h-8 items-center justify-end gap-2">
+                    <span className="text-sm text-foreground">{accountName}</span>
+                    <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" aria-label="Edit" onClick={() => setEditing(true)}>
+                      <PencilIcon size={16} />
+                    </Button>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-3 px-4 py-3">
-                <span className="text-sm text-accent-foreground">All previous workspace URLs</span>
-                <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
-                <span className="rounded bg-muted px-2 py-0.5 text-sm text-foreground">omnimart.databricks.com</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="text-sm text-foreground">{redirectRow2 ? "On" : "Off"}</span>
-                  <Switch checked={redirectRow2} onCheckedChange={setRedirectRow2} />
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-md border border-border bg-card">
+            <div className="flex items-center justify-between gap-8 px-4 py-4">
+              <div className="flex flex-col gap-1">
+                <span className="text-sm font-semibold text-foreground">Custom URL</span>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-sm text-foreground">omnimart.databricks.com</span>
+                <Button variant="ghost" size="icon-sm" className="size-7 text-muted-foreground" aria-label="Edit">
+                  <PencilIcon size={16} />
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-hidden rounded-md border border-border bg-card">
+            <div className="flex flex-col gap-3 px-4 py-4">
+              <span className="text-sm font-semibold text-foreground">Auto redirect</span>
+              <div className="overflow-hidden rounded-md border border-border">
+                <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+                  <span className="text-sm text-foreground">e2-spog.staging.cloud.databricks.com</span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="rounded bg-muted px-2 py-0.5 text-sm text-foreground">omnimart.databricks.com</span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-sm text-foreground">{redirectRow1 ? "On" : "Off"}</span>
+                    <Switch checked={redirectRow1} onCheckedChange={setRedirectRow1} />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 px-4 py-3">
+                  <span className="text-sm text-accent-foreground">All previous workspace URLs</span>
+                  <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="rounded bg-muted px-2 py-0.5 text-sm text-foreground">omnimart.databricks.com</span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-sm text-foreground">{redirectRow2 ? "On" : "Off"}</span>
+                    <Switch checked={redirectRow2} onCheckedChange={setRedirectRow2} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -160,7 +162,7 @@ export function AccountSettingsContent({ saved, onSave }: { saved: string; onSav
 
       <div className="flex flex-col gap-1">
         <h3 className="mb-3 text-[15px] font-semibold text-foreground">Multi-cloud</h3>
-        <div className="overflow-hidden rounded-md border border-border">
+        <div className="overflow-hidden rounded-md border border-border bg-card">
           <div className="flex items-center justify-between gap-8 px-4 py-4">
             <div className="flex flex-col gap-1">
               <span className="text-sm font-semibold text-foreground">Multi-cloud</span>

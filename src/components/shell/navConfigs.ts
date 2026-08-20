@@ -288,6 +288,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
           { id: "cost",            label: "Cost",                   icon: DollarIcon,     href: "/cost" },
           { id: "billing",         label: "Subscription & billing", icon: CreditCardIcon, href: "/billing" },
           { id: "accounts",        label: "Accounts",               icon: OfficeIcon,     href: "/accounts" },
+          { id: "glean-mcp",       label: "Knowledge platform",     icon: McpIcon,        href: "/knowledge-platform" },
           { id: "feature-preview", label: "Features & previews",    icon: ChecklistIcon,  href: "/previews" },
           { id: "custom-url",      label: "Account settings",       icon: OfficeIcon,     href: "/custom-url" },
         ],

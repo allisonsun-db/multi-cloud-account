@@ -3,8 +3,10 @@
 import * as React from "react"
 import { AppShell } from "@/components/shell"
 import { Card, CardContent } from "@/components/ui/card"
+import { useRouter } from "next/navigation"
 import { BarChart } from "@/components/monitoring/charts"
 import { scaleSeries, scaleValue } from "@/lib/scope-data"
+import { BUDGETS } from "@/lib/budgets"
 import { DbIcon } from "@/components/ui/db-icon"
 import { CLOUD_LOGO } from "@/components/ui/location-picker"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -70,16 +72,6 @@ const TOP_WORKSPACES = [
   { name: "data-eng", icon: WorkflowsIcon, spend: 458.0, label: "$458.0K" },
   { name: "bi-reporting", icon: QueryIcon, spend: 289.4, label: "$289.4K" },
   { name: "sandbox", icon: PipelineIcon, spend: 121.7, label: "$121.7K" },
-]
-
-// Placeholder budgets — each has a period, a used/limit amount, and a computed pct.
-const BUDGETS = [
-  { name: "Production compute", scope: "analytics-prod · Monthly", used: 84200, limit: 100000 },
-  { name: "ML Serving", scope: "ml-platform · Monthly", used: 61500, limit: 60000 },
-  { name: "Data engineering", scope: "data-eng · Monthly", used: 38900, limit: 75000 },
-  { name: "BI & reporting", scope: "bi-reporting · Quarterly", used: 142000, limit: 150000 },
-  { name: "Sandbox & dev", scope: "All dev workspaces · Monthly", used: 12100, limit: 20000 },
-  { name: "AI Gateway", scope: "Account-wide · Monthly", used: 7400, limit: 10000 },
 ]
 
 // ─── Reusable pieces ─────────────────────────────────────────────────────────────
@@ -155,6 +147,7 @@ function RankedBarList({ header, rows }: { header: string; rows: RankedRow[] }) 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Page() {
+  const router = useRouter()
   const [group, setGroup] = React.useState<"products" | "workspaces">("products")
 
   // Prototype-only: the picker scopes the (mock) dashboard. "all" = across all workspaces.
@@ -362,8 +355,12 @@ export default function Page() {
               </TableHeader>
               <TableBody>
                 {BUDGETS.map((b) => (
-                  <TableRow key={b.name}>
-                    <TableCell className="font-normal text-foreground">{b.name}</TableCell>
+                  <TableRow
+                    key={b.id}
+                    className="cursor-pointer"
+                    onClick={() => router.push(`/cost/budgets/${b.id}`)}
+                  >
+                    <TableCell className="font-normal text-primary">{b.name}</TableCell>
                     <TableCell><Skeleton className="h-4 w-28 animate-none" /></TableCell>
                     <TableCell><Skeleton className="h-4 w-16 animate-none" /></TableCell>
                     <TableCell><Skeleton className="ml-auto h-4 w-20 animate-none" /></TableCell>

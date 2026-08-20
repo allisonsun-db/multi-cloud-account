@@ -12,6 +12,7 @@ import { useTheme } from "next-themes"
 export default function Page() {
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
+  const [language, setLanguage] = React.useState("en")
 
   React.useEffect(() => {
     setMounted(true)
@@ -53,6 +54,30 @@ export default function Page() {
                   <SelectItem value="system">Use system default settings</SelectItem>
                   <SelectItem value="light">Light</SelectItem>
                   <SelectItem value="dark">Dark</SelectItem>
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          <Card className="shadow-none">
+            <CardContent className="flex items-center justify-between gap-6 px-4">
+              <div className="flex flex-col gap-1">
+                <Label>Language</Label>
+                <p className="text-sm text-muted-foreground">Select the language used across the interface</p>
+              </div>
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="w-[240px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="es">Español</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                  <SelectItem value="de">Deutsch</SelectItem>
+                  <SelectItem value="pt">Português</SelectItem>
+                  <SelectItem value="ja">日本語</SelectItem>
+                  <SelectItem value="ko">한국어</SelectItem>
+                  <SelectItem value="zh">中文 (简体)</SelectItem>
                 </SelectContent>
               </Select>
             </CardContent>
