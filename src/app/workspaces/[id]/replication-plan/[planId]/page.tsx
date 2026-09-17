@@ -10,6 +10,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
 } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
@@ -59,28 +60,102 @@ function computeWorkspaces(runs: ActivityRun[], initialPrimary: string, initialR
   return result
 }
 
-function ReplicationFlowIndicator({ reversed = false, loading = false }: { reversed?: boolean; loading?: boolean }) {
+function DottedFlowArrow({
+  reversed = false,
+  className = "text-muted-foreground",
+  animate = true,
+  solid = false,
+}: {
+  reversed?: boolean
+  className?: string
+  animate?: boolean
+  solid?: boolean
+}) {
+  return (
+    <svg
+      width="84"
+      height="12"
+      viewBox="0 0 84 12"
+      fill="none"
+      className={className}
+      style={reversed ? { transform: "scaleX(-1)" } : undefined}
+    >
+      <line
+        x1="0" y1="6" x2="76" y2="6"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeDasharray={solid ? undefined : "6 4"}
+        style={animate && !solid ? { animation: "dash-flow 0.6s linear infinite" } : undefined}
+      />
+      <polygon points="76,2 84,6 76,10" fill="currentColor" />
+    </svg>
+  )
+}
+
+function getReplicationItemStatus(index: number) {
+  if (index === 0) return "Completed"
+  if (index === 1) return "In progress"
+  return "Not started"
+}
+
+function ReplicationFlowIndicator({
+  reversed = false,
+  loading = false,
+  expanded = false,
+  catalogCount = 0,
+  storageCount = 0,
+}: {
+  reversed?: boolean
+  loading?: boolean
+  expanded?: boolean
+  catalogCount?: number
+  storageCount?: number
+}) {
   const className = loading ? "text-border" : "text-muted-foreground"
+  const catalogArrowYs = Array.from({ length: catalogCount }, (_, index) => 113 + index * 30)
+  const storageArrowYs = Array.from({ length: storageCount }, (_, index) => 271 + index * 28)
+  const rowArrowYs = [...catalogArrowYs, ...storageArrowYs]
+  const rowStatuses = rowArrowYs.map((_, index) => getReplicationItemStatus(index))
 
   return (
-    <div className="flex shrink-0 justify-center md:mt-[38px]">
-      <svg
-        width="84"
-        height="19"
-        viewBox="0 0 84 19"
-        fill="none"
-        className={`hidden md:block ${className}`}
-        style={reversed ? { transform: "scaleX(-1)" } : undefined}
-      >
-        <line
-          x1="0" y1="10" x2="76" y2="10"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeDasharray="6 4"
-          style={{ animation: "dash-flow 0.6s linear infinite" }}
-        />
-        <polygon points="76,6 84,10 76,14" fill="currentColor" />
-      </svg>
+    <div className={`flex shrink-0 justify-center ${expanded ? "md:self-stretch" : "md:mt-[38px]"}`}>
+      {expanded ? (
+        <div className="relative hidden w-[84px] self-stretch md:block">
+          <div className="absolute left-0 top-[40px]">
+            <DottedFlowArrow reversed={reversed} className={className} />
+          </div>
+          {rowArrowYs.map((y, index) => (
+            <div key={y} className="absolute left-0" style={{ top: y - 6 }}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="relative block cursor-default">
+                    <DottedFlowArrow
+                      reversed={reversed}
+                      className={
+                        rowStatuses[index] === "In progress"
+                          ? "text-muted-foreground"
+                          : rowStatuses[index] === "Completed"
+                            ? "text-muted-foreground opacity-60"
+                            : "text-muted-foreground opacity-30"
+                      }
+                      animate={rowStatuses[index] === "In progress"}
+                      solid={rowStatuses[index] === "Completed"}
+                    />
+                    {rowStatuses[index] === "Completed" && (
+                      <CheckCircleIcon className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background text-[var(--success)]" />
+                    )}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">{rowStatuses[index]}</TooltipContent>
+              </Tooltip>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="hidden md:block">
+          <DottedFlowArrow reversed={reversed} className={className} />
+        </div>
+      )}
       <svg
         width="19"
         height="48"
@@ -131,23 +206,14 @@ export default function ReplicationPlanPage() {
   const [failedOver, setFailedOver] = React.useState(false)
   const [failoverLoading, setFailoverLoading] = React.useState(false)
   const [pendingRunId, setPendingRunId] = React.useState<string | null>(null)
-  const [arrowY, setArrowY] = React.useState<number | null>(null)
-  const cardsRef = React.useRef<HTMLDivElement>(null)
-
-  function onRowEnter(key: string, type: "catalog" | "storage", e: React.MouseEvent<HTMLDivElement>) {
+  function onRowEnter(key: string, type: "catalog" | "storage") {
     if (type === "catalog") setHoveredCatalog(key)
     else setHoveredStorage(key)
-    if (cardsRef.current) {
-      const rowRect = e.currentTarget.getBoundingClientRect()
-      const containerRect = cardsRef.current.getBoundingClientRect()
-      setArrowY(rowRect.top - containerRect.top + rowRect.height / 2)
-    }
   }
 
   function onRowLeave(type: "catalog" | "storage") {
     if (type === "catalog") setHoveredCatalog(null)
     else setHoveredStorage(null)
-    setArrowY(null)
   }
 
   const currentRpo = RUNS.find((r) => r.status === "succeeded" && r.activity === "Replication")?.rpo ?? "—"
@@ -232,19 +298,7 @@ export default function ReplicationPlanPage() {
 
             {/* Workspaces */}
             <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
-              <div ref={cardsRef} className="relative flex flex-col items-stretch gap-4 px-4 py-4 shadow-xs md:flex-row md:items-start md:justify-center md:gap-0.5 md:py-6">
-            {arrowY !== null && (
-              <div
-                className="absolute pointer-events-none z-10 hidden md:block"
-                style={{ top: arrowY - 6, left: "50%", transform: "translateX(-42px)" }}
-              >
-                <svg width="84" height="12" viewBox="0 0 84 12" fill="none" className="text-muted-foreground" style={failedOver ? { transform: "scaleX(-1)" } : undefined}>
-                  <line x1="0" y1="6" x2="76" y2="6" stroke="currentColor" strokeWidth="1.5" strokeDasharray="6 4"
-                    style={{ animation: "dash-flow 0.6s linear infinite" }} />
-                  <polygon points="76,2 84,6 76,10" fill="currentColor" />
-                </svg>
-              </div>
-            )}
+              <div className="relative flex flex-col items-stretch gap-4 px-4 py-4 shadow-xs md:flex-row md:items-start md:justify-center md:gap-0.5 md:py-6">
             {/* Primary workspace */}
             <div className="flex min-w-0 flex-col gap-1.5 md:w-[300px]">
               <p className="text-sm font-semibold">{failedOver ? "Secondary workspace" : "Primary workspace"}</p>
@@ -274,31 +328,39 @@ export default function ReplicationPlanPage() {
                     <div className="px-3 py-2">
                       <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Catalogs</p>
                       <div className="flex flex-col gap-0.5">
-                        {catalogs.map((c) => (
-                          <div
-                            key={c}
-                            className={`flex items-center gap-2 py-1 text-sm rounded px-1 -mx-1 transition-colors ${hoveredCatalog === c ? "bg-primary/10 text-primary" : ""}`}
-                            onMouseEnter={(e) => onRowEnter(c, "catalog", e)}
-                            onMouseLeave={() => onRowLeave("catalog")}
-                          >
-                            <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
-                            <span>{c}</span>
-                          </div>
+                        {catalogs.map((c, index) => (
+                          <Tooltip key={c}>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={`flex items-center gap-2 py-1 text-sm rounded px-1 -mx-1 transition-colors ${hoveredCatalog === c ? "bg-primary/10 text-primary" : ""}`}
+                                onMouseEnter={() => onRowEnter(c, "catalog")}
+                                onMouseLeave={() => onRowLeave("catalog")}
+                              >
+                                <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
+                                <span>{c}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">{getReplicationItemStatus(index)}</TooltipContent>
+                          </Tooltip>
                         ))}
                       </div>
                     </div>
                     <div className="px-3 py-2">
                       <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Storage locations</p>
                       <div className="flex flex-col gap-0.5">
-                        {storageMappings.map((m) => (
-                          <div
-                            key={m.source}
-                            className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[3px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
-                            onMouseEnter={(e) => onRowEnter(m.source, "storage", e)}
-                            onMouseLeave={() => onRowLeave("storage")}
-                          >
-                            {m.source}
-                          </div>
+                        {storageMappings.map((m, index) => (
+                          <Tooltip key={m.source}>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[3px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
+                                onMouseEnter={() => onRowEnter(m.source, "storage")}
+                                onMouseLeave={() => onRowLeave("storage")}
+                              >
+                                {m.source}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">{getReplicationItemStatus(catalogs.length + index)}</TooltipContent>
+                          </Tooltip>
                         ))}
                       </div>
                     </div>
@@ -307,7 +369,13 @@ export default function ReplicationPlanPage() {
               </div>
             </div>
 
-            <ReplicationFlowIndicator reversed={failedOver} loading={failoverLoading} />
+            <ReplicationFlowIndicator
+              reversed={failedOver}
+              loading={failoverLoading}
+              expanded={expanded}
+              catalogCount={catalogs.length}
+              storageCount={storageMappings.length}
+            />
 
             {/* Secondary workspace */}
             <div className="flex min-w-0 flex-col gap-1.5 md:w-[300px]">
@@ -338,31 +406,39 @@ export default function ReplicationPlanPage() {
                     <div className="px-3 py-2">
                       <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Catalogs</p>
                       <div className="flex flex-col gap-0.5">
-                        {catalogs.map((c) => (
-                          <div
-                            key={c}
-                            className={`flex items-center gap-2 py-1 text-sm rounded px-1 -mx-1 transition-colors ${hoveredCatalog === c ? "bg-primary/10 text-primary" : ""}`}
-                            onMouseEnter={(e) => onRowEnter(c, "catalog", e)}
-                            onMouseLeave={() => onRowLeave("catalog")}
-                          >
-                            <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
-                            <span>{c}</span>
-                          </div>
+                        {catalogs.map((c, index) => (
+                          <Tooltip key={c}>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={`flex items-center gap-2 py-1 text-sm rounded px-1 -mx-1 transition-colors ${hoveredCatalog === c ? "bg-primary/10 text-primary" : ""}`}
+                                onMouseEnter={() => onRowEnter(c, "catalog")}
+                                onMouseLeave={() => onRowLeave("catalog")}
+                              >
+                                <CatalogIcon className={`h-4 w-4 shrink-0 ${hoveredCatalog === c ? "text-primary" : "text-muted-foreground"}`} />
+                                <span>{c}</span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">{getReplicationItemStatus(index)}</TooltipContent>
+                          </Tooltip>
                         ))}
                       </div>
                     </div>
                     <div className="px-3 py-2">
                       <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Storage locations</p>
                       <div className="flex flex-col gap-0.5">
-                        {storageMappings.map((m) => (
-                          <div
-                            key={m.destination}
-                            className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[3px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
-                            onMouseEnter={(e) => onRowEnter(m.source, "storage", e)}
-                            onMouseLeave={() => onRowLeave("storage")}
-                          >
-                            {m.destination}
-                          </div>
+                        {storageMappings.map((m, index) => (
+                          <Tooltip key={m.destination}>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[3px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
+                                onMouseEnter={() => onRowEnter(m.source, "storage")}
+                                onMouseLeave={() => onRowLeave("storage")}
+                              >
+                                {m.destination}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top">{getReplicationItemStatus(catalogs.length + index)}</TooltipContent>
+                          </Tooltip>
                         ))}
                       </div>
                     </div>

@@ -22,6 +22,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
+import { Search } from "lucide-react"
 import { toast } from "sonner"
 
 // ─── Failover groups data ──────────────────────────────────────────────────────
@@ -286,7 +287,8 @@ function StableUrlDialog({
 
 export function ResilienceContent() {
   const router = useRouter()
-  const [activeTab, setActiveTab] = React.useState("failover-groups")
+  const [failoverFilter, setFailoverFilter] = React.useState("")
+  const [stableUrlFilter, setStableUrlFilter] = React.useState("")
   const [stableUrls, setStableUrls] = React.useState<StableUrl[]>(INITIAL_STABLE_URLS)
   const [stableUrlDialogOpen, setStableUrlDialogOpen] = React.useState(false)
   const [stableUrlDialogMode, setStableUrlDialogMode] = React.useState<"create" | "edit">("create")
@@ -316,25 +318,29 @@ export function ResilienceContent() {
         />
         <h1 className="text-xl font-semibold text-foreground">Resilience</h1>
 
-        <Tabs defaultValue="failover-groups" onValueChange={setActiveTab}>
-          <div className="flex flex-wrap items-center gap-2">
-            <TabsList>
+        <Tabs defaultValue="failover-groups">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border">
+            <TabsList variant="line">
               <TabsTrigger value="failover-groups">Failover groups</TabsTrigger>
               <TabsTrigger value="stable-urls">Stable URLs</TabsTrigger>
             </TabsList>
-            <div className="ml-auto pb-1">
-              {activeTab === "failover-groups" && (
-                <Button size="sm" onClick={() => router.push(`/workspaces/1/replication-plan/new`)}>
-                  Create failover group
-                </Button>
-              )}
-              {activeTab === "stable-urls" && (
-                <Button size="sm" onClick={openStableUrlCreate}>Create stable URL</Button>
-              )}
-            </div>
           </div>
 
-          <TabsContent value="failover-groups" className="mt-2">
+          <TabsContent value="failover-groups" className="mt-4 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="relative w-[280px]">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Filter failover groups"
+                  value={failoverFilter}
+                  onChange={(e) => setFailoverFilter(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Button size="sm" className="ml-auto" onClick={() => router.push(`/workspaces/1/replication-plan/new`)}>
+                Create failover group
+              </Button>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -346,7 +352,9 @@ export function ResilienceContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {REPLICATION_PLANS.map((plan) => (
+                {REPLICATION_PLANS.filter((plan) =>
+                  plan.name.toLowerCase().includes(failoverFilter.toLowerCase())
+                ).map((plan) => (
                   <TableRow
                     key={plan.id}
                     className="cursor-pointer"
@@ -381,7 +389,19 @@ export function ResilienceContent() {
             </Table>
           </TabsContent>
 
-          <TabsContent value="stable-urls" className="mt-2">
+          <TabsContent value="stable-urls" className="mt-4 flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <div className="relative w-[280px]">
+                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Filter stable URLs"
+                  value={stableUrlFilter}
+                  onChange={(e) => setStableUrlFilter(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
+              <Button size="sm" className="ml-auto" onClick={openStableUrlCreate}>Create stable URL</Button>
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -395,7 +415,10 @@ export function ResilienceContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stableUrls.map((entry) => (
+                {stableUrls.filter((entry) =>
+                  entry.name.toLowerCase().includes(stableUrlFilter.toLowerCase()) ||
+                  entry.url.toLowerCase().includes(stableUrlFilter.toLowerCase())
+                ).map((entry) => (
                   <TableRow key={entry.id}>
                     <TableCell>{entry.name}</TableCell>
                     <TableCell className="w-[400px] max-w-[400px]">
