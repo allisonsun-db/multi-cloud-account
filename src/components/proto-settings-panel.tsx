@@ -23,7 +23,7 @@ const NAV_DISPLAY_LABELS: Record<string, string> = {
 
 export function ProtoSettingsPanel() {
   const [open, setOpen] = React.useState(false)
-  const { resolvedTheme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
   const [navVersion, setNavVersionState] = React.useState<NavVersionKey>(DEFAULT_NAV_VERSION)
@@ -72,6 +72,7 @@ export function ProtoSettingsPanel() {
               <Label>Appearance</Label>
               <div className="inline-flex rounded bg-secondary p-0.5">
                 {([
+                  { id: "system", label: "System" },
                   { id: "light", label: "Light" },
                   { id: "dark", label: "Dark" },
                 ] as { id: string; label: string }[]).map((opt) => (
@@ -81,7 +82,7 @@ export function ProtoSettingsPanel() {
                     onClick={() => setTheme(opt.id)}
                     className={cn(
                       "flex-1 rounded px-3 h-7 text-sm font-normal transition-colors",
-                      mounted && resolvedTheme === opt.id
+                      mounted && (theme ?? "system") === opt.id
                         ? "bg-background text-foreground shadow-[var(--shadow-db-sm)]"
                         : "bg-transparent text-muted-foreground hover:text-foreground"
                     )}

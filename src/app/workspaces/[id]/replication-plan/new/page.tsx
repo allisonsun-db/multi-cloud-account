@@ -13,8 +13,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Plus, ArrowRight } from "lucide-react"
-import { CheckCircleIcon, CopyIcon, LoadingIcon, TrashIcon, CatalogIcon, InfoFillIcon, DangerIcon } from "@/components/icons"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
+import { CheckCircleIcon, CopyIcon, LoadingIcon, TrashIcon, CatalogIcon, DangerFillIcon } from "@/components/icons"
+import { Alert, AlertTitle } from "@/components/ui/alert"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import {
   Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue,
@@ -327,9 +327,7 @@ export default function CreateReplicationPlanPage() {
                           {CLOUD_ICONS[selectedPrimary.cloud]}
                           <span>{selectedPrimary.label} <span className="text-muted-foreground">({selectedPrimary.region})</span></span>
                         </span>
-                      ) : (
-                        <span className="text-muted-foreground">Select workspace</span>
-                      )}
+                      ) : <span />}
                     </SelectTrigger>
                     <SelectContent>
                       {WORKSPACES.map((ws) => (
@@ -365,9 +363,7 @@ export default function CreateReplicationPlanPage() {
                           {CLOUD_ICONS[selectedDR.cloud]}
                           <span>{selectedDR.label} <span className="text-muted-foreground">({selectedDR.region})</span></span>
                         </span>
-                      ) : (
-                        <span className="text-muted-foreground">Select workspace</span>
-                      )}
+                      ) : <span />}
                     </SelectTrigger>
                     <SelectContent>
                       {WORKSPACES.map((ws) => (
@@ -394,27 +390,21 @@ export default function CreateReplicationPlanPage() {
                   </Select>
                 </div>
               </div>
+              <p className="-mt-2 text-sm text-muted-foreground">
+                Make sure both workspaces meet the{" "}
+                <a href={PREREQS_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">prerequisites</a>.
+              </p>
               {sameWorkspaceError && (
-                <p className="flex items-center gap-1 text-sm text-destructive">
-                  <DangerIcon className="h-4 w-4" />
-                  Primary and secondary workspaces cannot be the same.
-                </p>
+                <Alert variant="destructive">
+                  <DangerFillIcon />
+                  <AlertTitle className="line-clamp-none">Primary and secondary workspaces cannot be the same.</AlertTitle>
+                </Alert>
               )}
-              {selectedPrimary && selectedDR && !sameWorkspaceError && (
-                selectedPrimary.cloud !== selectedDR.cloud ? (
-                  <p className="flex items-center gap-1 text-sm text-destructive">
-                    <DangerIcon className="h-4 w-4" />
-                    Primary and secondary workspaces must be on the same cloud.
-                  </p>
-                ) : (
-                  <Alert variant="info">
-                    <InfoFillIcon />
-                    <AlertTitle className="line-clamp-none">Make sure both primary and secondary workspaces meet the prerequisites.</AlertTitle>
-                    <AlertDescription>
-                      <a href={PREREQS_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View prerequisites</a>
-                    </AlertDescription>
-                  </Alert>
-                )
+              {selectedPrimary && selectedDR && !sameWorkspaceError && selectedPrimary.cloud !== selectedDR.cloud && (
+                <Alert variant="destructive">
+                  <DangerFillIcon />
+                  <AlertTitle className="line-clamp-none">Primary and secondary workspaces must be on the same cloud.</AlertTitle>
+                </Alert>
               )}
               <div className="flex flex-col gap-4">
                 <Label htmlFor="stable-url">Stable URL <span className="font-normal text-muted-foreground">(optional)</span></Label>
@@ -436,9 +426,7 @@ export default function CreateReplicationPlanPage() {
                         <span className="shrink-0">{selectedStableUrl.name}</span>
                         <span className="truncate text-muted-foreground">({selectedStableUrl.url})</span>
                       </span>
-                    ) : (
-                      <span className="text-muted-foreground">Select stable URL</span>
-                    )}
+                    ) : <span />}
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="__create__" className="text-primary">
