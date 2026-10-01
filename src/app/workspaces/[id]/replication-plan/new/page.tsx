@@ -13,7 +13,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Plus, ArrowRight } from "lucide-react"
-import { CheckCircleIcon, CopyIcon, LoadingIcon, TrashIcon, CatalogIcon } from "@/components/icons"
+import { CheckCircleIcon, CopyIcon, LoadingIcon, TrashIcon, CatalogIcon, InfoFillIcon, DangerIcon } from "@/components/icons"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
 import {
   Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue,
@@ -98,22 +99,28 @@ function CustomStorageLocationInput({
   )
 }
 
+const PREREQS_DOCS_URL = "https://docs.databricks.com/aws/en/admin/managed-disaster-recovery#configuration-prerequisites"
+
 const PREREQS = [
   {
-    label: "Secondary metastore set up",
-    description: "A metastore in the secondary region.",
+    label: "Secondary workspace and metastore",
+    description: "Both are in the secondary region, in the same account and cloud as the primary. The metastore has no catalogs with the same names as replicated catalogs.",
   },
   {
-    label: "Secondary workspace set up",
-    description: "A workspace in the secondary region with the secondary metastore assigned.",
+    label: "Identity",
+    description: "Account-level SSO is enabled, and users, groups, and service principals are synced to the account. Stable URLs also need a custom URL and account-level OAuth.",
   },
   {
-    label: "Users provisioned",
-    description: "Users and service principals have been provisioned in the secondary workspace.",
+    label: "Storage and data access",
+    description: "The secondary region has a matching IAM credential, storage credentials, and external locations. The secondary's IAM roles have ALL PRIVILEGES on those locations.",
   },
   {
-    label: "Storage locations in secondary region",
-    description: "Storage buckets for the metastore and any external locations for the secondary region.",
+    label: "Networking",
+    description: "Both workspaces use the same NCC, serverless egress policy, private access settings, and IP access list. Storage allows serverless access in both directions.",
+  },
+  {
+    label: "Cost and governance",
+    description: "Both workspaces have the serverless usage policy associated.",
   },
 ]
 
@@ -262,11 +269,14 @@ export default function CreateReplicationPlanPage() {
               <DialogTitle>Before you begin</DialogTitle>
             </DialogHeader>
             <DialogBody>
-              <p className="text-sm text-accent-foreground mb-4">Make sure the following are in place before creating a failover group.</p>
+              <p className="text-sm text-accent-foreground mb-4">
+                Ensure that the following settings and resources are configured before creating a failover group.{" "}
+                <a href={PREREQS_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Learn more</a>
+              </p>
               <div className="flex flex-col gap-0">
                 {PREREQS.map((prereq, i) => (
                   <div key={prereq.label} className="flex items-start gap-3 py-2">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-grey-100 text-muted-foreground mt-0.5 text-xs font-semibold">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-grey-100 text-foreground dark:bg-grey-700 mt-0.5 text-xs font-semibold">
                       {i + 1}
                     </div>
                     <div className="flex flex-col gap-0.5">
@@ -385,7 +395,26 @@ export default function CreateReplicationPlanPage() {
                 </div>
               </div>
               {sameWorkspaceError && (
-                <p className="text-sm text-destructive">Primary and secondary workspaces cannot be the same.</p>
+                <p className="flex items-center gap-1 text-sm text-destructive">
+                  <DangerIcon className="h-4 w-4" />
+                  Primary and secondary workspaces cannot be the same.
+                </p>
+              )}
+              {selectedPrimary && selectedDR && !sameWorkspaceError && (
+                selectedPrimary.cloud !== selectedDR.cloud ? (
+                  <p className="flex items-center gap-1 text-sm text-destructive">
+                    <DangerIcon className="h-4 w-4" />
+                    Primary and secondary workspaces must be on the same cloud.
+                  </p>
+                ) : (
+                  <Alert variant="info">
+                    <InfoFillIcon />
+                    <AlertTitle className="line-clamp-none">Make sure both primary and secondary workspaces meet the prerequisites.</AlertTitle>
+                    <AlertDescription>
+                      <a href={PREREQS_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View prerequisites</a>
+                    </AlertDescription>
+                  </Alert>
+                )
               )}
               <div className="flex flex-col gap-4">
                 <Label htmlFor="stable-url">Stable URL <span className="font-normal text-muted-foreground">(optional)</span></Label>

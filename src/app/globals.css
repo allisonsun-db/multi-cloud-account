@@ -364,3 +364,8 @@
   80%  { opacity: 1; }
   100% { transform: translateX(56px); opacity: 0; }
 }
+
+@keyframes progress-shimmer {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(100%); }
+}

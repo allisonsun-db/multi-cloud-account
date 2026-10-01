@@ -6,8 +6,7 @@ import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CheckCircleIcon, XCircleIcon, LoadingIcon, CopyIcon, OverflowIcon } from "@/components/icons"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { CheckCircleIcon, XCircleIcon, RunningIcon, LoadingIcon, CopyIcon, OverflowIcon } from "@/components/icons"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
@@ -34,7 +33,8 @@ type ReplicationPlan = {
   primaryCloud: "AWS" | "Azure" | "GCP"
   replicaWorkspace: string
   replicaCloud: "AWS" | "Azure" | "GCP"
-  status: "Active" | "Failed"
+  status: "Active" | "Failed" | "Initial Replication"
+  progress?: number
   lastRun: string
 }
 
@@ -43,6 +43,7 @@ const REPLICATION_PLANS: ReplicationPlan[] = [
   { id: "plan-2", name: "staging-dr-plan",       primaryWorkspace: "ws-staging-east", primaryCloud: "Azure", replicaWorkspace: "ws-staging-dr-west",  replicaCloud: "Azure", status: "Active", lastRun: "Apr 9, 2026 at 9:30 AM" },
   { id: "plan-3", name: "analytics-backup-plan", primaryWorkspace: "analytics-prod",  primaryCloud: "AWS",   replicaWorkspace: "analytics-dr",        replicaCloud: "AWS",   status: "Active", lastRun: "Apr 8, 2026 at 4:00 PM" },
   { id: "plan-4", name: "ml-platform-dr",        primaryWorkspace: "ml-platform-prod",primaryCloud: "GCP",   replicaWorkspace: "ml-platform-dr-east", replicaCloud: "GCP",   status: "Failed", lastRun: "Apr 8, 2026 at 2:15 PM" },
+  { id: "plan-5", name: "finance-dr-plan",       primaryWorkspace: "finance-prod",    primaryCloud: "AWS",   replicaWorkspace: "finance-dr-west",     replicaCloud: "AWS",   status: "Initial Replication", progress: 71, lastRun: "Apr 9, 2026 at 9:50 AM" },
 ]
 
 // ─── Stable URLs data ──────────────────────────────────────────────────────────
@@ -344,8 +345,8 @@ export function ResilienceContent() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-8" />
                   <TableHead>Name</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead>Primary workspace</TableHead>
                   <TableHead>Secondary workspace</TableHead>
                   <TableHead>Last run</TableHead>
@@ -360,16 +361,16 @@ export function ResilienceContent() {
                     className="cursor-pointer"
                     onClick={() => router.push(`/workspaces/1/replication-plan/${plan.id}`)}
                   >
-                    <TableCell className="w-8">
-                      <Tooltip>
-                        <TooltipTrigger className="flex items-center">
-                          {plan.status === "Active" && <CheckCircleIcon size={14} className="text-[var(--success)]" />}
-                          {plan.status === "Failed" && <XCircleIcon size={14} className="text-destructive" />}
-                        </TooltipTrigger>
-                        <TooltipContent>{plan.status}</TooltipContent>
-                      </Tooltip>
-                    </TableCell>
                     <TableCell>{plan.name}</TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-1.5">
+                        {plan.status === "Active" && <CheckCircleIcon size={14} className="text-[var(--success)]" />}
+                        {plan.status === "Failed" && <XCircleIcon size={14} className="text-destructive" />}
+                        {plan.status === "Initial Replication" && <RunningIcon size={14} className="text-primary animate-spin [animation-duration:2s]" />}
+                        {plan.status}
+                        {plan.progress !== undefined && <span className="text-muted-foreground">({plan.progress}%)</span>}
+                      </span>
+                    </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-2">
                         {CLOUD_ICONS[plan.primaryCloud]}
