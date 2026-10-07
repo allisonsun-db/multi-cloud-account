@@ -26,6 +26,7 @@ import {
   ChecklistIcon,
   UserCircleIcon,
   OfficeIcon,
+  ErdIcon,
 } from "@/components/icons"
 import type React from "react"
 
@@ -64,6 +65,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         items: [
           { id: "data",         label: "Data",         icon: DataIcon,          href: "/data" },
           { id: "ai-gov",       label: "AI",           icon: SparkleDoubleIcon, href: "/ai" },
+          { id: "ontology",     label: "Ontology",     icon: ErdIcon,           href: "/ontology" },
           { id: "cost",         label: "Cost",         icon: DollarIcon,        href: "/cost" },
           { id: "performance",  label: "Performance",  icon: SpeedometerIcon,   href: "/performance" },
         ],
@@ -97,6 +99,7 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
           { id: "performance",  label: "Performance", icon: SpeedometerIcon,   href: "/performance" },
           { id: "security-gov", label: "Security",    icon: ShieldCheckIcon,   href: "/security" },
           { id: "ai-gateway",   label: "AI",          icon: SparkleDoubleIcon, href: "/ai" },
+          { id: "ontology",     label: "Ontology",    icon: ErdIcon,           href: "/ontology" },
         ],
       },
       {
@@ -261,8 +264,9 @@ export const NAV_VERSIONS: Record<string, NavVersionConfig> = {
         label: "Data & AI",
         items: [
           { id: "data", label: "Data", icon: DataIcon,          href: "/e/data" },
-          { id: "ai",   label: "AI",   icon: SparkleDoubleIcon, href: "/ai" },
-          { id: "tags", label: "Tags", icon: TagIcon,           href: "/tags" },
+          { id: "ai",       label: "AI",       icon: SparkleDoubleIcon, href: "/ai" },
+          { id: "ontology", label: "Ontology", icon: ErdIcon,           href: "/ontology" },
+          { id: "tags",     label: "Tags",     icon: TagIcon,           href: "/tags" },
         ],
       },
       {
