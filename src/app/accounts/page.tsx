@@ -34,10 +34,10 @@ type Account = {
 }
 
 const INITIAL_ACCOUNTS: Account[] = [
-  { id: "main",    name: "Nike",             isMain: true,  url: "nike.databricks.com",         contact: "admin@nike.com",      created: "2024-06-15", status: "Active" },
-  { id: "emea",    name: "Nike EMEA",        isMain: false, url: "nike-emea.databricks.com",    contact: "emea-admin@nike.com", created: "2025-03-01", status: "Active" },
-  { id: "ds",      name: "Nike Data Science",isMain: false, url: "nike-ds.databricks.com",      contact: "ds-team@nike.com",    created: "2025-08-12", status: "Active" },
-  { id: "sandbox", name: "Nike Sandbox",     isMain: false, url: "nike-sandbox.databricks.com", contact: "sandbox@nike.com",    created: "2026-04-30", status: "Pending" },
+  { id: "main",    name: "Acme",             isMain: true,  url: "acme.databricks.com",         contact: "admin@acme.com",      created: "2024-06-15", status: "Active" },
+  { id: "emea",    name: "Acme EMEA",        isMain: false, url: "acme-emea.databricks.com",    contact: "emea-admin@acme.com", created: "2025-03-01", status: "Active" },
+  { id: "ds",      name: "Acme Data Science",isMain: false, url: "acme-ds.databricks.com",      contact: "ds-team@acme.com",    created: "2025-08-12", status: "Active" },
+  { id: "sandbox", name: "Acme Sandbox",     isMain: false, url: "acme-sandbox.databricks.com", contact: "sandbox@acme.com",    created: "2026-04-30", status: "Pending" },
 ]
 
 const STATUS_META: Record<AccountStatus, { icon: React.ComponentType<{ size?: number; className?: string }>; className: string; tooltip: string }> = {
@@ -245,7 +245,7 @@ function CreateAccountDialog({ onCreated }: { onCreated: (a: Account) => void })
               id="account-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Nike APAC"
+              placeholder="e.g. Acme APAC"
             />
           </div>
 

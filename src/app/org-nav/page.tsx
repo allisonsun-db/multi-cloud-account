@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import { Lock, Plus, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -48,13 +47,13 @@ import { AccountsContent } from "@/app/accounts/page"
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const ORG_NAME = "Nike Organization"
+const ORG_NAME = "Acme Organization"
 
 const ACCOUNTS = [
-  { id: "main",    name: "Nike",             isMain: true,  url: "main.nike.databricks.com",    users: 1240, usageLabel: "$42k / mo", usageRaw: 42 },
-  { id: "emea",    name: "Nike EMEA",         isMain: false, url: "emea.nike.databricks.com",    users: 89,   usageLabel: "$8k / mo",  usageRaw: 8  },
-  { id: "ds",      name: "Nike Data Science", isMain: false, url: "ds.nike.databricks.com",      users: 234,  usageLabel: "$19k / mo", usageRaw: 19 },
-  { id: "sandbox", name: "Nike Sandbox",      isMain: false, url: "sandbox.nike.databricks.com", users: 12,   usageLabel: "$1k / mo",  usageRaw: 1  },
+  { id: "main",    name: "Acme",             isMain: true,  url: "main.acme.databricks.com",    users: 1240, usageLabel: "$42k / mo", usageRaw: 42 },
+  { id: "emea",    name: "Acme EMEA",         isMain: false, url: "emea.acme.databricks.com",    users: 89,   usageLabel: "$8k / mo",  usageRaw: 8  },
+  { id: "ds",      name: "Acme Data Science", isMain: false, url: "ds.acme.databricks.com",      users: 234,  usageLabel: "$19k / mo", usageRaw: 19 },
+  { id: "sandbox", name: "Acme Sandbox",      isMain: false, url: "sandbox.acme.databricks.com", users: 12,   usageLabel: "$1k / mo",  usageRaw: 1  },
 ]
 
 const TOTAL_USAGE_RAW = ACCOUNTS.reduce((s, a) => s + a.usageRaw, 0)
@@ -82,15 +81,11 @@ function NavButton({ item, active, collapsed, onClick }: { item: { id: string; l
   )
 }
 
-function NikeScopeLogo() {
+function OrgScopeLogo() {
   return (
-    <Image
-      src="/nike-logo.png"
-      alt=""
-      width={24}
-      height={24}
-      className="h-6 w-6 shrink-0 rounded object-cover"
-    />
+    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-muted-foreground/70 text-xs font-semibold text-background" aria-hidden="true">
+      {ORG_NAME[0]}
+    </span>
   )
 }
 
@@ -292,7 +287,7 @@ function AccountIdentityView({ accountId, onGoToOrg }: { accountId: string; onGo
                 {[
                   { name: `${account.id}-analysts`, members: 24,   scope: "This account" },
                   { name: `${account.id}-admins`,   members: 3,    scope: "This account" },
-                  { name: "nike-all-employees",      members: 1240, scope: "Organization" },
+                  { name: "acme-all-employees",      members: 1240, scope: "Organization" },
                 ].map((g) => (
                   <TableRow key={g.name}>
                     <TableCell className="font-mono text-sm text-foreground">{g.name}</TableCell>
@@ -570,7 +565,7 @@ export default function OrgNavPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex h-10 w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10">
-                    <NikeScopeLogo />
+                    <OrgScopeLogo />
                     <span className="flex-1 truncate">{ORG_NAME}</span>
                     <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </button>
@@ -595,7 +590,7 @@ export default function OrgNavPage() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="flex h-10 w-full items-center gap-1.5 rounded-md border border-border bg-background px-2 text-left text-sm font-normal text-foreground transition-colors hover:bg-muted-foreground/10">
-                    <NikeScopeLogo />
+                    <OrgScopeLogo />
                     <span className="flex-1 truncate">{account?.name}</span>
                     <ChevronDownIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                   </button>
@@ -625,7 +620,7 @@ export default function OrgNavPage() {
                   title={isOrg ? ORG_NAME : account?.name}
                   aria-label={isOrg ? `Switch scope, current scope ${ORG_NAME}` : `Switch scope, current scope ${account?.name}`}
                 >
-                  <NikeScopeLogo />
+                  <OrgScopeLogo />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-[220px]">

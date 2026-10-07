@@ -137,7 +137,7 @@ function renderCardVisual(card: OverviewCard) {
 
 export default function HomePage() {
   return (
-    <AppShell workspace="Nike Production" userInitial="A">
+    <AppShell workspace="Acme Production" userInitial="A">
       <HomeContent />
     </AppShell>
   )
@@ -212,7 +212,7 @@ function HomeContent() {
         `Issue: ${alert.text}`,
         `Severity: ${alert.level}`,
         `Source: ${alert.source}`,
-        "Account: Nike Production",
+        "Account: Acme Production",
       ].join("\n"),
       tags: [
         { id: `review-${alert.id}`, label: "Review item", kind: "node" },

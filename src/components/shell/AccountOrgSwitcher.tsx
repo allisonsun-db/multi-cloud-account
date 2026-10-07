@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Image from "next/image"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,24 +14,20 @@ import { cn } from "@/lib/utils"
 import { useAccountScope } from "./AppShell"
 import { setPersona } from "@/components/home/usePersona"
 
-const ORG_NAME = "Nike"
+const ORG_NAME = "Acme"
 
 const ACCOUNTS = [
-  { id: "main", name: "Nike APAC", isMain: true },
-  { id: "emea", name: "Nike EMEA", isMain: false },
-  { id: "ds", name: "Nike Data Science", isMain: false },
-  { id: "sandbox", name: "Nike Sandbox", isMain: false },
+  { id: "main", name: "Acme APAC", isMain: true },
+  { id: "emea", name: "Acme EMEA", isMain: false },
+  { id: "ds", name: "Acme Data Science", isMain: false },
+  { id: "sandbox", name: "Acme Sandbox", isMain: false },
 ]
 
-function NikeLogo() {
+function OrgLogo() {
   return (
-    <Image
-      src="/nike-logo.png"
-      alt=""
-      width={32}
-      height={32}
-      className="h-8 w-8 shrink-0 rounded object-cover"
-    />
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-muted-foreground/70 text-sm font-semibold text-background" aria-hidden="true">
+      {ORG_NAME[0]}
+    </span>
   )
 }
 
@@ -68,7 +63,7 @@ export function AccountOrgSwitcher({
             title={label}
             aria-label={`Switch account or organization, current scope ${label}`}
           >
-            <NikeLogo />
+            <OrgLogo />
             {!compact && (
               <span className="flex min-w-0 items-center gap-3">
                 <span className="flex min-w-0 flex-col">

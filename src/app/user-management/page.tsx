@@ -110,7 +110,7 @@ function UserManagementContent() {
 
 export default function UserManagementPage() {
   return (
-    <AppShell activeItem="user-management" workspace="Nike Production" userInitial="A">
+    <AppShell activeItem="user-management" workspace="Acme Production" userInitial="A">
       <UserManagementContent />
     </AppShell>
   )
