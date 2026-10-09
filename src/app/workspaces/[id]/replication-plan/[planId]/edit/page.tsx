@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch"
 import { Plus, ArrowRight } from "lucide-react"
 import { TrashIcon, CatalogIcon } from "@/components/icons"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
+import { BetaAssetsField } from "../../beta-assets"
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select"
@@ -96,6 +97,7 @@ function getMockFailoverGroup(planId: string): {
   drWorkspace: string
   selectedCatalogs: Record<string, boolean>
   replicateWorkspaceAssets: boolean
+  replicateBetaAssets: boolean
   locationMappings: MappingRow[]
 } {
   const allCatalogs = ["main", "prod_catalog", "analytics", "ml_catalog"] as const
@@ -112,6 +114,7 @@ function getMockFailoverGroup(planId: string): {
       drWorkspace: "ws-staging-dr",
       selectedCatalogs: { main: true, prod_catalog: true, analytics: false, ml_catalog: false },
       replicateWorkspaceAssets: false,
+      replicateBetaAssets: true,
       locationMappings: defaultMappings,
     }
   }
@@ -122,6 +125,7 @@ function getMockFailoverGroup(planId: string): {
     drWorkspace: "ws-prod-dr-west",
     selectedCatalogs: allSelected,
     replicateWorkspaceAssets: false,
+    replicateBetaAssets: false,
     locationMappings: defaultMappings,
   }
 }
@@ -136,6 +140,8 @@ export default function EditReplicationPlanPage() {
   const [stableUrl, setStableUrl] = React.useState("")
   const [selectedCatalogs, setSelectedCatalogs] = React.useState<Record<string, boolean>>({})
   const [replicateWorkspaceAssets, setReplicateWorkspaceAssets] = React.useState(false)
+  const [replicateBetaAssets, setReplicateBetaAssets] = React.useState(false)
+  const [betaAssetsSaved, setBetaAssetsSaved] = React.useState(false)
   const [primaryWorkspace, setPrimaryWorkspace] = React.useState("")
   const [drWorkspace, setDrWorkspace] = React.useState("")
   const [locationMappings, setLocationMappings] = React.useState<MappingRow[]>([
@@ -148,6 +154,8 @@ export default function EditReplicationPlanPage() {
     setStableUrl(m.stableUrl)
     setSelectedCatalogs(m.selectedCatalogs)
     setReplicateWorkspaceAssets(m.replicateWorkspaceAssets)
+    setReplicateBetaAssets(m.replicateBetaAssets)
+    setBetaAssetsSaved(m.replicateBetaAssets)
     setPrimaryWorkspace(m.primaryWorkspace)
     setDrWorkspace(m.drWorkspace)
     setLocationMappings(m.locationMappings)
@@ -401,6 +409,12 @@ export default function EditReplicationPlanPage() {
                       </Link>
                     </p>
                   </div>
+                  <BetaAssetsField
+                    mode="edit"
+                    checked={replicateBetaAssets}
+                    onCheckedChange={setReplicateBetaAssets}
+                    locked={betaAssetsSaved}
+                  />
                 </div>
               </>
             )}

@@ -9,13 +9,9 @@ import {
 } from "@/components/ui/select"
 import { Search } from "lucide-react"
 import { NewWindowIcon, SpeechBubbleIcon } from "@/components/icons"
-import { AwsBadge, AzureBadge, GcpBadge } from "@/components/ui/cloud-badge"
-
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-type Phase = "Public Preview" | "General Availability Soon" | "Private Preview"
-
-type Cloud = "AWS" | "Azure" | "GCP"
+type Phase = "GA" | "Beta" | "Public Preview" | "General Availability Soon" | "Private Preview"
 
 type Preview = {
   id: string
@@ -23,17 +19,31 @@ type Preview = {
   phase: Phase
   description: string
   enabled: boolean
-  clouds: Cloud[]
+  hideDocs?: boolean
 }
 
 const INITIAL_PREVIEWS: Preview[] = [
+  {
+    id: "mdr",
+    name: "Managed disaster recovery",
+    phase: "GA",
+    description: "A managed disaster recovery solution for Unity Catalog data and metadata assets.",
+    enabled: true,
+    hideDocs: true,
+  },
+  {
+    id: "mdr-beta",
+    name: "Managed disaster recovery: Beta Assets",
+    phase: "Beta",
+    description: "Turn on the ability to toggle Beta assets in your failover group page.",
+    enabled: false,
+  },
   {
     id: "1",
     name: "Test gasoon preview with account scope and DSL metadata",
     phase: "General Availability Soon",
     description: "Test gasoon preview with metadata in DSL and enablement control being account scoped.",
     enabled: false,
-    clouds: ["AWS"],
   },
   {
     id: "2",
@@ -41,7 +51,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "Public Preview",
     description: "Attribute Based Access Control (ABAC) in Unity Catalog lets admins define tag-based policies once and apply fine-grained access controls, row filters, and column masks across catalogs, schemas, and tables.",
     enabled: true,
-    clouds: ["AWS", "Azure", "GCP"],
   },
   {
     id: "3",
@@ -49,7 +58,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "Public Preview",
     description: "This feature allows privileged users on the provider side to share ABAC-enabled assets.",
     enabled: true,
-    clouds: ["AWS", "Azure", "GCP"],
   },
   {
     id: "4",
@@ -57,7 +65,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "Public Preview",
     description: "Allow billing admins to enforce tagging requirements across serverless workloads such as workflows, notebooks, DLT pipelines, model-serving, and Databrick Apps.",
     enabled: true,
-    clouds: ["AWS", "Azure"],
   },
   {
     id: "5",
@@ -65,7 +72,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "Public Preview",
     description: "Customer-managed keys (CMK) for Unity Catalog let you protect data managed by Databricks with your own encryption keys. You can configure encryption at the catalog level, using a separate key for each catalog based on data sensitivity or compliance requirements.",
     enabled: true,
-    clouds: ["AWS", "Azure"],
   },
   {
     id: "6",
@@ -73,7 +79,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "Public Preview",
     description: "Enforce security policies on all cluster types, including job clusters and SQL warehouses, with fine-grained controls over configuration options available to users.",
     enabled: false,
-    clouds: ["AWS", "Azure", "GCP"],
   },
   {
     id: "7",
@@ -81,7 +86,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "General Availability Soon",
     description: "Run notebook workloads on serverless compute without managing cluster lifecycle. Serverless compute starts instantly and scales automatically based on workload demand.",
     enabled: true,
-    clouds: ["AWS", "Azure", "GCP"],
   },
   {
     id: "8",
@@ -89,7 +93,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "Public Preview",
     description: "Create conversational data experiences that allow business users to get answers from your data using natural language. Genie Spaces are powered by Databricks SQL and Foundation Models.",
     enabled: true,
-    clouds: ["AWS", "Azure", "GCP"],
   },
   {
     id: "9",
@@ -97,7 +100,6 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "Public Preview",
     description: "Monitor the quality and drift of your data and ML models directly in Unity Catalog. Automatically generate quality metrics, drift analysis, and anomaly detection for tables and model endpoints.",
     enabled: false,
-    clouds: ["AWS", "GCP"],
   },
   {
     id: "10",
@@ -105,13 +107,14 @@ const INITIAL_PREVIEWS: Preview[] = [
     phase: "General Availability Soon",
     description: "Automatically optimize Delta tables in Unity Catalog by running OPTIMIZE and VACUUM operations based on table usage patterns, eliminating the need for manual maintenance jobs.",
     enabled: true,
-    clouds: ["AWS", "Azure", "GCP"],
   },
 ]
 
-const PHASE_OPTIONS: Phase[] = ["Public Preview", "General Availability Soon", "Private Preview"]
+const PHASE_OPTIONS: Phase[] = ["GA", "Beta", "Public Preview", "General Availability Soon", "Private Preview"]
 
 const phaseBadgeClass: Record<Phase, string> = {
+  "GA":                        "border border-border text-foreground",
+  "Beta":                      "border border-border text-foreground",
   "Public Preview":           "border border-border text-foreground",
   "General Availability Soon": "border border-border text-foreground",
   "Private Preview":          "border border-border text-foreground",
@@ -123,13 +126,11 @@ export default function PreviewsPage() {
   const [previews, setPreviews] = React.useState(INITIAL_PREVIEWS)
   const [filter, setFilter] = React.useState("")
   const [phase, setPhase] = React.useState<string>("all")
-  const [cloud, setCloud] = React.useState<string>("all")
 
   const filtered = previews.filter((p) => {
     const matchesFilter = p.name.toLowerCase().includes(filter.toLowerCase())
     const matchesPhase = phase === "all" || p.phase === phase
-    const matchesCloud = cloud === "all" || p.clouds?.includes(cloud as Cloud)
-    return matchesFilter && matchesPhase && matchesCloud
+    return matchesFilter && matchesPhase
   })
 
   function toggle(id: string) {
@@ -174,32 +175,6 @@ export default function PreviewsPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={cloud} onValueChange={setCloud}>
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Select a cloud" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All clouds</SelectItem>
-              <SelectItem value="AWS">
-                <span className="flex items-center gap-1.5">
-                  <img src="/aws.png" alt="" width={14} height={14} className="object-contain" />
-                  AWS
-                </span>
-              </SelectItem>
-              <SelectItem value="Azure">
-                <span className="flex items-center gap-1.5">
-                  <img src="/azure.svg" alt="" width={14} height={14} className="object-contain" />
-                  Azure
-                </span>
-              </SelectItem>
-              <SelectItem value="GCP">
-                <span className="flex items-center gap-1.5">
-                  <img src="/gcp.svg" alt="" width={14} height={14} className="object-contain" />
-                  GCP
-                </span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
         </div>
 
         {/* Preview list */}
@@ -216,26 +191,13 @@ export default function PreviewsPage() {
                 </div>
                 {/* Description */}
                 <p className="max-w-[720px] text-sm text-muted-foreground">{preview.description}</p>
-                {/* Cloud availability */}
-                <div className="flex items-center gap-2 py-2">
-                  {(["AWS", "Azure", "GCP"] as Cloud[])
-                    .filter((c) => preview.clouds?.includes(c))
-                    .map((c, i, arr) => (
-                      <React.Fragment key={c}>
-                        {c === "AWS" && <AwsBadge />}
-                        {c === "Azure" && <AzureBadge />}
-                        {c === "GCP" && <GcpBadge />}
-                        {i < arr.length - 1 && (
-                          <span className="text-border select-none">|</span>
-                        )}
-                      </React.Fragment>
-                    ))}
-                </div>
                 {/* Links */}
                 <div className="flex items-center gap-4 mt-0.5">
-                  <a href="#" className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
-                    Documentation <NewWindowIcon className="size-4" />
-                  </a>
+                  {!preview.hideDocs && (
+                    <a href="#" className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
+                      Documentation <NewWindowIcon className="size-4" />
+                    </a>
+                  )}
                   <a href="#" className="text-primary text-sm inline-flex items-center gap-1 hover:underline">
                     <SpeechBubbleIcon className="size-4" /> Send feedback
                   </a>

@@ -28,6 +28,7 @@ import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, Cata
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 import { ChevronDown, ArrowRight, Info } from "lucide-react"
 import { toast } from "sonner"
+import { PREREQS_DOCS_URL, PrereqsList } from "../prerequisites"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
 type ActivityType = "Replication" | "Failover" | "Validation"
@@ -232,7 +233,9 @@ export default function ReplicationPlanPage() {
   const [runs, setRuns] = React.useState<ActivityRun[]>(RUNS)
   const workspaceMap = computeWorkspaces(runs, primaryWs.label, replicaWs.label)
   const [activityFilter, setActivityFilter] = React.useState<ActivityType | "all">("all")
-  const filteredRuns = activityFilter === "all" ? runs : runs.filter((run) => run.activity === activityFilter)
+  const filteredRuns = runs.filter(
+    (run) => run.activity !== "Replication" && (activityFilter === "all" || run.activity === activityFilter),
+  )
   const catalogs = CATALOGS
   const storageMappings = STORAGE_MAPPINGS
   const runningReplication = runs.find((run) => run.activity === "Replication" && run.status === "running")
@@ -273,6 +276,7 @@ export default function ReplicationPlanPage() {
   const [failoverLoading, setFailoverLoading] = React.useState(false)
   const [pendingRunId, setPendingRunId] = React.useState<string | null>(null)
   const [validating, setValidating] = React.useState(false)
+  const [prereqOpen, setPrereqOpen] = React.useState(false)
   const [expandedRunIds, setExpandedRunIds] = React.useState<Set<string>>(new Set())
 
   function toggleRunExpanded(id: string) {
@@ -425,11 +429,41 @@ export default function ReplicationPlanPage() {
                   <DropdownMenuItem className="text-destructive focus:text-destructive">Delete</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button variant="outline" size="sm" disabled={validating || failoverLoading} onClick={startValidation}>Validate</Button>
+              <div className="flex items-center -space-x-px">
+                <Button variant="outline" size="sm" className="rounded-r-none" disabled={validating || failoverLoading} onClick={startValidation}>Validate</Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="rounded-l-none px-2" aria-label="More validation options">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onSelect={() => setPrereqOpen(true)}>View requirements</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               <Button size="sm" disabled={failoverLoading} onClick={() => setFailoverOpen(true)}>Start failover</Button>
             </>
           }
         />
+
+        <Dialog open={prereqOpen} onOpenChange={setPrereqOpen}>
+          <DialogContent className="max-w-[520px]">
+            <DialogHeader>
+              <DialogTitle>Requirements for a failover group</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <p className="text-sm text-accent-foreground mb-4">
+                Both workspaces need these settings and resources for replication and failover to work.{" "}
+                <a href={PREREQS_DOCS_URL} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Learn more</a>
+              </p>
+              <PrereqsList />
+            </DialogBody>
+            <DialogFooter>
+              <Button size="sm" onClick={() => setPrereqOpen(false)}>Close</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <div className="-mt-3 border-b border-border" />
 
@@ -506,7 +540,6 @@ export default function ReplicationPlanPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All activities</SelectItem>
-                    <SelectItem value="Replication">Replication</SelectItem>
                     <SelectItem value="Failover">Failover</SelectItem>
                     <SelectItem value="Validation">Validation</SelectItem>
                   </SelectContent>
