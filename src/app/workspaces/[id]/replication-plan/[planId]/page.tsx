@@ -277,6 +277,7 @@ export default function ReplicationPlanPage() {
   const [pendingRunId, setPendingRunId] = React.useState<string | null>(null)
   const [validating, setValidating] = React.useState(false)
   const [prereqOpen, setPrereqOpen] = React.useState(false)
+  const [assetsUpdatedAt, setAssetsUpdatedAt] = React.useState("Apr 9, 2026 at 9:45 AM")
   const [expandedRunIds, setExpandedRunIds] = React.useState<Set<string>>(new Set())
 
   function toggleRunExpanded(id: string) {
@@ -652,15 +653,15 @@ export default function ReplicationPlanPage() {
             <div className="flex flex-col gap-2">
               <p className="text-sm font-semibold text-foreground">About this failover group</p>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground w-[150px] shrink-0">Created</span>
+                <span className="text-sm text-muted-foreground w-[110px] shrink-0">Created</span>
                 <span className="text-sm text-foreground">Apr 1, 2026</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground w-[150px] shrink-0">Created by</span>
+                <span className="text-sm text-muted-foreground w-[110px] shrink-0">Created by</span>
                 <span className="text-sm text-foreground">Allison Sun</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="flex w-[150px] shrink-0 items-center gap-1 text-sm text-muted-foreground">
+                <span className="flex w-[110px] shrink-0 items-center gap-1 text-sm text-muted-foreground">
                   RPO
                   <Info className="h-3.5 w-3.5 shrink-0" />
                 </span>
@@ -671,33 +672,47 @@ export default function ReplicationPlanPage() {
             <div className="flex flex-col gap-2">
               <p className="text-sm font-semibold text-foreground">Assets</p>
               <div className="flex items-center gap-2">
-                <span className="flex w-[150px] shrink-0 items-center gap-1 text-sm text-muted-foreground">
-                  Workspace assets
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-3.5 w-3.5 shrink-0" aria-label="About workspace assets" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-64">
-                      Notebooks, jobs, SQL warehouses, clusters, draft AI/BI dashboards, files, and folders, along with their ACLs.
-                    </TooltipContent>
-                  </Tooltip>
-                </span>
-                <span className="text-sm text-foreground">Enabled</span>
+                <span className="text-sm text-muted-foreground w-[110px] shrink-0">Last updated</span>
+                <span className="text-sm text-foreground">{assetsUpdatedAt}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="flex w-[150px] shrink-0 items-center gap-1 text-sm text-muted-foreground">
-                  Beta assets
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-3.5 w-3.5 shrink-0" aria-label="About beta assets" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-64">
-                      Placeholder description of beta assets.
-                    </TooltipContent>
-                  </Tooltip>
-                </span>
-                <span className="text-sm text-foreground">Enabled</span>
+              <div className="flex items-start gap-2">
+                <span className="text-sm text-muted-foreground w-[110px] shrink-0">Enabled assets</span>
+                <div className="flex flex-col gap-2">
+                  <span className="text-sm text-foreground">
+                    Workspace assets
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="ml-1 inline-block h-3.5 w-3.5 align-[-2px] text-muted-foreground" aria-label="About workspace assets" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-64">
+                        Notebooks, jobs, SQL warehouses, clusters, draft AI/BI dashboards, files, and folders, along with their ACLs.
+                      </TooltipContent>
+                    </Tooltip>
+                  </span>
+                  <span className="text-sm text-foreground">
+                    Beta assets
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="ml-1 inline-block h-3.5 w-3.5 align-[-2px] text-muted-foreground" aria-label="About beta assets" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-64">
+                        Placeholder description of beta assets.
+                      </TooltipContent>
+                    </Tooltip>
+                  </span>
+                </div>
               </div>
+              <Button
+                variant="outline"
+                size="xs"
+                className="mt-1 w-fit text-sm"
+                onClick={() => {
+                  setAssetsUpdatedAt("Just now")
+                  toast.success("Asset refresh started")
+                }}
+              >
+                Refresh assets in failover group
+              </Button>
             </div>
           </div>
         </div>
