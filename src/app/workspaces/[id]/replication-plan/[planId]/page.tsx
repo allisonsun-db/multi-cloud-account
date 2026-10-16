@@ -228,6 +228,7 @@ export default function ReplicationPlanPage() {
   const workspaceId = params.id as string
   const planId = params.planId as string
 
+  const groupName = "my-replication-plan"
   const primaryWs = { label: "ws-prod-east", cloud: "AWS", region: "us-east-1" }
   const replicaWs  = { label: "ws-prod-dr-west", cloud: "AWS", region: "us-west-2" }
   const [runs, setRuns] = React.useState<ActivityRun[]>(RUNS)
@@ -278,6 +279,8 @@ export default function ReplicationPlanPage() {
   const [validating, setValidating] = React.useState(false)
   const [prereqOpen, setPrereqOpen] = React.useState(false)
   const [assetsUpdatedAt, setAssetsUpdatedAt] = React.useState("Apr 9, 2026 at 9:45 AM")
+  const [refreshOpen, setRefreshOpen] = React.useState(false)
+  const [refreshConfirm, setRefreshConfirm] = React.useState("")
   const [expandedRunIds, setExpandedRunIds] = React.useState<Set<string>>(new Set())
 
   function toggleRunExpanded(id: string) {
@@ -405,12 +408,12 @@ export default function ReplicationPlanPage() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>my-replication-plan</BreadcrumbPage>
+                  <BreadcrumbPage>{groupName}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           }
-          title="my-replication-plan"
+          title={groupName}
           actions={
             <>
               <DropdownMenu>
@@ -706,18 +709,61 @@ export default function ReplicationPlanPage() {
                 variant="outline"
                 size="xs"
                 className="mt-1 w-fit text-sm"
-                onClick={() => {
-                  setAssetsUpdatedAt("Just now")
-                  toast.success("Asset refresh started")
-                }}
+                onClick={() => setRefreshOpen(true)}
               >
-                Refresh assets in failover group
+                Refresh assets
               </Button>
             </div>
           </div>
         </div>
 
       </div>
+
+      <Dialog open={refreshOpen} onOpenChange={(open) => { setRefreshOpen(open); if (!open) setRefreshConfirm("") }}>
+        <DialogContent className="max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle>Refresh assets in failover group</DialogTitle>
+          </DialogHeader>
+          <DialogBody>
+            <p className="text-sm text-accent-foreground">
+              This updates the assets replicated from{" "}
+              <span className="font-semibold text-foreground">{failedOver ? replicaWs.label : primaryWs.label}</span> to{" "}
+              <span className="font-semibold text-foreground">{failedOver ? primaryWs.label : replicaWs.label}</span>.
+              While updating, the failover group will be in initial replication and failover will not be available.
+            </p>
+            <p className="mt-3 text-sm text-foreground">
+              <span className="font-semibold text-accent-foreground">Enabled assets:</span> Workspace assets, beta assets
+            </p>
+            <div className="flex flex-col gap-1.5 mt-6">
+              <Label htmlFor="refresh-confirm" className="font-normal text-accent-foreground">
+                Type <span className="font-semibold text-foreground">{groupName}</span> to confirm
+              </Label>
+              <Input
+                id="refresh-confirm"
+                value={refreshConfirm}
+                onChange={(e) => setRefreshConfirm(e.target.value)}
+                placeholder={groupName}
+                autoComplete="off"
+              />
+            </div>
+          </DialogBody>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => { setRefreshOpen(false); setRefreshConfirm("") }}>Cancel</Button>
+            <Button
+              size="sm"
+              disabled={refreshConfirm !== groupName}
+              onClick={() => {
+                setAssetsUpdatedAt("Just now")
+                setRefreshOpen(false)
+                setRefreshConfirm("")
+                toast.success("Asset refresh started")
+              }}
+            >
+              Refresh assets
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={failoverOpen} onOpenChange={(open) => { setFailoverOpen(open); if (!open) setFailoverConfirm("") }}>
         <DialogContent className="max-w-[480px]">
