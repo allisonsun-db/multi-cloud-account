@@ -11,6 +11,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter,
 } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
+import { Badge } from "@/components/ui/badge"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
@@ -19,20 +21,15 @@ import {
   BreadcrumbLink, BreadcrumbSeparator, BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
 import { Input } from "@/components/ui/input"
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
-import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CatalogIcon, NewWindowIcon, DangerFillIcon, ChevronRightIcon } from "@/components/icons"
-import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
-import { ChevronDown, ArrowRight, Info } from "lucide-react"
+import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CloseIcon, CatalogIcon, NewWindowIcon, WarningIcon } from "@/components/icons"
+import { ChevronDown, Info } from "lucide-react"
 import { toast } from "sonner"
 import { PREREQS_DOCS_URL, PrereqsList } from "../prerequisites"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
 type ActivityType = "Replication" | "Failover" | "Validation"
-type ValidationTrigger = "scheduled" | "manual"
 
 interface ActivityRun {
   id: string
@@ -41,15 +38,71 @@ interface ActivityRun {
   status: ReplicationStatus
   activity: ActivityType
   rpo: string
-  trigger?: ValidationTrigger
-  errors?: ValidationError[]
+  validation?: FailoverGroupValidation
   errorMessage?: string
 }
 
-interface ValidationError {
-  itemType: "Catalog" | "Storage location"
-  item: string
+// Mirrors the FailoverGroupValidation resource from the "[UCDR] Validation checks APIs" design doc.
+type CheckKind = "DATA_REPLICATION" | "SSC_CONFIG" | "CSC_PL_CONFIG" | "LM_COVERAGE"
+type CheckStatus = "RUNNING" | "PASSED" | "FAILED" | "ABORTED"
+// The API only defines SYSTEM_SCHEDULED. USER_MANUAL is prototype-only, backing the "Validate" button.
+type ValidationTrigger = "SYSTEM_SCHEDULED" | "USER_MANUAL"
+
+interface FailoverGroupValidationCheckError {
+  errorClass: string
   message: string
+  parameters?: Record<string, string>
+}
+
+interface FailoverGroupValidationCheckResult {
+  kind: CheckKind
+  region: string
+  isRegionPrimary: boolean
+  status: CheckStatus
+  errors?: FailoverGroupValidationCheckError[]
+}
+
+interface FailoverGroupValidation {
+  name: string
+  type: "STANDARD"
+  trigger: ValidationTrigger
+  results: FailoverGroupValidationCheckResult[]
+}
+
+const CHECK_LABELS: Record<CheckKind, string> = {
+  DATA_REPLICATION: "Data replication",
+  SSC_CONFIG: "Server-side copy config",
+  CSC_PL_CONFIG: "Client-side copy (Private Link)",
+  LM_COVERAGE: "Location mapping coverage",
+}
+
+const PRIMARY_REGION = "us-east-1"
+const SECONDARY_REGION = "us-west-2"
+
+// Order checks are listed (and simulated) in: by kind, primary region first.
+const CHECK_PLAN: Pick<FailoverGroupValidationCheckResult, "kind" | "region" | "isRegionPrimary">[] = [
+  { kind: "DATA_REPLICATION", region: SECONDARY_REGION, isRegionPrimary: false },
+  { kind: "SSC_CONFIG",       region: PRIMARY_REGION,   isRegionPrimary: true  },
+  { kind: "SSC_CONFIG",       region: SECONDARY_REGION, isRegionPrimary: false },
+  { kind: "CSC_PL_CONFIG",    region: PRIMARY_REGION,   isRegionPrimary: true  },
+  { kind: "CSC_PL_CONFIG",    region: SECONDARY_REGION, isRegionPrimary: false },
+  { kind: "LM_COVERAGE",      region: SECONDARY_REGION, isRegionPrimary: false },
+]
+
+function results(overrides: Partial<Record<number, Partial<FailoverGroupValidationCheckResult>>> = {}, status: CheckStatus = "PASSED") {
+  return CHECK_PLAN.map((c, i) => ({ ...c, status, ...overrides[i] }))
+}
+
+const PASSED_RESULTS: FailoverGroupValidationCheckResult[] = results()
+
+type ValidationOutcome = "succeeded" | "aborted" | "failed" | "running"
+
+// The API has no overall result field — it's derived from the check results.
+function validationOutcome(results: FailoverGroupValidationCheckResult[]): ValidationOutcome {
+  if (results.some((r) => r.status === "RUNNING")) return "running"
+  if (results.some((r) => r.status === "FAILED")) return "failed"
+  if (results.some((r) => r.status === "ABORTED")) return "aborted"
+  return "succeeded"
 }
 
 const RUNS: ActivityRun[] = [
@@ -57,33 +110,41 @@ const RUNS: ActivityRun[] = [
   { id: "run-17", startedAt: "Apr 9, 2026 at 9:30 AM", duration: "1m 08s", status: "succeeded", activity: "Replication", rpo: "10m" },
   { id: "run-16", startedAt: "Apr 9, 2026 at 9:15 AM", duration: "1m 21s", status: "succeeded", activity: "Failover",    rpo: "5m"  },
   { id: "run-15", startedAt: "Apr 9, 2026 at 9:00 AM", duration: "0m 54s", status: "failed",    activity: "Replication", rpo: "15m", errorMessage: "Placeholder error message" },
-  { id: "run-14b", startedAt: "Apr 9, 2026 at 8:52 AM", duration: "2m 36s", status: "succeeded", activity: "Validation", rpo: "—", trigger: "manual" },
+  { id: "run-14b", startedAt: "Apr 9, 2026 at 8:52 AM", duration: "2m 36s", status: "succeeded", activity: "Validation", rpo: "—",
+    validation: { name: "fgv-7c1e9a", type: "STANDARD", trigger: "USER_MANUAL", results: PASSED_RESULTS } },
   { id: "run-14", startedAt: "Apr 9, 2026 at 8:45 AM", duration: "1m 03s", status: "succeeded", activity: "Replication", rpo: "5m"  },
   { id: "run-13", startedAt: "Apr 9, 2026 at 8:30 AM", duration: "1m 17s", status: "succeeded", activity: "Replication", rpo: "10m" },
   { id: "run-12", startedAt: "Apr 9, 2026 at 8:15 AM", duration: "1m 09s", status: "succeeded", activity: "Replication", rpo: "5m"  },
   { id: "run-11", startedAt: "Apr 9, 2026 at 8:00 AM", duration: "1m 22s", status: "succeeded", activity: "Replication", rpo: "10m" },
-  { id: "run-10", startedAt: "Apr 9, 2026 at 6:00 AM", duration: "2m 41s", status: "succeeded", activity: "Validation",  rpo: "—", trigger: "scheduled" },
-  { id: "run-9",  startedAt: "Apr 9, 2026 at 12:00 AM", duration: "2m 58s", status: "failed",   activity: "Validation",  rpo: "—", trigger: "scheduled",
-    errors: [
-      { itemType: "Catalog", item: "ml_catalog", message: "No matching catalog exists in the secondary metastore." },
-      { itemType: "Storage location", item: "s3://primary-bucket/external", message: "No external location in the secondary region covers s3://dr-bucket/external." },
-    ],
+  { id: "run-10", startedAt: "Apr 9, 2026 at 6:00 AM", duration: "2m 41s", status: "succeeded", activity: "Validation",  rpo: "—",
+    validation: { name: "fgv-3b02d4", type: "STANDARD", trigger: "SYSTEM_SCHEDULED",
+      results: results({
+        4: { status: "ABORTED", errors: [{
+          errorClass: "INTERNAL_ERROR",
+          message: "The check couldn't finish because of an internal error. It will run again with the next scheduled validation.",
+        }] },
+      }),
+    },
+  },
+  { id: "run-9",  startedAt: "Apr 9, 2026 at 12:00 AM", duration: "2m 58s", status: "failed",   activity: "Validation",  rpo: "—",
+    validation: { name: "fgv-91f5aa", type: "STANDARD", trigger: "SYSTEM_SCHEDULED",
+      results: results({
+        0: { status: "FAILED", errors: [{
+          errorClass: "CATALOG_NOT_REPLICATED",
+          message: "Catalog ml_catalog has no matching catalog in the secondary metastore.",
+          parameters: { catalog_name: "ml_catalog" },
+        }] },
+        5: { status: "FAILED", errors: [{
+          errorClass: "STORAGE_LOCATION_NOT_MAPPED",
+          message: "No external location in us-west-2 covers s3://primary-bucket/external.",
+          parameters: { storage_location: "s3://primary-bucket/external", region: "us-west-2" },
+        }] },
+      }),
+    },
   },
 ]
 
 const REPLICATION_PROGRESS = 74
-
-// Compute from/to by replaying runs chronologically, swapping on each failover
-function computeWorkspaces(runs: ActivityRun[], initialPrimary: string, initialReplica: string) {
-  let primary = initialPrimary
-  let replica = initialReplica
-  const result: Record<string, { from: string; to: string }> = {}
-  ;[...runs].reverse().forEach((run) => {
-    result[run.id] = { from: primary, to: replica }
-    if (run.activity === "Failover") [primary, replica] = [replica, primary]
-  })
-  return result
-}
 
 function DottedFlowArrow({
   reversed = false,
@@ -216,10 +277,176 @@ function ReplicationFlowIndicator({
   )
 }
 
-function StatusIcon({ status }: { status: ReplicationStatus }) {
+function StatusIcon({ status }: { status: ReplicationStatus | ValidationOutcome }) {
   if (status === "succeeded") return <CheckCircleIcon className="h-4 w-4 text-[var(--success)]" />
   if (status === "failed") return <XCircleIcon className="h-4 w-4 text-destructive" />
+  if (status === "aborted") return <WarningIcon className="h-4 w-4 text-[var(--warning)]" />
   return <RunningIcon className="h-4 w-4 text-primary animate-spin [animation-duration:2s]" />
+}
+
+const CHECK_STATUS_ICON: Record<CheckStatus, ValidationOutcome> = {
+  PASSED: "succeeded",
+  FAILED: "failed",
+  ABORTED: "aborted",
+  RUNNING: "running",
+}
+
+const CHECK_COUNT_TAG: Record<CheckStatus, { className: string; icon: React.ReactNode }> = {
+  PASSED: { className: "bg-[var(--background-success)] text-[var(--success)]", icon: <CheckCircleIcon /> },
+  ABORTED: { className: "bg-[var(--background-warning)] text-[var(--warning)]", icon: <WarningIcon /> },
+  FAILED: { className: "bg-[var(--background-danger)] text-destructive", icon: <XCircleIcon /> },
+  RUNNING: { className: "bg-primary/10 text-primary", icon: <RunningIcon className="animate-spin [animation-duration:2s]" /> },
+}
+
+const CHECK_TOOLTIP_STATUS: Record<CheckStatus, string> = {
+  PASSED: "Passed",
+  FAILED: "Failed",
+  ABORTED: "Couldn't finish",
+  RUNNING: "Running",
+}
+
+function CheckCounts({ results }: { results: FailoverGroupValidationCheckResult[] }) {
+  const checks = groupByKind(results)
+  const groups = (["PASSED", "ABORTED", "FAILED", "RUNNING"] as const)
+    .map((status) => ({ status, kinds: checks.filter((c) => c.status === status).map((c) => c.kind) }))
+    .filter(({ kinds }) => kinds.length > 0)
+  return (
+    <span className="flex items-center gap-1.5">
+      {groups.map(({ status, kinds }) => (
+        <Tooltip key={status}>
+          <TooltipTrigger asChild>
+            <Badge
+              className={`h-5 gap-1 px-1.5 py-0 text-sm font-normal [&>svg]:size-3.5 ${CHECK_COUNT_TAG[status].className}`}
+              aria-label={`${kinds.length} ${CHECK_TOOLTIP_STATUS[status].toLowerCase()}`}
+            >
+              {CHECK_COUNT_TAG[status].icon}
+              {kinds.length}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="px-3 py-2">
+            <div className="flex flex-col gap-1">
+              <span className="font-semibold">{CHECK_TOOLTIP_STATUS[status]}</span>
+              {kinds.map((kind) => <span key={kind}>{CHECK_LABELS[kind]}</span>)}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      ))}
+    </span>
+  )
+}
+
+const STATUS_SEVERITY: CheckStatus[] = ["RUNNING", "FAILED", "ABORTED", "PASSED"]
+
+// Groups results of the same kind, e.g. "Server-side copy config · us-east-1, us-west-2".
+function groupByKind(results: FailoverGroupValidationCheckResult[]) {
+  const kinds = (Object.keys(CHECK_LABELS) as CheckKind[]).filter((k) => results.some((r) => r.kind === k))
+  return kinds.map((kind) => {
+    const kindResults = results.filter((r) => r.kind === kind)
+    const status = STATUS_SEVERITY.find((s) => kindResults.some((r) => r.status === s)) ?? "PASSED"
+    return { kind, status, regions: kindResults.map((r) => r.region) }
+  })
+}
+
+const OUTCOME_LABEL: Record<ValidationOutcome, string> = {
+  succeeded: "Passed",
+  failed: "Failed",
+  aborted: "Incomplete",
+  running: "Running",
+}
+
+function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="flex flex-col gap-3">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      {children}
+    </section>
+  )
+}
+
+function ValidationDetails({ run }: { run: ActivityRun }) {
+  const validation = run.validation!
+  const results = validation.results
+  const outcome = validationOutcome(results)
+  const issues = results.filter((r) => r.status === "FAILED" || r.status === "ABORTED")
+
+  const meta: [string, React.ReactNode][] = [
+    ["Status", <span key="s" className="flex items-center gap-1.5"><StatusIcon status={outcome} />{OUTCOME_LABEL[outcome]}</span>],
+    ["Start time", run.startedAt],
+    ["Trigger", validation.trigger === "SYSTEM_SCHEDULED" ? "Scheduled" : "Manual"],
+    ["Duration", outcome === "running" ? "—" : run.duration],  ]
+
+  return (
+    <div className="flex flex-1 flex-col gap-6 overflow-y-auto px-6 pb-6">
+      <dl className="grid grid-cols-[110px_1fr] gap-x-4 gap-y-2 text-sm">
+        {meta.map(([label, value]) => (
+          <React.Fragment key={label}>
+            <dt className="text-muted-foreground">{label}</dt>
+            <dd className="text-foreground">{value}</dd>
+          </React.Fragment>
+        ))}
+      </dl>
+
+      <div className="border-t border-border" />
+
+      <DetailSection title="Check results">
+        <div className="overflow-hidden rounded-md border border-border">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-secondary hover:bg-secondary">
+                <TableHead className="px-3">Check</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {groupByKind(results).map((g) => {
+                const kindIssues = issues.filter((r) => r.kind === g.kind)
+                return (
+                <React.Fragment key={g.kind}>
+                <TableRow className={`hover:bg-transparent dark:hover:bg-transparent ${kindIssues.length > 0 ? "border-b-0" : ""}`}>
+                  <TableCell className="whitespace-normal px-3">
+                    <span className="flex items-center gap-2">
+                      <StatusIcon status={CHECK_STATUS_ICON[g.status]} />
+                      {CHECK_LABELS[g.kind]}
+                    </span>
+                  </TableCell>
+                </TableRow>
+                {kindIssues.length > 0 && (
+                <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
+                  <TableCell colSpan={2} className="whitespace-normal pt-0 pr-3 pl-9">
+                    <div className="flex flex-col gap-3">
+                    {kindIssues.flatMap((result) =>
+                      (result.errors ?? [{ errorClass: "UNKNOWN", message: "No additional details are available." }]).map((error, i) => (
+                        <div key={`${result.region}-${i}`} className="flex flex-col gap-0.5">
+                          <span className="text-muted-foreground">
+                            {result.region}{result.status === "ABORTED" && " · Couldn't finish"}
+                          </span>
+                          <span className="text-accent-foreground">{error.message}</span>
+                          <span className="flex items-center gap-1">
+                            <code className="font-mono text-xs text-muted-foreground">{error.errorClass}</code>
+                            <Button
+                              variant="ghost"
+                              size="icon-xs"
+                              aria-label="Copy error class"
+                              onClick={() => { navigator.clipboard?.writeText(error.errorClass); toast.success("Copied to clipboard") }}
+                            >
+                              <CopyIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </span>
+                        </div>
+                      )),
+                    )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+                )}
+                </React.Fragment>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </DetailSection>
+    </div>
+  )
 }
 
 export default function ReplicationPlanPage() {
@@ -232,11 +459,7 @@ export default function ReplicationPlanPage() {
   const primaryWs = { label: "ws-prod-east", cloud: "AWS", region: "us-east-1" }
   const replicaWs  = { label: "ws-prod-dr-west", cloud: "AWS", region: "us-west-2" }
   const [runs, setRuns] = React.useState<ActivityRun[]>(RUNS)
-  const workspaceMap = computeWorkspaces(runs, primaryWs.label, replicaWs.label)
-  const [activityFilter, setActivityFilter] = React.useState<ActivityType | "all">("all")
-  const filteredRuns = runs.filter(
-    (run) => run.activity !== "Replication" && (activityFilter === "all" || run.activity === activityFilter),
-  )
+  const validationRuns = runs.filter((run) => run.activity === "Validation" && run.validation)
   const catalogs = CATALOGS
   const storageMappings = STORAGE_MAPPINGS
   const runningReplication = runs.find((run) => run.activity === "Replication" && run.status === "running")
@@ -281,26 +504,29 @@ export default function ReplicationPlanPage() {
   const [assetsUpdatedAt, setAssetsUpdatedAt] = React.useState("Apr 9, 2026 at 9:45 AM")
   const [refreshOpen, setRefreshOpen] = React.useState(false)
   const [refreshConfirm, setRefreshConfirm] = React.useState("")
-  const [expandedRunIds, setExpandedRunIds] = React.useState<Set<string>>(new Set())
-
-  function toggleRunExpanded(id: string) {
-    setExpandedRunIds((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-  }
+  const [selectedRunId, setSelectedRunId] = React.useState<string | null>(null)
+  const selectedRun = runs.find((r) => r.id === selectedRunId && r.validation)
 
   function startValidation() {
     const id = `run-${Date.now()}`
-    setRuns((prev) => [{ id, startedAt: "Apr 9, 2026 at 9:50 AM", duration: "—", status: "running", activity: "Validation", rpo: "—", trigger: "manual" }, ...prev])
+    const running = results({}, "RUNNING")
+    const validation: FailoverGroupValidation = { name: `fgv-${id.slice(-6)}`, type: "STANDARD", trigger: "USER_MANUAL", results: running }
+    setRuns((prev) => [{ id, startedAt: "Apr 9, 2026 at 9:50 AM", duration: "—", status: "running", activity: "Validation", rpo: "—", validation }, ...prev])
+    setSelectedRunId(id)
     setValidating(true)
     toast.success("Validation started")
-    setTimeout(() => {
-      setRuns((prev) => prev.map((r) => r.id === id ? { ...r, status: "succeeded", duration: "2m 30s" } : r))
-      setValidating(false)
-    }, 3000)
+    // Check results resolve one at a time so the expanded row shows progress.
+    CHECK_PLAN.forEach((_, step) => {
+      setTimeout(() => {
+        setRuns((prev) => prev.map((r) => {
+          if (r.id !== id || !r.validation) return r
+          const next = r.validation.results.map((c, i) => (i === step ? PASSED_RESULTS[i] : c))
+          const done = step === CHECK_PLAN.length - 1
+          return { ...r, validation: { ...r.validation, results: next }, ...(done ? { status: "succeeded" as const, duration: "2m 30s" } : {}) }
+        }))
+        if (step === CHECK_PLAN.length - 1) setValidating(false)
+      }, (step + 1) * 700)
+    })
   }
   function onRowEnter(key: string, type: "catalog" | "storage") {
     if (type === "catalog") setHoveredCatalog(key)
@@ -532,124 +758,88 @@ export default function ReplicationPlanPage() {
               </div>
             </div>
 
-            {/* Replication runs */}
+            {/* Validations */}
             <div className="rounded-md border border-border shadow-[var(--shadow-db-sm)] flex flex-col">
               <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
-                <p className="text-sm font-semibold">Activity</p>
-              </div>
-              <div className="px-4 py-3">
-                <Select value={activityFilter} onValueChange={(value) => setActivityFilter(value as ActivityType | "all")}>
-                  <SelectTrigger className="w-[160px]" aria-label="Filter by activity">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All activities</SelectItem>
-                    <SelectItem value="Failover">Failover</SelectItem>
-                    <SelectItem value="Validation">Validation</SelectItem>
-                  </SelectContent>
-                </Select>
+                <p className="text-sm font-semibold">Validations</p>
               </div>
               <div className="px-4">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-6 px-0"></TableHead>
-                    <TableHead className="pl-2 w-10"></TableHead>
-                    <TableHead>Activity</TableHead>
-                    <TableHead>Workspaces</TableHead>
-                    <TableHead>Started</TableHead>
-                    <TableHead>
-                      <span className="flex items-center gap-1">
-                        RPO
-                        <Info className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                      </span>
-                    </TableHead>
+                    <TableHead>Start time</TableHead>
+                    <TableHead>Results</TableHead>
+                    <TableHead>Trigger</TableHead>
+                    <TableHead>Duration</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredRuns.map((run) => {
-                    const expandable = run.status === "failed"
-                    const errors = run.errors ?? []
-                    const isExpanded = expandedRunIds.has(run.id)
+                  {validationRuns.map((run) => {
+                    const checks = run.validation!.results
+                    const outcome = validationOutcome(checks)
                     return (
-                    <React.Fragment key={run.id}>
                     <TableRow
-                      className={`${expandable ? "cursor-pointer" : ""} ${isExpanded ? "border-b-0" : ""}`}
-                      onClick={expandable ? () => toggleRunExpanded(run.id) : undefined}
+                      key={run.id}
+                      className="cursor-pointer"
+                      data-state={selectedRunId === run.id ? "selected" : undefined}
+                      tabIndex={0}
+                      aria-label={`View validation started ${run.startedAt}`}
+                      onClick={() => setSelectedRunId(run.id)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedRunId(run.id) } }}
                     >
-                      <TableCell className="px-0">
-                        {expandable && (
-                          <Button
-                            variant="ghost"
-                            size="icon-xs"
-                            aria-label={isExpanded ? "Hide errors" : "Show errors"}
-                            aria-expanded={isExpanded}
-                            onClick={(e) => { e.stopPropagation(); toggleRunExpanded(run.id) }}
-                          >
-                            <ChevronRightIcon className={`size-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                          </Button>
-                        )}
-                      </TableCell>
-                      <TableCell className="pl-2"><StatusIcon status={run.status} /></TableCell>
-                      <TableCell>
-                        {run.activity}
-                        {run.trigger && (
-                          <span className="text-muted-foreground"> ({run.trigger === "manual" ? "Manual" : "Scheduled"})</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <span className="flex items-center gap-1.5 text-sm">
-                          <span>{workspaceMap[run.id].from}</span>
-                          <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                          <span>{workspaceMap[run.id].to}</span>
-                        </span>
-                      </TableCell>
                       <TableCell>{run.startedAt}</TableCell>
-                      <TableCell>{run.status === "failed" || run.activity === "Validation" ? <span className="text-muted-foreground">—</span> : run.rpo}</TableCell>
+                      <TableCell>
+                        <CheckCounts results={checks} />
+                      </TableCell>
+                      <TableCell>{run.validation!.trigger === "SYSTEM_SCHEDULED" ? "Scheduled" : "Manual"}</TableCell>
+                      <TableCell>{outcome === "running" ? <span className="text-muted-foreground">—</span> : run.duration}</TableCell>
                     </TableRow>
-                    {isExpanded && (
-                      <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-                        <TableCell colSpan={2} className="p-0" />
-                        <TableCell colSpan={4} className="whitespace-normal pt-2 pb-3">
-                          <Alert variant="destructive">
-                            <DangerFillIcon />
-                            <AlertTitle>
-                              {errors.length > 0
-                                ? `${errors.length} ${errors.length === 1 ? "issue" : "issues"} found`
-                                : `${run.activity} failed`}
-                            </AlertTitle>
-                            <AlertDescription>
-                              {errors.length === 0 && <p>{run.errorMessage ?? "No additional error details are available for this run."}</p>}                              <ul className="flex flex-col gap-2 mt-1 empty:hidden">
-                                {errors.map((error) => (
-                                  <li key={`${error.itemType}-${error.item}`} className="flex flex-col">
-                                    <span className="text-foreground">
-                                      <span className="font-semibold">{error.item}</span>{" "}
-                                      <span className="text-muted-foreground">({error.itemType})</span>
-                                    </span>
-                                    <span>{error.message}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                              <Button
-                                variant="outline"
-                                size="xs"
-                                className="mt-2 text-sm"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                View errors in system table
-                              </Button>
-                            </AlertDescription>
-                          </Alert>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                    </React.Fragment>
                     )
                   })}
                 </TableBody>
               </Table>
               </div>
             </div>
+
+            <Sheet open={Boolean(selectedRun)} onOpenChange={(open) => { if (!open) setSelectedRunId(null) }}>
+              <SheetContent side="right" showCloseButton={false} className="w-full gap-0 sm:max-w-[480px]">
+                {selectedRun && (
+                  <>
+                    <SheetHeader className="px-6 pt-6 pb-4">
+                      <SheetDescription className="sr-only">Validation started {selectedRun.startedAt}</SheetDescription>
+                      <span className="flex items-center gap-2">
+                        <span className="order-last -mr-1 ml-auto flex items-center gap-2">
+                          {!["running", "succeeded"].includes(validationOutcome(selectedRun.validation!.results)) && (
+                            <Button variant="outline" size="xs" className="text-sm">
+                              View in system table
+                              <NewWindowIcon className="size-4" />
+                            </Button>
+                          )}
+                          <SheetClose asChild>
+                            <Button variant="ghost" size="icon-xs" aria-label="Close">
+                              <CloseIcon className="size-4 text-muted-foreground" />
+                            </Button>
+                          </SheetClose>
+                        </span>
+                        <SheetTitle className="text-lg leading-6">Validation</SheetTitle>
+                        <span className="flex items-center gap-1">
+                        <code className="font-mono text-[14px] text-muted-foreground">{selectedRun.validation!.name}</code>
+                        <Button
+                          variant="ghost"
+                          size="icon-xs"
+                          aria-label="Copy validation ID"
+                          onClick={() => { navigator.clipboard?.writeText(selectedRun.validation!.name); toast.success("Copied to clipboard") }}
+                        >
+                          <CopyIcon className="size-4 text-muted-foreground" />
+                        </Button>
+                        </span>
+                      </span>
+                    </SheetHeader>
+                    <ValidationDetails run={selectedRun} />
+                  </>
+                )}
+              </SheetContent>
+            </Sheet>
           </div>
 
           <div className="w-full shrink-0 lg:w-[280px]">
@@ -674,9 +864,19 @@ export default function ReplicationPlanPage() {
             <div className="my-4 border-t border-border" />
             <div className="flex flex-col gap-2">
               <p className="text-sm font-semibold text-foreground">Assets</p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-start gap-2">
                 <span className="text-sm text-muted-foreground w-[110px] shrink-0">Last updated</span>
-                <span className="text-sm text-foreground">{assetsUpdatedAt}</span>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-sm text-foreground">{assetsUpdatedAt}</span>
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    className="w-fit text-sm"
+                    onClick={() => setRefreshOpen(true)}
+                  >
+                    Refresh
+                  </Button>
+                </div>
               </div>
               <div className="flex items-start gap-2">
                 <span className="text-sm text-muted-foreground w-[110px] shrink-0">Enabled assets</span>
@@ -705,14 +905,6 @@ export default function ReplicationPlanPage() {
                   </span>
                 </div>
               </div>
-              <Button
-                variant="outline"
-                size="xs"
-                className="mt-1 w-fit text-sm"
-                onClick={() => setRefreshOpen(true)}
-              >
-                Refresh assets
-              </Button>
             </div>
           </div>
         </div>
