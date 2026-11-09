@@ -13,6 +13,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Badge } from "@/components/ui/badge"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
@@ -23,7 +24,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
-import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CloseIcon, CatalogIcon, NewWindowIcon, WarningIcon } from "@/components/icons"
+import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, CloseIcon, MinusCircleIcon, DangerFillIcon, WarningFillIcon, CatalogIcon, NewWindowIcon, WarningIcon } from "@/components/icons"
 import { ChevronDown, Info } from "lucide-react"
 import { toast } from "sonner"
 import { PREREQS_DOCS_URL, PrereqsList } from "../prerequisites"
@@ -43,7 +44,7 @@ interface ActivityRun {
 }
 
 // Mirrors the FailoverGroupValidation resource from the "[UCDR] Validation checks APIs" design doc.
-type CheckKind = "DATA_REPLICATION" | "SSC_CONFIG" | "CSC_PL_CONFIG" | "LM_COVERAGE"
+type CheckKind = "DATA_REPLICATION" | "DATA_REPLICATION_CONFIG" | "LOCATION_MAPPING_CONFIG"
 type CheckStatus = "RUNNING" | "PASSED" | "FAILED" | "ABORTED"
 // The API only defines SYSTEM_SCHEDULED. USER_MANUAL is prototype-only, backing the "Validate" button.
 type ValidationTrigger = "SYSTEM_SCHEDULED" | "USER_MANUAL"
@@ -67,59 +68,80 @@ interface FailoverGroupValidation {
   type: "STANDARD"
   trigger: ValidationTrigger
   results: FailoverGroupValidationCheckResult[]
+  // Unset while the validation is still running.
+  finishTime?: string
 }
 
 const CHECK_LABELS: Record<CheckKind, string> = {
   DATA_REPLICATION: "Data replication",
-  SSC_CONFIG: "Server-side copy config",
-  CSC_PL_CONFIG: "Client-side copy (Private Link)",
-  LM_COVERAGE: "Location mapping coverage",
+  DATA_REPLICATION_CONFIG: "Data replication config",
+  LOCATION_MAPPING_CONFIG: "Location mapping config",
 }
 
-const PRIMARY_REGION = "us-east-1"
-const SECONDARY_REGION = "us-west-2"
+const EAST_REGION = "us-east-1"
+const WEST_REGION = "us-west-2"
 
-// Order checks are listed (and simulated) in: by kind, primary region first.
-const CHECK_PLAN: Pick<FailoverGroupValidationCheckResult, "kind" | "region" | "isRegionPrimary">[] = [
-  { kind: "DATA_REPLICATION", region: SECONDARY_REGION, isRegionPrimary: false },
-  { kind: "SSC_CONFIG",       region: PRIMARY_REGION,   isRegionPrimary: true  },
-  { kind: "SSC_CONFIG",       region: SECONDARY_REGION, isRegionPrimary: false },
-  { kind: "CSC_PL_CONFIG",    region: PRIMARY_REGION,   isRegionPrimary: true  },
-  { kind: "CSC_PL_CONFIG",    region: SECONDARY_REGION, isRegionPrimary: false },
-  { kind: "LM_COVERAGE",      region: SECONDARY_REGION, isRegionPrimary: false },
-]
-
-function results(overrides: Partial<Record<number, Partial<FailoverGroupValidationCheckResult>>> = {}, status: CheckStatus = "PASSED") {
-  return CHECK_PLAN.map((c, i) => ({ ...c, status, ...overrides[i] }))
+// Every check runs once in each region. Listed by kind, primary region first.
+function checkPlan(primary: string, secondary: string) {
+  return (Object.keys(CHECK_LABELS) as CheckKind[]).flatMap((kind) => [
+    { kind, region: primary, isRegionPrimary: true },
+    { kind, region: secondary, isRegionPrimary: false },
+  ])
 }
 
-const PASSED_RESULTS: FailoverGroupValidationCheckResult[] = results()
+// Overrides are keyed by "<kind>:primary" or "<kind>:secondary".
+function results(
+  primary: string,
+  secondary: string,
+  overrides: Record<string, Partial<FailoverGroupValidationCheckResult>> = {},
+  status: CheckStatus = "PASSED",
+): FailoverGroupValidationCheckResult[] {
+  return checkPlan(primary, secondary).map((c) => ({
+    ...c,
+    status,
+    ...overrides[`${c.kind}:${c.isRegionPrimary ? "primary" : "secondary"}`],
+  }))
+}
 
-type ValidationOutcome = "succeeded" | "aborted" | "failed" | "running"
+// "incomplete": some checks couldn't finish. "aborted": the whole validation stopped before any check ran.
+type ValidationOutcome = "succeeded" | "incomplete" | "aborted" | "failed" | "running"
 
-// The API has no overall result field — it's derived from the check results.
-function validationOutcome(results: FailoverGroupValidationCheckResult[]): ValidationOutcome {
-  if (results.some((r) => r.status === "RUNNING")) return "running"
+// The API has no overall result field — it's derived from finish time and the check results.
+function validationOutcome(validation: FailoverGroupValidation): ValidationOutcome {
+  const { results } = validation
+  if (!validation.finishTime || results.some((r) => r.status === "RUNNING")) return "running"
+  if (results.length === 0) return "aborted"
   if (results.some((r) => r.status === "FAILED")) return "failed"
-  if (results.some((r) => r.status === "ABORTED")) return "aborted"
+  if (results.some((r) => r.status === "ABORTED")) return "incomplete"
   return "succeeded"
 }
 
+// Roles swapped at the 9:15 AM failover: us-west-2 was primary before it, us-east-1 after.
 const RUNS: ActivityRun[] = [
+  { id: "run-19", startedAt: "Apr 9, 2026 at 9:48 AM", duration: "—", status: "running", activity: "Validation", rpo: "—",
+    validation: { name: "fgv-e40b17", type: "STANDARD", trigger: "SYSTEM_SCHEDULED",
+      results: results(EAST_REGION, WEST_REGION, {
+        "DATA_REPLICATION:primary": { status: "PASSED" },
+        "DATA_REPLICATION:secondary": { status: "PASSED" },
+        "DATA_REPLICATION_CONFIG:primary": { status: "PASSED" },
+      }, "RUNNING"),
+    },
+  },
   { id: "run-18", startedAt: "Apr 9, 2026 at 9:45 AM", duration: "1m 12s", status: "running",   activity: "Replication", rpo: "5m"  },
   { id: "run-17", startedAt: "Apr 9, 2026 at 9:30 AM", duration: "1m 08s", status: "succeeded", activity: "Replication", rpo: "10m" },
   { id: "run-16", startedAt: "Apr 9, 2026 at 9:15 AM", duration: "1m 21s", status: "succeeded", activity: "Failover",    rpo: "5m"  },
   { id: "run-15", startedAt: "Apr 9, 2026 at 9:00 AM", duration: "0m 54s", status: "failed",    activity: "Replication", rpo: "15m", errorMessage: "Placeholder error message" },
   { id: "run-14b", startedAt: "Apr 9, 2026 at 8:52 AM", duration: "2m 36s", status: "succeeded", activity: "Validation", rpo: "—",
-    validation: { name: "fgv-7c1e9a", type: "STANDARD", trigger: "USER_MANUAL", results: PASSED_RESULTS } },
+    validation: { name: "fgv-7c1e9a", type: "STANDARD", trigger: "USER_MANUAL", finishTime: "Apr 9, 2026 at 8:55 AM",
+      results: results(WEST_REGION, EAST_REGION) } },
   { id: "run-14", startedAt: "Apr 9, 2026 at 8:45 AM", duration: "1m 03s", status: "succeeded", activity: "Replication", rpo: "5m"  },
   { id: "run-13", startedAt: "Apr 9, 2026 at 8:30 AM", duration: "1m 17s", status: "succeeded", activity: "Replication", rpo: "10m" },
   { id: "run-12", startedAt: "Apr 9, 2026 at 8:15 AM", duration: "1m 09s", status: "succeeded", activity: "Replication", rpo: "5m"  },
   { id: "run-11", startedAt: "Apr 9, 2026 at 8:00 AM", duration: "1m 22s", status: "succeeded", activity: "Replication", rpo: "10m" },
   { id: "run-10", startedAt: "Apr 9, 2026 at 6:00 AM", duration: "2m 41s", status: "succeeded", activity: "Validation",  rpo: "—",
-    validation: { name: "fgv-3b02d4", type: "STANDARD", trigger: "SYSTEM_SCHEDULED",
-      results: results({
-        4: { status: "ABORTED", errors: [{
+    validation: { name: "fgv-3b02d4", type: "STANDARD", trigger: "SYSTEM_SCHEDULED", finishTime: "Apr 9, 2026 at 6:03 AM",
+      results: results(WEST_REGION, EAST_REGION, {
+        "DATA_REPLICATION_CONFIG:secondary": { status: "ABORTED", errors: [{
           errorClass: "INTERNAL_ERROR",
           message: "The check couldn't finish because of an internal error. It will run again with the next scheduled validation.",
         }] },
@@ -127,20 +149,23 @@ const RUNS: ActivityRun[] = [
     },
   },
   { id: "run-9",  startedAt: "Apr 9, 2026 at 12:00 AM", duration: "2m 58s", status: "failed",   activity: "Validation",  rpo: "—",
-    validation: { name: "fgv-91f5aa", type: "STANDARD", trigger: "SYSTEM_SCHEDULED",
-      results: results({
-        0: { status: "FAILED", errors: [{
+    validation: { name: "fgv-91f5aa", type: "STANDARD", trigger: "SYSTEM_SCHEDULED", finishTime: "Apr 9, 2026 at 12:02 AM",
+      results: results(WEST_REGION, EAST_REGION, {
+        "DATA_REPLICATION:secondary": { status: "FAILED", errors: [{
           errorClass: "CATALOG_NOT_REPLICATED",
           message: "Catalog ml_catalog has no matching catalog in the secondary metastore.",
           parameters: { catalog_name: "ml_catalog" },
         }] },
-        5: { status: "FAILED", errors: [{
+        "LOCATION_MAPPING_CONFIG:secondary": { status: "FAILED", errors: [{
           errorClass: "STORAGE_LOCATION_NOT_MAPPED",
-          message: "No external location in us-west-2 covers s3://primary-bucket/external.",
-          parameters: { storage_location: "s3://primary-bucket/external", region: "us-west-2" },
+          message: "No external location in us-east-1 covers s3://primary-bucket/external.",
+          parameters: { storage_location: "s3://primary-bucket/external", region: "us-east-1" },
         }] },
       }),
     },
+  },
+  { id: "run-8",  startedAt: "Apr 8, 2026 at 6:00 PM", duration: "0m 04s", status: "failed",   activity: "Validation",  rpo: "—",
+    validation: { name: "fgv-0a7d3c", type: "STANDARD", trigger: "SYSTEM_SCHEDULED", finishTime: "Apr 8, 2026 at 6:00 PM", results: [] },
   },
 ]
 
@@ -277,20 +302,6 @@ function ReplicationFlowIndicator({
   )
 }
 
-function StatusIcon({ status }: { status: ReplicationStatus | ValidationOutcome }) {
-  if (status === "succeeded") return <CheckCircleIcon className="h-4 w-4 text-[var(--success)]" />
-  if (status === "failed") return <XCircleIcon className="h-4 w-4 text-destructive" />
-  if (status === "aborted") return <WarningIcon className="h-4 w-4 text-[var(--warning)]" />
-  return <RunningIcon className="h-4 w-4 text-primary animate-spin [animation-duration:2s]" />
-}
-
-const CHECK_STATUS_ICON: Record<CheckStatus, ValidationOutcome> = {
-  PASSED: "succeeded",
-  FAILED: "failed",
-  ABORTED: "aborted",
-  RUNNING: "running",
-}
-
 const CHECK_COUNT_TAG: Record<CheckStatus, { className: string; icon: React.ReactNode }> = {
   PASSED: { className: "bg-[var(--background-success)] text-[var(--success)]", icon: <CheckCircleIcon /> },
   ABORTED: { className: "bg-[var(--background-warning)] text-[var(--warning)]", icon: <WarningIcon /> },
@@ -305,28 +316,48 @@ const CHECK_TOOLTIP_STATUS: Record<CheckStatus, string> = {
   RUNNING: "Running",
 }
 
-function CheckCounts({ results }: { results: FailoverGroupValidationCheckResult[] }) {
-  const checks = groupByKind(results)
+const TAG_CLASS = "h-5 gap-1 px-1.5 py-0 text-sm font-normal [&>svg]:size-3.5"
+
+function CheckCounts({ validation }: { validation: FailoverGroupValidation }) {
+  if (validationOutcome(validation) === "aborted") {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Badge className={`${TAG_CLASS} bg-secondary text-muted-foreground`}>
+            <MinusCircleIcon />
+            Aborted
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent>Stopped before any checks ran</TooltipContent>
+      </Tooltip>
+    )
+  }
+  // One count per check per region, matching the API's check list.
+  const checks = groupByKind(validation.results).flatMap((g) => g.results)
   const groups = (["PASSED", "ABORTED", "FAILED", "RUNNING"] as const)
-    .map((status) => ({ status, kinds: checks.filter((c) => c.status === status).map((c) => c.kind) }))
-    .filter(({ kinds }) => kinds.length > 0)
+    .map((status) => ({ status, items: checks.filter((c) => c.status === status) }))
+    .filter(({ items }) => items.length > 0)
   return (
     <span className="flex items-center gap-1.5">
-      {groups.map(({ status, kinds }) => (
+      {groups.map(({ status, items }) => (
         <Tooltip key={status}>
           <TooltipTrigger asChild>
             <Badge
-              className={`h-5 gap-1 px-1.5 py-0 text-sm font-normal [&>svg]:size-3.5 ${CHECK_COUNT_TAG[status].className}`}
-              aria-label={`${kinds.length} ${CHECK_TOOLTIP_STATUS[status].toLowerCase()}`}
+              className={`${TAG_CLASS} ${CHECK_COUNT_TAG[status].className}`}
+              aria-label={`${items.length} ${CHECK_TOOLTIP_STATUS[status].toLowerCase()}`}
             >
               {CHECK_COUNT_TAG[status].icon}
-              {kinds.length}
+              {items.length}
             </Badge>
           </TooltipTrigger>
           <TooltipContent className="px-3 py-2">
             <div className="flex flex-col gap-1">
               <span className="font-semibold">{CHECK_TOOLTIP_STATUS[status]}</span>
-              {kinds.map((kind) => <span key={kind}>{CHECK_LABELS[kind]}</span>)}
+              {items.map((c) => (
+                <span key={`${c.kind}-${c.region}`}>
+                  {CHECK_LABELS[c.kind]} <span className="opacity-70">({c.isRegionPrimary ? "Primary" : "Secondary"})</span>
+                </span>
+              ))}
             </div>
           </TooltipContent>
         </Tooltip>
@@ -335,23 +366,29 @@ function CheckCounts({ results }: { results: FailoverGroupValidationCheckResult[
   )
 }
 
+type Role = "primary" | "secondary"
+const ROLES: Role[] = ["primary", "secondary"]
+const ROLE_LABEL: Record<Role, string> = { primary: "Primary", secondary: "Secondary" }
+
+const CHECK_CELL_LABEL: Record<CheckStatus, string> = {
+  PASSED: "Passed",
+  FAILED: "Failed",
+  ABORTED: "Aborted",
+  RUNNING: "Running",
+}
+
 const STATUS_SEVERITY: CheckStatus[] = ["RUNNING", "FAILED", "ABORTED", "PASSED"]
 
-// Groups results of the same kind, e.g. "Server-side copy config · us-east-1, us-west-2".
+// Groups the per-region results of each check, primary region first. A check's status is its worst region's.
 function groupByKind(results: FailoverGroupValidationCheckResult[]) {
   const kinds = (Object.keys(CHECK_LABELS) as CheckKind[]).filter((k) => results.some((r) => r.kind === k))
   return kinds.map((kind) => {
-    const kindResults = results.filter((r) => r.kind === kind)
+    const kindResults = results
+      .filter((r) => r.kind === kind)
+      .sort((a, b) => Number(b.isRegionPrimary) - Number(a.isRegionPrimary))
     const status = STATUS_SEVERITY.find((s) => kindResults.some((r) => r.status === s)) ?? "PASSED"
-    return { kind, status, regions: kindResults.map((r) => r.region) }
+    return { kind, status, results: kindResults }
   })
-}
-
-const OUTCOME_LABEL: Record<ValidationOutcome, string> = {
-  succeeded: "Passed",
-  failed: "Failed",
-  aborted: "Incomplete",
-  running: "Running",
 }
 
 function DetailSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -366,11 +403,11 @@ function DetailSection({ title, children }: { title: string; children: React.Rea
 function ValidationDetails({ run }: { run: ActivityRun }) {
   const validation = run.validation!
   const results = validation.results
-  const outcome = validationOutcome(results)
-  const issues = results.filter((r) => r.status === "FAILED" || r.status === "ABORTED")
+  const outcome = validationOutcome(validation)
+  // Roles are fixed within a validation, so each column's region comes from any check in that role.
+  const regionFor = (role: Role) => results.find((r) => r.isRegionPrimary === (role === "primary"))?.region
 
   const meta: [string, React.ReactNode][] = [
-    ["Status", <span key="s" className="flex items-center gap-1.5"><StatusIcon status={outcome} />{OUTCOME_LABEL[outcome]}</span>],
     ["Start time", run.startedAt],
     ["Trigger", validation.trigger === "SYSTEM_SCHEDULED" ? "Scheduled" : "Manual"],
     ["Duration", outcome === "running" ? "—" : run.duration],  ]
@@ -389,51 +426,80 @@ function ValidationDetails({ run }: { run: ActivityRun }) {
       <div className="border-t border-border" />
 
       <DetailSection title="Check results">
+        {outcome === "aborted" ? (
+          <p className="text-sm text-muted-foreground">The validation was aborted before any checks ran.</p>
+        ) : (
         <div className="overflow-hidden rounded-md border border-border">
           <Table>
             <TableHeader>
               <TableRow className="bg-secondary hover:bg-secondary">
-                <TableHead className="px-3">Check</TableHead>
+                <TableHead className="pl-3">Check</TableHead>
+                {ROLES.map((role) => (
+                  <TableHead key={role} className="last:pr-3">
+                    {ROLE_LABEL[role]}
+                    {regionFor(role) && <span className="font-normal text-muted-foreground"> ({regionFor(role)})</span>}
+                  </TableHead>
+                ))}
               </TableRow>
             </TableHeader>
             <TableBody>
               {groupByKind(results).map((g) => {
-                const kindIssues = issues.filter((r) => r.kind === g.kind)
+                const byRole = (role: Role) => g.results.find((r) => r.isRegionPrimary === (role === "primary"))
+                const issues = ROLES.flatMap((role) => {
+                  const r = byRole(role)
+                  return r && (r.status === "FAILED" || r.status === "ABORTED") ? [{ role, result: r }] : []
+                })
                 return (
                 <React.Fragment key={g.kind}>
-                <TableRow className={`hover:bg-transparent dark:hover:bg-transparent ${kindIssues.length > 0 ? "border-b-0" : ""}`}>
-                  <TableCell className="whitespace-normal px-3">
-                    <span className="flex items-center gap-2">
-                      <StatusIcon status={CHECK_STATUS_ICON[g.status]} />
-                      {CHECK_LABELS[g.kind]}
-                    </span>
-                  </TableCell>
+                <TableRow className={`hover:bg-transparent dark:hover:bg-transparent ${issues.length > 0 ? "border-b-0" : ""}`}>
+                  <TableCell className="whitespace-normal pl-3">{CHECK_LABELS[g.kind]}</TableCell>
+                  {ROLES.map((role) => {
+                    const r = byRole(role)
+                    return (
+                      <TableCell key={role} className="last:pr-3">
+                        {r ? (
+                          <Badge className={`${TAG_CLASS} ${CHECK_COUNT_TAG[r.status].className}`}>
+                            {CHECK_COUNT_TAG[r.status].icon}
+                            {CHECK_CELL_LABEL[r.status]}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                    )
+                  })}
                 </TableRow>
-                {kindIssues.length > 0 && (
+                {issues.length > 0 && (
                 <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-                  <TableCell colSpan={2} className="whitespace-normal pt-0 pr-3 pl-9">
-                    <div className="flex flex-col gap-3">
-                    {kindIssues.flatMap((result) =>
-                      (result.errors ?? [{ errorClass: "UNKNOWN", message: "No additional details are available." }]).map((error, i) => (
-                        <div key={`${result.region}-${i}`} className="flex flex-col gap-0.5">
-                          <span className="text-muted-foreground">
-                            {result.region}{result.status === "ABORTED" && " · Couldn't finish"}
-                          </span>
-                          <span className="text-accent-foreground">{error.message}</span>
-                          <span className="flex items-center gap-1">
-                            <code className="font-mono text-xs text-muted-foreground">{error.errorClass}</code>
-                            <Button
-                              variant="ghost"
-                              size="icon-xs"
-                              aria-label="Copy error class"
-                              onClick={() => { navigator.clipboard?.writeText(error.errorClass); toast.success("Copied to clipboard") }}
-                            >
-                              <CopyIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                            </Button>
-                          </span>
-                        </div>
-                      )),
-                    )}
+                  <TableCell colSpan={3} className="whitespace-normal px-3 pt-0">
+                    <div className="flex flex-col gap-2">
+                      {issues.flatMap(({ role, result }) =>
+                        (result.errors ?? [{ errorClass: "UNKNOWN", message: "No additional details are available." }]).map((error, j) => {
+                          const failed = result.status === "FAILED"
+                          return (
+                          <Alert key={`${role}-${j}`} variant={failed ? "destructive" : "warning"} className="px-3 py-2 has-[>svg]:gap-x-2">
+                            {failed ? <DangerFillIcon /> : <WarningFillIcon />}
+                            <AlertTitle className="line-clamp-none text-foreground">
+                              {failed ? "Failed" : "Aborted"} in {ROLE_LABEL[role].toLowerCase()} ({result.region})
+                            </AlertTitle>
+                            <AlertDescription className="gap-0.5">
+                              <p className="leading-5 text-foreground">{error.message}</p>
+                              <span className="flex items-center gap-1">
+                                <code className="font-mono text-xs text-muted-foreground">{error.errorClass}</code>
+                                <Button
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  aria-label="Copy error class"
+                                  onClick={() => { navigator.clipboard?.writeText(error.errorClass); toast.success("Copied to clipboard") }}
+                                >
+                                  <CopyIcon className="size-4 text-muted-foreground" />
+                                </Button>
+                              </span>
+                            </AlertDescription>
+                          </Alert>
+                          )
+                        }),
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -444,6 +510,7 @@ function ValidationDetails({ run }: { run: ActivityRun }) {
             </TableBody>
           </Table>
         </div>
+        )}
       </DetailSection>
     </div>
   )
@@ -509,23 +576,29 @@ export default function ReplicationPlanPage() {
 
   function startValidation() {
     const id = `run-${Date.now()}`
-    const running = results({}, "RUNNING")
+    const [primary, secondary] = failedOver ? [WEST_REGION, EAST_REGION] : [EAST_REGION, WEST_REGION]
+    const passed = results(primary, secondary)
+    const running = results(primary, secondary, {}, "RUNNING")
     const validation: FailoverGroupValidation = { name: `fgv-${id.slice(-6)}`, type: "STANDARD", trigger: "USER_MANUAL", results: running }
     setRuns((prev) => [{ id, startedAt: "Apr 9, 2026 at 9:50 AM", duration: "—", status: "running", activity: "Validation", rpo: "—", validation }, ...prev])
     setSelectedRunId(id)
     setValidating(true)
     toast.success("Validation started")
     // Check results resolve one at a time so the expanded row shows progress.
-    CHECK_PLAN.forEach((_, step) => {
+    passed.forEach((_, step) => {
       setTimeout(() => {
+        const done = step === passed.length - 1
         setRuns((prev) => prev.map((r) => {
           if (r.id !== id || !r.validation) return r
-          const next = r.validation.results.map((c, i) => (i === step ? PASSED_RESULTS[i] : c))
-          const done = step === CHECK_PLAN.length - 1
-          return { ...r, validation: { ...r.validation, results: next }, ...(done ? { status: "succeeded" as const, duration: "2m 30s" } : {}) }
+          const next = r.validation.results.map((c, i) => (i === step ? passed[i] : c))
+          return {
+            ...r,
+            validation: { ...r.validation, results: next, ...(done ? { finishTime: "Apr 9, 2026 at 9:52 AM" } : {}) },
+            ...(done ? { status: "succeeded" as const, duration: "2m 30s" } : {}),
+          }
         }))
-        if (step === CHECK_PLAN.length - 1) setValidating(false)
-      }, (step + 1) * 700)
+        if (done) setValidating(false)
+      }, (step + 1) * 500)
     })
   }
   function onRowEnter(key: string, type: "catalog" | "storage") {
@@ -775,8 +848,8 @@ export default function ReplicationPlanPage() {
                 </TableHeader>
                 <TableBody>
                   {validationRuns.map((run) => {
-                    const checks = run.validation!.results
-                    const outcome = validationOutcome(checks)
+                    const validation = run.validation!
+                    const outcome = validationOutcome(validation)
                     return (
                     <TableRow
                       key={run.id}
@@ -789,7 +862,7 @@ export default function ReplicationPlanPage() {
                     >
                       <TableCell>{run.startedAt}</TableCell>
                       <TableCell>
-                        <CheckCounts results={checks} />
+                        <CheckCounts validation={validation} />
                       </TableCell>
                       <TableCell>{run.validation!.trigger === "SYSTEM_SCHEDULED" ? "Scheduled" : "Manual"}</TableCell>
                       <TableCell>{outcome === "running" ? <span className="text-muted-foreground">—</span> : run.duration}</TableCell>
@@ -809,7 +882,7 @@ export default function ReplicationPlanPage() {
                       <SheetDescription className="sr-only">Validation started {selectedRun.startedAt}</SheetDescription>
                       <span className="flex items-center gap-2">
                         <span className="order-last -mr-1 ml-auto flex items-center gap-2">
-                          {!["running", "succeeded"].includes(validationOutcome(selectedRun.validation!.results)) && (
+                          {!["running", "succeeded"].includes(validationOutcome(selectedRun.validation!)) && (
                             <Button variant="outline" size="xs" className="text-sm">
                               View in system table
                               <NewWindowIcon className="size-4" />
