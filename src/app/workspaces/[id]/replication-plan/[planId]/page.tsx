@@ -28,6 +28,9 @@ import { CheckCircleIcon, XCircleIcon, RunningIcon, OverflowIcon, CopyIcon, Clos
 import { ChevronDown, Info } from "lucide-react"
 import { toast } from "sonner"
 import { PREREQS_DOCS_URL, PrereqsList } from "../prerequisites"
+import {
+  FlowErrorMarker, ReplicationErrorsAlert, ReplicationErrorsSheet, affectedTotal, errorsForAsset, getReplicationErrors, type ReplicationStateError,
+} from "../replication-errors"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
 type ActivityType = "Replication" | "Failover" | "Validation"
@@ -176,29 +179,32 @@ function DottedFlowArrow({
   className = "text-muted-foreground",
   animate = true,
   solid = false,
+  width = 84,
 }: {
   reversed?: boolean
   className?: string
   animate?: boolean
   solid?: boolean
+  width?: number
 }) {
+  const tip = width - 8
   return (
     <svg
-      width="84"
+      width={width}
       height="12"
-      viewBox="0 0 84 12"
+      viewBox={`0 0 ${width} 12`}
       fill="none"
       className={className}
       style={reversed ? { transform: "scaleX(-1)" } : undefined}
     >
       <line
-        x1="0" y1="6" x2="76" y2="6"
+        x1="0" y1="6" x2={tip} y2="6"
         stroke="currentColor"
         strokeWidth="1.5"
         strokeDasharray={solid ? undefined : "6 4"}
         style={animate && !solid ? { animation: "dash-flow 0.6s linear infinite" } : undefined}
       />
-      <polygon points="76,2 84,6 76,10" fill="currentColor" />
+      <polygon points={`${tip},2 ${width},6 ${tip},10`} fill="currentColor" />
     </svg>
   )
 }
@@ -209,21 +215,9 @@ const STORAGE_MAPPINGS = [
   { source: "s3://primary-bucket/external",  destination: "s3://dr-bucket/external" },
 ]
 
-function ProgressBar({ progress }: { progress: number }) {
-  return (
-    <div
-      className="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-      role="progressbar"
-      aria-label="Replication progress"
-      aria-valuemin={0}
-      aria-valuemax={100}
-      aria-valuenow={progress}
-    >
-      <div className="relative h-full overflow-hidden rounded-full bg-primary transition-[width] duration-500" style={{ width: `${progress}%` }}>
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[progress-shimmer_1.5s_ease-in-out_infinite] motion-reduce:animate-none" />
-      </div>
-    </div>
-  )
+function rowFailingLabel(errors: ReplicationStateError[]) {
+  const assets = errors.reduce((sum, e) => sum + affectedTotal(e), 0)
+  return `Failing · ${errors.length} ${errors.length === 1 ? "error" : "errors"}, ${assets.toLocaleString()} ${assets === 1 ? "asset" : "assets"}`
 }
 
 function getReplicationItemStatus(index: number) {
@@ -232,34 +226,84 @@ function getReplicationItemStatus(index: number) {
   return "Not started"
 }
 
+function FlowProgressTag({ progress }: { progress: number }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge
+          className={`${TAG_CLASS} relative cursor-default overflow-hidden text-primary ring-2 ring-background`}
+          // The tint is translucent; layer it over the page background so the arrow doesn't show through.
+          style={{ background: "linear-gradient(color-mix(in srgb, var(--primary) 10%, transparent), color-mix(in srgb, var(--primary) 10%, transparent)), var(--background)" }}
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={progress}
+          aria-label="Replication progress"
+        >
+          <span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-primary/25 to-transparent animate-[progress-shimmer_1.5s_ease-in-out_infinite] motion-reduce:animate-none"
+          />
+          <span className="relative">{progress}%</span>
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top">Replicating tables, catalogs, and workspace assets.</TooltipContent>
+    </Tooltip>
+  )
+}
+
 function ReplicationFlowIndicator({
   reversed = false,
   loading = false,
   animate = true,
   headerY,
   rowYs,
+  rowErrors = [],
+  onViewRowErrors,
+  progress,
 }: {
   reversed?: boolean
   loading?: boolean
   animate?: boolean
   headerY: number
   rowYs: number[]
+  /** Errors affecting each catalog / storage row, in row order. */
+  rowErrors?: ReplicationStateError[][]
+  onViewRowErrors?: (index: number) => void
+  /** Progress of the running replication, if any. */
+  progress?: number
 }) {
+  const hasProgress = progress !== undefined && !loading
   const className = loading ? "text-border" : "text-muted-foreground"
   const rowStatuses = rowYs.map((_, index) => getReplicationItemStatus(index))
+  const width = 84
 
   return (
     <div className="flex shrink-0 justify-center md:self-stretch">
-        <div className="relative hidden w-[84px] self-stretch md:block">
+        <div className="relative hidden self-stretch md:block" style={{ width }}>
           <div className="absolute left-0" style={{ top: headerY - 6 }}>
-            <DottedFlowArrow reversed={reversed} className={className} animate={animate} />
+            <span className="relative block">
+              <DottedFlowArrow reversed={reversed} className={className} animate={animate} width={width} />
+              {hasProgress && (
+                <span className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center">
+                  <FlowProgressTag progress={progress} />
+                </span>
+              )}
+            </span>
           </div>
           {rowYs.map((y, index) => (
             <div key={index} className="absolute left-0" style={{ top: y - 6 }}>
+              {(rowErrors[index]?.length ?? 0) > 0 && onViewRowErrors ? (
+                <span className="relative block">
+                  <DottedFlowArrow reversed={reversed} className="text-destructive" animate={false} width={width} />
+                  <FlowErrorMarker errors={rowErrors[index]} onView={() => onViewRowErrors(index)} />
+                </span>
+              ) : (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span className="relative block cursor-default">
                     <DottedFlowArrow
+                      width={width}
                       reversed={reversed}
                       className={
                         rowStatuses[index] === "In progress"
@@ -278,6 +322,7 @@ function ReplicationFlowIndicator({
                 </TooltipTrigger>
                 <TooltipContent side="top">{rowStatuses[index]}</TooltipContent>
               </Tooltip>
+              )}
             </div>
           ))}
         </div>
@@ -573,7 +618,20 @@ export default function ReplicationPlanPage() {
   const [refreshConfirm, setRefreshConfirm] = React.useState("")
   const [selectedRunId, setSelectedRunId] = React.useState<string | null>(null)
   const selectedRun = runs.find((r) => r.id === selectedRunId && r.validation)
-
+  const [replicationErrors, setReplicationErrors] = React.useState(() => getReplicationErrors(planId))
+  const [errorsOpen, setErrorsOpen] = React.useState(false)
+  const [errorFilter, setErrorFilter] = React.useState<{ name: string; indices: number[] } | null>(null)
+  // Row order matches the workspace cards: catalogs, then storage locations.
+  const rowAssets = [
+    ...CATALOGS.map((catalog) => ({ name: catalog, indices: errorsForAsset(replicationErrors, { catalog }) })),
+    ...STORAGE_MAPPINGS.map((m) => ({ name: m.source, indices: errorsForAsset(replicationErrors, { location: m.source }) })),
+  ]
+  const rowErrors = rowAssets.map((a) => a.indices.map((i) => replicationErrors[i]))
+  function openErrors(rowIndex?: number) {
+    const asset = rowIndex === undefined ? null : rowAssets[rowIndex]
+    setErrorFilter(asset && asset.indices.length > 0 ? asset : null)
+    setErrorsOpen(true)
+  }
   function startValidation() {
     const id = `run-${Date.now()}`
     const [primary, secondary] = failedOver ? [WEST_REGION, EAST_REGION] : [EAST_REGION, WEST_REGION]
@@ -649,7 +707,9 @@ export default function ReplicationPlanPage() {
               <div className="px-3 py-2">
                 <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Catalogs</p>
                 <div className="flex flex-col gap-0.5">
-                  {catalogs.map((c, index) => (
+                  {catalogs.map((c, index) => {
+                    const failing = rowErrors[index].length > 0
+                    return (
                     <Tooltip key={c}>
                       <TooltipTrigger asChild>
                         <div
@@ -662,19 +722,23 @@ export default function ReplicationPlanPage() {
                           <span>{c}</span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="top">{getReplicationItemStatus(index)}</TooltipContent>
+                      <TooltipContent side="top">{failing ? rowFailingLabel(rowErrors[index]) : getReplicationItemStatus(index)}</TooltipContent>
                     </Tooltip>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
               <div className="px-3 py-2">
                 <p className="text-xs font-normal text-muted-foreground mb-1.5 py-px">Storage locations</p>
                 <div className="flex flex-col gap-0.5">
-                  {storageMappings.map((m, index) => (
+                  {storageMappings.map((m, index) => {
+                    const row = catalogs.length + index
+                    const failing = rowErrors[row].length > 0
+                    return (
                     <Tooltip key={m.source}>
                       <TooltipTrigger asChild>
                         <div
-                          ref={isPrimary ? (el) => { primaryRowRefs.current[catalogs.length + index] = el } : undefined}
+                          ref={isPrimary ? (el) => { primaryRowRefs.current[row] = el } : undefined}
                           className={`text-sm font-mono truncate rounded px-1 -mx-1 py-[3px] transition-colors ${hoveredStorage === m.source ? "bg-primary/10 text-primary" : "text-accent-foreground"}`}
                           onMouseEnter={() => onRowEnter(m.source, "storage")}
                           onMouseLeave={() => onRowLeave("storage")}
@@ -682,9 +746,10 @@ export default function ReplicationPlanPage() {
                           {isPrimary ? m.source : m.destination}
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="top">{getReplicationItemStatus(catalogs.length + index)}</TooltipContent>
+                      <TooltipContent side="top">{failing ? rowFailingLabel(rowErrors[row]) : getReplicationItemStatus(row)}</TooltipContent>
                     </Tooltip>
-                  ))}
+                    )
+                  })}
                 </div>
               </div>
             </div>
@@ -770,6 +835,14 @@ export default function ReplicationPlanPage() {
 
         <div className="-mt-3 border-b border-border" />
 
+        <ReplicationErrorsSheet
+          open={errorsOpen}
+          onOpenChange={setErrorsOpen}
+          errors={replicationErrors}
+          assetFilter={errorFilter}
+          onClearFilter={() => setErrorFilter(null)}
+        />
+
         <div className="flex flex-col gap-6 lg:flex-row">
           <div className="flex min-w-0 flex-1 flex-col gap-6">
             {/* Stable URL */}
@@ -808,14 +881,6 @@ export default function ReplicationPlanPage() {
               <div className="px-4 py-2.5 border-b border-border bg-secondary rounded-t-md">
                 <p className="text-sm font-semibold">Replication status</p>
               </div>
-              {runningReplication && (
-                <div className="mx-4 flex flex-col gap-2 border-b border-border py-4">
-                  <ProgressBar progress={REPLICATION_PROGRESS} />
-                  <p className="text-sm text-muted-foreground">
-                    <span className="text-foreground">{REPLICATION_PROGRESS}%</span> · Replicating tables, catalogs, and workspace assets.
-                  </p>
-                </div>
-              )}
               <div className="relative flex flex-col items-stretch gap-4 px-4 py-4 shadow-xs md:flex-row md:items-start md:justify-center md:gap-0.5 md:py-6">
             {renderWorkspaceCard("primary")}
 
@@ -825,10 +890,18 @@ export default function ReplicationPlanPage() {
               animate={Boolean(runningReplication) || failoverLoading}
               headerY={arrowLayout.headerY}
               rowYs={arrowLayout.rowYs}
+              rowErrors={rowErrors}
+              onViewRowErrors={openErrors}
+              progress={runningReplication ? REPLICATION_PROGRESS : undefined}
             />
 
             {renderWorkspaceCard("secondary")}
               </div>
+              {replicationErrors.length > 0 && !failoverLoading && (
+                <div className="px-4 pb-4">
+                  <ReplicationErrorsAlert errors={replicationErrors} onView={() => openErrors()} />
+                </div>
+              )}
             </div>
 
             {/* Validations */}
@@ -1070,6 +1143,7 @@ export default function ReplicationPlanPage() {
               const newId = `run-${Date.now()}`
               setRuns((prev) => [{ id: newId, startedAt: "Apr 10, 2026 at 11:00 AM", duration: "—", status: "running", activity: "Failover", rpo: currentRpo }, ...prev])
               setFailedOver(isNowFailedOver)
+              setReplicationErrors([])
               setFailoverOpen(false)
               setFailoverConfirm("")
               setFailoverLoading(true)

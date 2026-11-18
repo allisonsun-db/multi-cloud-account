@@ -21,6 +21,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
+import { ErrorCountTag, getReplicationErrors } from "@/app/workspaces/[id]/replication-plan/replication-errors"
 import { Search } from "lucide-react"
 import { toast } from "sonner"
 
@@ -369,6 +370,7 @@ export function ResilienceContent() {
                         {plan.status === "Initial Replication" && <RunningIcon size={14} className="text-primary animate-spin [animation-duration:2s]" />}
                         {plan.status}
                         {plan.progress !== undefined && <span className="text-muted-foreground">({plan.progress}%)</span>}
+                        <span className="ml-1"><ErrorCountTag errors={getReplicationErrors(plan.id)} /></span>
                       </span>
                     </TableCell>
                     <TableCell>
