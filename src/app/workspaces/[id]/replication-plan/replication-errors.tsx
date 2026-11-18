@@ -7,12 +7,11 @@ import { Alert, AlertTitle } from "@/components/ui/alert"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Search } from "lucide-react"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import {
-  CatalogIcon, CheckCircleIcon, ChevronRightIcon, CloseIcon, DangerFillIcon, FolderIcon, FunctionIcon,
-  SchemaIcon, TableIcon, XCircleIcon,
+  CatalogIcon, CheckCircleIcon, ChevronRightIcon, CloseIcon, DangerFillIcon, DangerIcon, FolderIcon, FunctionIcon,
+  SchemaIcon, TableIcon, WarningIcon,
 } from "@/components/icons"
 // ─── API shape (ListReplicationStateErrors, "[UCDR] Logging API design") ──────
 
@@ -189,16 +188,56 @@ export function summaryText(errors: ReplicationStateError[]) {
 
 // ─── Failover group list tag ───────────────────────────────────────────────────
 
-export function ErrorCountTag({ errors }: { errors: ReplicationStateError[] }) {
-  if (errors.length === 0) return null
+const LIST_TAG_CLASS = "h-5 gap-1 px-1.5 py-0 text-sm font-normal [&>svg]:size-3.5"
+
+const WARNING_TAG_CLASS = "bg-[var(--background-warning)] text-[var(--warning)]"
+
+const STATUS_TAG_CLASS: Record<"Active" | "Failed" | "Initial Replication", string> = {
+  Active: "bg-[var(--background-success)] text-[var(--success)]",
+  Failed: "bg-[var(--background-danger)] text-destructive",
+  "Initial Replication": "bg-primary/10 text-primary",
+}
+
+export function StatusTags({
+  status,
+  progress,
+  errors,
+}: {
+  status: keyof typeof STATUS_TAG_CLASS
+  progress?: number
+  errors: ReplicationStateError[]
+}) {
+  const hasErrors = errors.length > 0
+  const label = status === "Initial Replication" ? "Initial replication" : status
+  // Errors don't stop the group, so they use warning rather than the red reserved for Failed.
+  const colorClass = hasErrors && status !== "Failed" ? WARNING_TAG_CLASS : STATUS_TAG_CLASS[status]
+
+  const tag = (
+    <Badge
+      className={`${LIST_TAG_CLASS} ${colorClass} relative overflow-hidden`}
+      aria-label={hasErrors ? `${label}, ${plural(errors.length, ["error", "errors"])}` : undefined}
+    >
+      {status === "Initial Replication" && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 animate-[progress-shimmer_1.5s_ease-in-out_infinite] bg-gradient-to-r from-transparent via-current/20 to-transparent motion-reduce:animate-none"
+        />
+      )}
+      {label}
+      {progress !== undefined && ` (${progress}%)`}
+      {hasErrors && (
+        <>
+          {" ·"}
+          <WarningIcon />
+          {errors.length}
+        </>
+      )}
+    </Badge>
+  )
+  if (!hasErrors) return tag
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <Badge className="h-5 gap-1 bg-[var(--background-danger)] px-1.5 py-0 text-sm font-normal text-destructive [&>svg]:size-3.5">
-          <XCircleIcon />
-          {plural(errors.length, ["error", "errors"])}
-        </Badge>
-      </TooltipTrigger>
+      <TooltipTrigger asChild>{tag}</TooltipTrigger>
       <TooltipContent className="first-letter:uppercase">{summaryText(errors)}</TooltipContent>
     </Tooltip>
   )
@@ -222,40 +261,22 @@ export function ReplicationErrorsAlert({ errors, onView }: { errors: Replication
   )
 }
 
-/** Same look as the failed-check tags in the Validations results column. */
+/** Same tag as the error count in the failover groups list, centered on a failing row's arrow. */
 export function FlowErrorTag({ errors, onView }: { errors: ReplicationStateError[]; onView: () => void }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Badge
           asChild
-          className="h-5 cursor-pointer gap-1 px-1.5 py-0 text-sm font-normal text-destructive ring-2 ring-background [&>svg]:size-3.5"
+          className={`${LIST_TAG_CLASS} absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-pointer text-destructive ring-2 ring-background`}
           // The danger tint is translucent in dark mode; layer it over the page background so the arrow doesn't show through.
           style={{ background: "linear-gradient(var(--background-danger), var(--background-danger)), var(--background)" }}
         >
           <button type="button" aria-label={`View ${summaryText(errors)}`} onClick={onView}>
-            <XCircleIcon />
+            <DangerIcon />
             {errors.length}
           </button>
         </Badge>
-      </TooltipTrigger>
-      <TooltipContent side="top" className="first-letter:uppercase">{summaryText(errors)}</TooltipContent>
-    </Tooltip>
-  )
-}
-
-export function FlowErrorMarker({ errors, onView }: { errors: ReplicationStateError[]; onView: () => void }) {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          type="button"
-          aria-label={`View ${summaryText(errors)}`}
-          onClick={onView}
-          className="absolute left-1/2 top-1/2 flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-background text-destructive transition-transform hover:scale-110"
-        >
-          <DangerFillIcon className="size-4" />
-        </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="first-letter:uppercase">{summaryText(errors)}</TooltipContent>
     </Tooltip>
@@ -373,78 +394,6 @@ function ErrorRows({ error, defaultOpen = false }: { error: ReplicationStateErro
   )
 }
 
-function AssetList({ errors }: { errors: ReplicationStateError[] }) {
-  const [query, setQuery] = React.useState("")
-  const rows = React.useMemo(() => {
-    const byName = new Map<string, { fullName: string; assetType: AssetType; errors: ReplicationStateError[] }>()
-    for (const error of errors) {
-      for (const asset of error.affectedAssetsSubset) {
-        const row = byName.get(asset.fullName) ?? { ...asset, errors: [] }
-        row.errors.push(error)
-        byName.set(asset.fullName, row)
-      }
-    }
-    return [...byName.values()].sort((a, b) => a.fullName.localeCompare(b.fullName))
-  }, [errors])
-  const shown = query ? rows.filter((r) => r.fullName.toLowerCase().includes(query.toLowerCase())) : rows
-  const { totalAffectedAssets } = summarizeErrors(errors)
-
-  return (
-    <>
-      {rows.length > ASSET_PREVIEW && (
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Filter assets" className="pl-8" />
-        </div>
-      )}
-      <div className="rounded-md border border-border [&>[data-slot=table-container]]:overflow-visible">
-        <Table className="table-fixed">
-          <TableHeader className="sticky top-0 z-10">
-            <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-              <TableHead className="w-[45%] rounded-tl-md bg-secondary">Asset</TableHead>
-              <TableHead className="rounded-tr-md bg-secondary">Error</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {shown.map((row) => {
-              const Icon = ASSET_ICON[row.assetType]
-              return (
-                <TableRow key={row.fullName} className="hover:bg-transparent dark:hover:bg-transparent">
-                  <TableCell className="align-top">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <Icon className="size-4 shrink-0 text-muted-foreground" aria-label={ASSET_LABEL[row.assetType][0]} />
-                      <span className="min-w-0 truncate" title={row.fullName}>{row.fullName}</span>
-                    </span>
-                  </TableCell>
-                  <TableCell className="whitespace-normal align-top">
-                    <span className="flex flex-col gap-1">
-                      {row.errors.map((error) => (
-                        <span key={errors.indexOf(error)}><ErrorMessage error={error} /></span>
-                      ))}
-                    </span>
-                  </TableCell>
-                </TableRow>
-              )
-            })}
-            {shown.length === 0 && (
-              <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-                <TableCell colSpan={2} className="text-muted-foreground">No matching assets</TableCell>
-              </TableRow>
-            )}
-            {!query && rows.length < totalAffectedAssets && (
-              <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-                <TableCell colSpan={2} className="text-muted-foreground">
-                  Showing {rows.length.toLocaleString()} of {totalAffectedAssets.toLocaleString()} assets
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </>
-  )
-}
-
 export function ReplicationErrorsSheet({
   open,
   onOpenChange,
@@ -462,7 +411,6 @@ export function ReplicationErrorsSheet({
   const filtered = assetFilter ? assetFilter.indices.map((i) => errors[i]).filter(Boolean) : null
   // The API is paginated (next_page_token); the panel fetches every page and lists them all.
   const shown = filtered ?? errors
-  const [view, setView] = React.useState<"errors" | "assets">("errors")
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -499,35 +447,25 @@ export function ReplicationErrorsSheet({
                   </Button>
                 </p>
               )}
-              <Tabs value={view} onValueChange={(v) => setView(v as "errors" | "assets")}>
-                <TabsList variant="line">
-                  <TabsTrigger value="errors">Group by error</TabsTrigger>
-                  <TabsTrigger value="assets">All assets</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              {view === "errors" ? (
-                <div className="rounded-md border border-border [&>[data-slot=table-container]]:overflow-visible">
-                  <Table className="table-fixed">
-                    <TableHeader className="sticky top-0 z-10">
-                      <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
-                        <TableHead className="rounded-tl-md bg-secondary pl-9">Error</TableHead>
-                        <TableHead className="w-32 rounded-tr-md bg-secondary text-right">Affected assets</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {shown.map((error) => (
-                        <ErrorRows
-                          key={`${errors.indexOf(error)}-${assetFilter?.name ?? "all"}`}
-                          error={error}
-                          defaultOpen={filtered?.length === 1}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <AssetList errors={shown} />
-              )}
+              <div className="rounded-md border border-border [&>[data-slot=table-container]]:overflow-visible">
+                <Table className="table-fixed">
+                  <TableHeader className="sticky top-0 z-10">
+                    <TableRow className="hover:bg-transparent dark:hover:bg-transparent">
+                      <TableHead className="rounded-tl-md bg-secondary pl-9">Error</TableHead>
+                      <TableHead className="w-32 rounded-tr-md bg-secondary text-right">Affected assets</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {shown.map((error) => (
+                      <ErrorRows
+                        key={`${errors.indexOf(error)}-${assetFilter?.name ?? "all"}`}
+                        error={error}
+                        defaultOpen={filtered?.length === 1}
+                      />
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           )}
         </div>

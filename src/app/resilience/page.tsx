@@ -6,7 +6,7 @@ import { AppShell } from "@/components/shell"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { CheckCircleIcon, XCircleIcon, RunningIcon, LoadingIcon, CopyIcon, OverflowIcon } from "@/components/icons"
+import { CheckCircleIcon, LoadingIcon, CopyIcon, OverflowIcon } from "@/components/icons"
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table"
@@ -21,7 +21,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { CLOUD_ICONS } from "@/components/ui/location-picker"
-import { ErrorCountTag, getReplicationErrors } from "@/app/workspaces/[id]/replication-plan/replication-errors"
+import { StatusTags, getReplicationErrors } from "@/app/workspaces/[id]/replication-plan/replication-errors"
 import { Search } from "lucide-react"
 import { toast } from "sonner"
 
@@ -364,14 +364,7 @@ export function ResilienceContent() {
                   >
                     <TableCell>{plan.name}</TableCell>
                     <TableCell>
-                      <span className="flex items-center gap-1.5">
-                        {plan.status === "Active" && <CheckCircleIcon size={14} className="text-[var(--success)]" />}
-                        {plan.status === "Failed" && <XCircleIcon size={14} className="text-destructive" />}
-                        {plan.status === "Initial Replication" && <RunningIcon size={14} className="text-primary animate-spin [animation-duration:2s]" />}
-                        {plan.status}
-                        {plan.progress !== undefined && <span className="text-muted-foreground">({plan.progress}%)</span>}
-                        <span className="ml-1"><ErrorCountTag errors={getReplicationErrors(plan.id)} /></span>
-                      </span>
+                      <StatusTags status={plan.status} progress={plan.progress} errors={getReplicationErrors(plan.id)} />
                     </TableCell>
                     <TableCell>
                       <span className="flex items-center gap-2">

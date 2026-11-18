@@ -29,7 +29,7 @@ import { ChevronDown, Info } from "lucide-react"
 import { toast } from "sonner"
 import { PREREQS_DOCS_URL, PrereqsList } from "../prerequisites"
 import {
-  FlowErrorMarker, ReplicationErrorsAlert, ReplicationErrorsSheet, affectedTotal, errorsForAsset, getReplicationErrors, type ReplicationStateError,
+  FlowErrorTag, ReplicationErrorsAlert, ReplicationErrorsSheet, affectedTotal, errorsForAsset, getReplicationErrors, type ReplicationStateError,
 } from "../replication-errors"
 
 type ReplicationStatus = "succeeded" | "failed" | "running"
@@ -283,7 +283,7 @@ function ReplicationFlowIndicator({
         <div className="relative hidden self-stretch md:block" style={{ width }}>
           <div className="absolute left-0" style={{ top: headerY - 6 }}>
             <span className="relative block">
-              <DottedFlowArrow reversed={reversed} className={className} animate={animate} width={width} />
+              <DottedFlowArrow reversed={reversed} className={className} animate={animate} solid={!animate} width={width} />
               {hasProgress && (
                 <span className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center">
                   <FlowProgressTag progress={progress} />
@@ -295,8 +295,8 @@ function ReplicationFlowIndicator({
             <div key={index} className="absolute left-0" style={{ top: y - 6 }}>
               {(rowErrors[index]?.length ?? 0) > 0 && onViewRowErrors ? (
                 <span className="relative block">
-                  <DottedFlowArrow reversed={reversed} className="text-destructive" animate={false} width={width} />
-                  <FlowErrorMarker errors={rowErrors[index]} onView={() => onViewRowErrors(index)} />
+                  <DottedFlowArrow reversed={reversed} className="text-destructive" animate={false} solid width={width} />
+                  <FlowErrorTag errors={rowErrors[index]} onView={() => onViewRowErrors(index)} />
                 </span>
               ) : (
               <Tooltip>
@@ -313,7 +313,7 @@ function ReplicationFlowIndicator({
                             : "text-muted-foreground opacity-30"
                       }
                       animate={rowStatuses[index] === "In progress"}
-                      solid={rowStatuses[index] === "Completed"}
+                      solid={rowStatuses[index] !== "In progress"}
                     />
                     {rowStatuses[index] === "Completed" && (
                       <CheckCircleIcon className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background text-[var(--success)]" />
